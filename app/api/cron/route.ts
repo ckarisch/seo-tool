@@ -4,7 +4,7 @@ import { crawlDomain } from '../seo/domains/[domainName]/crawl/crawlDomain';
 
 const prisma = new PrismaClient();
 
-export async function GET(
+export async function POST(
   request: Request
 ) {
   console.log('start auto crawl');
