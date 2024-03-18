@@ -4,9 +4,14 @@ import { crawlDomain } from '../seo/domains/[domainName]/crawl/crawlDomain';
 
 const prisma = new PrismaClient();
 
-export async function POST(
+export async function GET(
   request: Request
 ) {
+
+  if (request.headers.get('Authorization') !== `Bearer ${process.env.CRON_SECRET}`) {
+    return Response.json({ error: 'unauthorized' }, { status: 401 });
+  }
+
   console.log('start auto crawl');
   const domains = await prisma.domain.findMany({ where: { crawlEnabled: true } });
 
