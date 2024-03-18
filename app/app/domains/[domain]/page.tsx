@@ -1,9 +1,9 @@
 
 import styles from "./page.module.scss";
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import LinkList from "./linkList";
 import Link from "next/link";
+import { authOptions } from "@/app/api/auth/[...nextauth]/authOptions";
 
 export default async function Home({ params }: { params: { domain: string } }) {
   const linksFetchTag = 'seo/domain/' + params.domain + '/links';

@@ -1,13 +1,6 @@
-
-import axios, { AxiosError } from 'axios';
-import cheerio from 'cheerio';
-import { NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
-import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 import { getServerSession } from 'next-auth';
 import { crawlDomain } from './crawlDomain';
-
-const prisma = new PrismaClient();
+import { authOptions } from '@/app/api/auth/[...nextauth]/authOptions';
 
 export async function POST(
   request: Request,
