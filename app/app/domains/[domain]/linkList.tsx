@@ -25,7 +25,7 @@ export default function LinkList({ params, linksFetchTag, domainFetchTag }: { pa
 
     useEffect(() => {
         if (status !== "loading") {
-            fetch('http://localhost:3000/api/seo/domains/' + params.domain + '/links',
+            fetch(process.env.API_DOMAIN + '/api/seo/domains/' + params.domain + '/links',
                 { next: { tags: [linksFetchTag], revalidate: false } })
                 .then(res => res.json())
                 .then(data => setLinksJson(data));
