@@ -21,7 +21,7 @@ export default function DomainList() {
 
     useEffect(() => {
         if (status !== "loading") {
-            fetch(process.env.API_DOMAIN + '/api/seo/domains/')
+            fetch(process.env.NEXT_PUBLIC_API_DOMAIN + '/api/seo/domains/')
                 .then(res => res.json())
                 .then(data => setDomainsJson(data));
         }

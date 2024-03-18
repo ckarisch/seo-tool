@@ -7,7 +7,7 @@ import { useEffect, useState } from "react";
 import { revalidateTag } from "next/cache";
 
 const fetchData = async (domain: string, domainFetchTag: string, setLinksJson: Function) => {
-    return fetch(process.env.API_DOMAIN + '/api/seo/domains/' + domain,
+    return fetch(process.env.NEXT_PUBLIC_API_DOMAIN + '/api/seo/domains/' + domain,
         { next: { tags: [domainFetchTag] } })
         .then(res => res.json())
         .then(data => setLinksJson(data));
@@ -33,7 +33,7 @@ export default function DomainStatus({ params, domainFetchTag }: { params: { dom
 
     const handleCrawl = async (event: any) => {
         event.preventDefault();
-        const endpoint = process.env.API_DOMAIN + '/api/seo/domains/' + params.domain + '/crawl';
+        const endpoint = process.env.NEXT_PUBLIC_API_DOMAIN + '/api/seo/domains/' + params.domain + '/crawl';
 
         const options = {
             method: 'POST',
@@ -62,7 +62,7 @@ export default function DomainStatus({ params, domainFetchTag }: { params: { dom
 
     const handleSetCrawlEnalbed = async (event: any, value: boolean) => {
         event.preventDefault();
-        const endpoint = process.env.API_DOMAIN + '/api/seo/domains/' + params.domain + '/settings/crawlEnabled';
+        const endpoint = process.env.NEXT_PUBLIC_API_DOMAIN + '/api/seo/domains/' + params.domain + '/settings/crawlEnabled';
 
         const options = {
             method: 'POST',

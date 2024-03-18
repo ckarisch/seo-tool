@@ -44,7 +44,7 @@ export default function CrawlList({ params }: { params: { domain: string } }) {
 
     useEffect(() => {
         if (status !== "loading") {
-            fetch(process.env.API_DOMAIN + '/api/seo/domains/' + params.domain + '/crawls',
+            fetch(process.env.NEXT_PUBLIC_API_DOMAIN + '/api/seo/domains/' + params.domain + '/crawls',
                 { next: { tags: [crawlsFetchTag], revalidate: false } })
                 .then(res => res.json())
                 .then(data => setCrawlsJson(data));
