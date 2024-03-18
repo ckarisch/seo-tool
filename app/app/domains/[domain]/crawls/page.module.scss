@@ -1,0 +1,76 @@
+.main {
+    button {
+        margin: 5px;
+        padding: 5px;
+        border-radius: 5px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        transition: box-shadow 0.3s;
+        text-decoration: none;
+        color: #333;
+        background-color: #fff;
+        font-size: 1.5rem;
+        font-weight: 600;
+        cursor: pointer;
+
+        &:hover {
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+        }
+    }
+
+    .domain,
+    .domainStatus {
+        width: 100%;
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: left;
+        align-items: center;
+        margin-top: 20px;
+        background-color: #fff;
+        padding: 20px;
+        font-size: 1.5rem;
+
+        .domainData {
+            padding: 5px;
+        }
+
+        .crawling {
+            background-color: rgb(47, 184, 123);
+            color: #fff;
+        }
+
+        .idle {
+            background-color: rgb(190, 156, 54);
+            color: #fff;
+        }
+
+        .crawlButton[disabled] {
+            background-color: #bebebe;
+            color: #fff;
+        }
+    }
+
+    .crawlList {
+        display: flex;
+        flex-direction: column;
+        flex-wrap: wrap;
+        justify-content: left;
+        align-items: center;
+        margin-top: 20px;
+        background-color: #fff;
+        padding: 20px 0;
+        font-size: 1.5rem;
+
+        .logEntry {
+            padding: 5px;
+            background-color: #fff;
+            margin: 5px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+
+            &.error {
+                background-color: rgb(184, 47, 47);
+                color: #fff;
+            }
+        }
+    }
+}

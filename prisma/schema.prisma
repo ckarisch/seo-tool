@@ -1,0 +1,97 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id       String   @id @default(auto()) @map("_id") @db.ObjectId
+  email    String   @unique
+  name     String
+  password String
+  salt     String
+  role     String
+  domains  Domain[]
+
+  @@map("user")
+}
+
+model Domain {
+  id               String         @id @default(auto()) @map("_id") @db.ObjectId
+  name             String
+  domainName       String
+  internalLinks    InternalLink[]
+  externalLinks    ExternalLink[]
+  user             User           @relation(fields: [userId], references: [id])
+  domainCrawls     DomainCrawl[]
+  userId           String         @db.ObjectId
+  lastCrawl        DateTime?
+  lastErrorTime    DateTime?
+  lastErrorType    String?
+  lastErrorMessage String?
+  crawlStatus      String?
+  crawlInterval    Int? // in minutes
+  crawlEnabled     Boolean?
+  crawlDepth       Int?
+  errorStatus      String?
+
+  @@map("domain")
+}
+
+model DomainCrawl {
+  id           String    @id @default(auto()) @map("_id") @db.ObjectId
+  domain       Domain    @relation(fields: [domainId], references: [id])
+  domainId     String    @db.ObjectId
+  crawlType    String? // 2do: make not nullable
+  startTime    DateTime
+  endTime      DateTime?
+  status       String
+  error        Boolean
+  errorName    String?
+  errorMessage String?
+
+  @@map("domaincrawl")
+}
+
+model InternalLink {
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  path         String
+  lastCheck    DateTime
+  lastLoadTime Int
+  seoData      SeoData?
+  seoDataId    String?
+  domain       Domain   @relation(fields: [domainId], references: [id])
+  domainId     String   @db.ObjectId
+
+  @@map("internalLink")
+}
+
+model SeoData {
+  id             String       @id @default(auto()) @map("_id") @db.ObjectId
+  score          Int
+  loadTime       Int
+  indexable      Boolean
+  internalLink   InternalLink @relation(fields: [internalLinkId], references: [id])
+  internalLinkId String       @unique @db.ObjectId
+
+  @@map("seodata")
+}
+
+model ExternalLink {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  url       String
+  domain    Domain   @relation(fields: [domainId], references: [id])
+  domainId  String   @db.ObjectId
+  lastCheck DateTime
+
+  @@map("externallink")
+}

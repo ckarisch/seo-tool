@@ -1,0 +1,37 @@
+$primaryColor: #041E44;
+$primaryColor2: transparentize($primaryColor, .5);
+$primaryColor3: transparentize($primaryColor, .75);
+$secondaryColor: #041E44;
+$unlockedColor: #81BF42;
+$buttonColor1: #81BF42;
+$highlightedColor: #A30707;
+$unavailableColor: #E8E8E8;
+$unavailableTextColor: #BEBEBE;
+$unavailableButtonColor: $unavailableTextColor;
+$textColor: $primaryColor;
+$textColorInverse: #fff;
+$borderRadius: 7px;
+$boxShadow: 0 3px 6px rgba(0, 0, 0, 0.16);
+$circleColor: $primaryColor;
+$circleColor2: transparentize($circleColor, .5);
+$maxWidth: 1400px;
+
+$heading5XL: 45px;
+$heading4XL: 40px;
+$heading3XL: 35px;
+$heading2XL: 30px;
+$headingXL: 27px;
+$headingL: 25px;
+$headingM: 22px;
+$headingS: 18px;
+$headingXS: 16px;
+
+$heading5XL_2: 30px;
+$heading4XL_2: 30px;
+$heading3XL_2: 28px;
+$heading2XL_2: 27px;
+$headingXL_2: 25px;
+$headingL_2: 25px;
+$headingM_2: 22px;
+$headingS_2: 18px;
+$headingXS_2: 16px;
