@@ -13,7 +13,7 @@ const dummyExternalLinks = [
     { url: 'Loading', lastCheck: 'loading', lastLoadTime: 'loading' }
 ]
 
-export default function LinkList({ params, linksFetchTag, domainFetchTag }: { params: { domain: string }, linksFetchTag: string, domainFetchTag: string}) {
+export default function LinkList({ params, linksFetchTag, domainFetchTag }: { params: { domain: string }, linksFetchTag: string, domainFetchTag: string }) {
     const { data: session, status } = useSession({
         required: true,
         onUnauthenticated() {
@@ -21,7 +21,7 @@ export default function LinkList({ params, linksFetchTag, domainFetchTag }: { pa
         },
     });
 
-    const [linksJson, setLinksJson] = useState({ links: [], externalLinks: [], loaded: false, crawlingStatus: '', lastErrorType: '', lastErrorTime: '', lastErrorMessage: ''});
+    const [linksJson, setLinksJson] = useState({ links: [], externalLinks: [], loaded: false, crawlingStatus: '', lastErrorType: '', lastErrorTime: '', lastErrorMessage: '' });
 
     useEffect(() => {
         if (status !== "loading") {
@@ -73,8 +73,8 @@ export default function LinkList({ params, linksFetchTag, domainFetchTag }: { pa
             <div className={styles.links}>
                 {linksJson.links.map((link: any, index: number) => {
                     return <div key={index}>
-                        <div className={styles.linkInner}>
-                            {link.path}, {link.lastCheck}, {link.lastLoadTime}
+                        <div className={[styles.linkInner, (link.errorCode && link.errorCode == 404) ? styles.error : null].join(' ')}>
+                            {link.path}, {link.lastCheck}, {link.type}, load {link.lastLoadTime > 0 ? link.lastLoadTime + 'ms' : 'no data'}, {link.errorCode == 404 ? 'error 404' : null}
                         </div>
                     </div>
                 })}
@@ -88,7 +88,7 @@ export default function LinkList({ params, linksFetchTag, domainFetchTag }: { pa
                     return <div key={index}>
 
                         <div className={styles.externalLinkInner}>
-                            {link.url}, {link.lastCheck}, {link.lastLoadTime}
+                            {link.url}, {link.lastCheck}, load {link.lastLoadTime}
                         </div>
                     </div>
                 })}

@@ -2,6 +2,8 @@
 import { PrismaClient } from '@prisma/client';
 import { crawlDomain } from '../seo/domains/[domainName]/crawl/crawlDomain';
 
+export const maxDuration = parseInt(process.env.CRON_MAX_DURATION!)
+
 const prisma = new PrismaClient();
 
 export async function GET(
@@ -37,7 +39,7 @@ export async function GET(
 
           const depth = 0;
           const followLinks = false;
-          await crawlDomain(domain.domainName, depth, followLinks);
+          await crawlDomain(domain.domainName, depth, followLinks, maxDuration);
 
           continue;
         }

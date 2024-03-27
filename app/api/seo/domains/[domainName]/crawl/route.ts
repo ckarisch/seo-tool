@@ -2,6 +2,8 @@ import { getServerSession } from 'next-auth';
 import { crawlDomain } from './crawlDomain';
 import { authOptions } from '@/app/api/auth/[...nextauth]/authOptions';
 
+export const maxDuration = parseInt(process.env.CRON_MAX_DURATION!)
+
 export async function POST(
   request: Request,
   { params }: { params: { domainName: string } }
@@ -18,5 +20,5 @@ export async function POST(
   const depth = 2;
   const followLinks = true;
 
-  return crawlDomain(params.domainName, depth, followLinks);
+  return crawlDomain(params.domainName, depth, followLinks, maxDuration);
 }

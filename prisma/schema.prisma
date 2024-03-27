@@ -14,15 +14,27 @@ datasource db {
 }
 
 model User {
-  id       String   @id @default(auto()) @map("_id") @db.ObjectId
-  email    String   @unique
-  name     String
-  password String
-  salt     String
-  role     String
-  domains  Domain[]
+  id                   String                @id @default(auto()) @map("_id") @db.ObjectId
+  email                String                @unique
+  name                 String
+  password             String
+  salt                 String
+  role                 String
+  domains              Domain[]
+  notificationContacts NotificationContact[]
 
   @@map("user")
+}
+
+model NotificationContact {
+  id     String @id @default(auto()) @map("_id") @db.ObjectId
+  email  String?
+  name   String
+  type   String
+  user   User   @relation(fields: [userId], references: [id])
+  userId String @db.ObjectId
+
+  @@map("notificationcontact")
 }
 
 model Domain {
@@ -43,21 +55,25 @@ model Domain {
   crawlEnabled     Boolean?
   crawlDepth       Int?
   errorStatus      String?
+  lastCrawlTime    Int?
 
   @@map("domain")
 }
 
 model DomainCrawl {
-  id           String    @id @default(auto()) @map("_id") @db.ObjectId
-  domain       Domain    @relation(fields: [domainId], references: [id])
-  domainId     String    @db.ObjectId
-  crawlType    String? // 2do: make not nullable
-  startTime    DateTime
-  endTime      DateTime?
-  status       String
-  error        Boolean
-  errorName    String?
-  errorMessage String?
+  id                 String    @id @default(auto()) @map("_id") @db.ObjectId
+  domain             Domain    @relation(fields: [domainId], references: [id])
+  domainId           String    @db.ObjectId
+  crawlType          String? // 2do: make not nullable
+  startTime          DateTime
+  endTime            DateTime?
+  crawlTime          Int?
+  status             String
+  error              Boolean
+  errorName          String?
+  errorMessage       String?
+  warningDoubleSlash Boolean?
+  error404           Boolean?
 
   @@map("domaincrawl")
 }
@@ -71,7 +87,10 @@ model InternalLink {
   seoDataId    String?
   domain       Domain   @relation(fields: [domainId], references: [id])
   domainId     String   @db.ObjectId
+  type         String?
+  errorCode    Int?
 
+  @@unique([domainId, path])
   @@map("internalLink")
 }
 
@@ -93,5 +112,6 @@ model ExternalLink {
   domainId  String   @db.ObjectId
   lastCheck DateTime
 
+  @@unique([domainId, url])
   @@map("externallink")
 }

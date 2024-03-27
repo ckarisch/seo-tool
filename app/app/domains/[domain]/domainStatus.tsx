@@ -21,7 +21,7 @@ export default function DomainStatus({ params, domainFetchTag }: { params: { dom
         },
     });
 
-    const [linksJson, setLinksJson] = useState({ loaded: false, crawlStatus: '', lastErrorType: '', lastErrorTime: '', lastErrorMessage: '', crawlInterval: '', crawlDepth: '', crawlEnabled: false });
+    const [linksJson, setLinksJson] = useState({ loaded: false, crawlStatus: '', lastErrorType: '', lastErrorTime: '', lastErrorMessage: '', crawlInterval: '', crawlDepth: '', crawlEnabled: false, lastCrawlTime: 0 });
     const [crawlStatus, setcrawlStatus] = useState('idle');
 
     useEffect(() => {
@@ -49,6 +49,32 @@ export default function DomainStatus({ params, domainFetchTag }: { params: { dom
         }, 3000);
 
         setcrawlStatus('crawling');
+        const response = await fetch(endpoint, options);
+        const jsonData = await response.json();
+        setcrawlStatus('idle');
+
+        // fetch after crawling finished
+        await fetchData(params.domain, domainFetchTag, setLinksJson);
+
+        return jsonData;
+    };
+
+    const handleResetLinks = async (event: any) => {
+        event.preventDefault();
+        setcrawlStatus('crawling');
+        if(!confirm('do you really want to reset all links?'))
+        {
+            return false;
+        }
+        const endpoint = process.env.NEXT_PUBLIC_API_DOMAIN + '/api/seo/domains/' + params.domain + '/links';
+
+        const options = {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        }
+
         const response = await fetch(endpoint, options);
         const jsonData = await response.json();
         setcrawlStatus('idle');
@@ -113,6 +139,9 @@ export default function DomainStatus({ params, domainFetchTag }: { params: { dom
                     <form onSubmit={handleCrawl}>
                         <button className={styles.crawlButton} type="submit" disabled={linksJson.crawlStatus === 'crawling' || crawlStatus === 'crawling'}>request crawl</button>
                     </form>
+                    <form onSubmit={handleResetLinks}>
+                        <button className={styles.crawlButton} type="submit" disabled={linksJson.crawlStatus === 'crawling' || crawlStatus === 'crawling'}>reset links</button>
+                    </form>
                     <form onSubmit={($e) => handleSetCrawlEnalbed($e, !linksJson.crawlEnabled)}>
                         <button className={[styles.setCrawlEnabledButton, linksJson.crawlEnabled ? styles.crawlEnabled : styles.crawlDisabled].join(' ')} type="submit">{linksJson.crawlEnabled ? 'disable crawling' : 'enable crawling'}</button>
                     </form>
@@ -123,6 +152,7 @@ export default function DomainStatus({ params, domainFetchTag }: { params: { dom
                 <div className={styles.domainInfo}>Crawl interval: {linksJson.crawlInterval}</div>
                 <div className={styles.domainInfo}>Crawl depth: {linksJson.crawlDepth}</div>
                 <div className={styles.domainInfo}>Crawl enabled: {linksJson.crawlEnabled ? 'yes' : 'no'}</div>
+                <div className={styles.domainInfo}>Last Crawltime: {linksJson.lastCrawlTime}</div>
             </div>
             <div className={styles.domainCrawlErrors}>
                 <div className={styles.domainCrawlError}>{linksJson.lastErrorType ? 'Last error: ' + linksJson.lastErrorType : ''}</div>

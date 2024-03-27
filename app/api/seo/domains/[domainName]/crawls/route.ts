@@ -23,5 +23,12 @@ export async function GET(
 
   const crawls = await prisma.domainCrawl.findMany({ where: { domainId: domain.id } })
 
-  return Response.json({ crawls, crawlingStatus: domain.crawlStatus, lastErrorTime: domain.lastErrorTime, lastErrorType: domain.lastErrorType, lastErrorMessage: domain.lastErrorMessage, loaded: true }, { status: 200 })
+  return Response.json({
+    crawls,
+    crawlingStatus: domain.crawlStatus,
+    lastErrorTime: domain.lastErrorTime,
+    lastErrorType: domain.lastErrorType,
+    lastErrorMessage: domain.lastErrorMessage,
+    loaded: true
+  }, { status: 200 })
 }

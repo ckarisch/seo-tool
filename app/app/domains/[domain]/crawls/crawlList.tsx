@@ -6,18 +6,19 @@ import { useSession } from "next-auth/react";
 import { useEffect, useState } from "react";
 
 const dummyCrawls = [
-    { startTime: '', endTime: '', status: 'loading', error: false, errorName: 'loading', errorMessage: 'loading' }]
+    { startTime: '', endTime: '', status: 'loading', error: false, errorName: 'loading', errorMessage: 'loading', warningDoubleSlash: false }]
 
-const getLogTime = (crawl: { startTime: string, endTime: string, status: string, error: boolean, errorName: string, errorMessage: string }) => {
+const getLogTime = (crawl: { startTime: string, endTime: string, status: string, error: boolean, errorName: string, errorMessage: string, warningDoubleSlash: boolean, error404: boolean }) => {
     let output = '';
     if (crawl.startTime) {
         if (crawl.endTime) {
-            output = (format(crawl.startTime, 'dd.mm.yyyy HH:mm') + ' - ' + format(crawl.endTime, 'dd.mm.yyyy HH:mm'));
+            output = (format(crawl.startTime, 'dd.MM.yyyy HH:mm') + ' - ' + format(crawl.endTime, 'dd.MM.yyyy HH:mm'));
         }
         else {
-            output = format(crawl.startTime, 'dd.mm.yyyy HH:mm');
+            output = format(crawl.startTime, 'dd.MM.yyyy HH:mm');
         }
-        output = output + ', ' + crawl.status;
+        output = output + ', ' + crawl.status + (crawl.warningDoubleSlash ? ', Warnung: Doppelslash "//" in Links gefunden' : '');
+        output = crawl.error404 ? (output + ', 404 error') : output;
     }
     else {
         output = '';
@@ -26,6 +27,7 @@ const getLogTime = (crawl: { startTime: string, endTime: string, status: string,
 
     if (crawl.error) {
         output = output + ', ' + crawl.errorName + ', ' + crawl.errorMessage;
+        output = crawl.error404 ? (output + ', 404 error') : output;
     }
     return output;
 }
@@ -82,13 +84,9 @@ export default function CrawlList({ params }: { params: { domain: string } }) {
                 {crawlsJson.crawls.length ? crawlsJson.crawls.map((crawl: any, index: number) => {
                     return <div key={index}>
                         <div className={styles.crawlInner}>
-                            {crawl.error ?
-                                <div className={[styles.error, styles.logEntry].join(' ')}>
-                                    {getLogTime(crawl)}
-                                </div> : <div className={styles.logEntry}>
-                                    {getLogTime(crawl)}
-                                </div>
-                            }
+                            <div className={[crawl.error ? styles.error : null, styles.logEntry, (crawl.warningDoubleSlash || crawl.error404) ? styles.warning : null].join(' ')}>
+                                {getLogTime(crawl)}
+                            </div>
                         </div>
                     </div>
                 }) : <div>No crawls found</div>}

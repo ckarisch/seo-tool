@@ -33,6 +33,7 @@ export async function GET(
     crawlInterval: domain.crawlInterval,
     crawlEnabled: domain.crawlEnabled,
     crawlDepth: domain.crawlDepth,
+    lastCrawlTime: domain.lastCrawlTime,
     loaded: true
   }
 

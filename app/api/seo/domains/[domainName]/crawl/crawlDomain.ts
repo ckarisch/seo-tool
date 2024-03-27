@@ -1,76 +1,119 @@
-import { PrismaClient } from "@prisma/client";
+import { Prisma, PrismaClient } from "@prisma/client";
 
 import axios, { AxiosError } from 'axios';
 import cheerio from 'cheerio';
 import { NextResponse } from 'next/server';
+import { analyzeLink } from "./linkTools";
+import { crawlNotification, crawlNotificationType } from "./crawlNotification";
 
 const prisma = new PrismaClient();
 
-const pushLink = async (href: string, domainId: string) => {
-    const link = await prisma.internalLink.findFirst({ where: { path: href, domainId } });
-    if (!link && href) {
-        await prisma.internalLink.create({
-            data: {
-                path: href,
-                domain: {
-                    connect: {
-                        id: domainId
-                    }
-                },
-                lastCheck: new Date(),
-                lastLoadTime: 0,
-            }
-        });
-    }
-    else {
-        if (link && href) {
-            await prisma.internalLink.update({
-                where: { id: link.id },
-                data: {
-                    lastCheck: new Date(),
-                }
-            });
-        }
-    }
+export enum linkType {
+    anchor,
+    page
 }
 
-const pushExternalLink = async (href: string, domainId: string) => {
-    const link = await prisma.externalLink.findFirst({ where: { url: href, domainId } });
-    if (!link && href) {
-        await prisma.externalLink.create({
-            data: {
-                url: href,
-                domain: {
-                    connect: {
-                        id: domainId
-                    }
-                },
-                lastCheck: new Date(),
-            }
-        });
-    }
-    else {
-        if (link && href) {
-            await prisma.externalLink.update({
-                where: { id: link.id },
-                data: {
-                    lastCheck: new Date(),
+const pushLink = (href: string, domainId: string, type: linkType, requestTime: number, errorCode: 404 | null) => {
+    return prisma.internalLink.upsert({
+        create: {
+            path: href,
+            domain: {
+                connect: {
+                    id: domainId
                 }
-            });
-        }
-    }
+            },
+            lastCheck: new Date(),
+            lastLoadTime: requestTime,
+            type: linkType[type],
+            errorCode
+        },
+        update: {
+            lastCheck: new Date(),
+            lastLoadTime: requestTime,
+            type: linkType[type],
+            errorCode
+        },
+        where: { domainId_path: { domainId, path: href } }
+    });
 }
 
+const pushExternalLink = (href: string, domainId: string) => {
+    return prisma.externalLink.upsert({
+        create: {
+            url: href,
+            domain: {
+                connect: {
+                    id: domainId
+                }
+            },
+            lastCheck: new Date(),
+        },
+        update: {
+            lastCheck: new Date(),
+        },
+        where: { domainId_url: { domainId, url: href } }
+    });
+}
 
-export const crawlDomain = async (url: string, depth: number, followLinks: boolean): Promise<Response> => {
-    const seconds = 30;
+const checkTimeout = async (timePassed: number, maxCrawlTime: number, domainCrawlId: string, domainId: string) => {
+    if (timePassed + 500 > maxCrawlTime) {
+        await prisma.domainCrawl.update({
+            where: { id: domainCrawlId },
+            data: {
+                status: 'error',
+                error: true,
+                endTime: new Date(),
+                errorName: 'timeout',
+                errorMessage: 'the server did not respond within the time limit'
+            }
+        });
+
+        await prisma.domain.update({
+            where: { id: domainId },
+            data: {
+                crawlStatus: 'idle'
+            }
+        });
+
+        return true;
+    }
+    return false;
+}
+
+const checkRequests = (requests: number, maxRequests: number) => {
+    return requests >= maxRequests;
+}
+
+export const crawlDomain = async (url: string, depth: number, followLinks: boolean, maxDuration: number): Promise<Response> => {
+    const crawlStartTime = new Date().getTime();
+    const maxCrawlTime = maxDuration - 1000; // milliseconds
+    const seconds = 30; // min seconds between crawls
+    const maxRequests = 100;
+
+    const analyzedUrl = analyzeLink(url, url);
+
+    const links: (string | undefined)[] = [];
+    const externalLinks: (string | undefined)[] = [];
+    const crawledLinks: (string)[] = ['/'];
+
+    let timePassed, requestStartTime, requestTime;
+    let requests = 0;
+    let warningDoubleSlashOccured = false;
+    let error404Occured = false;
+
     const domain = await prisma.domain.findFirst({ where: { domainName: url } });
+    const user = await prisma.user.findFirst({ where: { id: domain?.userId }, include: { notificationContacts: true } });
 
     if (!domain) {
         return Response.json({ error: 'domain not found' }, { status: 404 })
     }
 
+    if (!user) {
+        return Response.json({ error: 'domain has no user' }, { status: 500 })
+    }
+
     const targetURL = 'https://' + url; // URL of the website you want to crawl
+    const protocol = 'https://';
 
     if (domain.crawlStatus === 'crawling') {
         console.log('domain currently crawling: ' + (new Date().getTime() - (domain.lastCrawl?.getTime() ?? 0)));
@@ -104,11 +147,23 @@ export const crawlDomain = async (url: string, depth: number, followLinks: boole
     });
 
     try {
-        console.time("Execution Time");
-        // Fetch the HTML content from the target URL
-        const { data } = await axios.get(targetURL);
+        console.log('Crawling: ' + targetURL, `depth ${depth}, followLinks ${followLinks}, maxDuration ${maxDuration}`);
 
-        if(!followLinks){
+        // Fetch the HTML content from the target URL
+        timePassed = (new Date().getTime() - crawlStartTime);
+        if (await checkTimeout(timePassed, maxCrawlTime, domainCrawl.id, domain.id)) {
+            Response.json({ error: 'Timeout' }, { status: 500 });
+        }
+
+        requestStartTime = new Date().getTime();
+        const { data } = await axios.get(targetURL, { timeout: maxCrawlTime - timePassed });
+        requestTime = new Date().getTime() - requestStartTime;
+        console.log(`request time (${targetURL}): ${requestTime}`);
+
+        links.push('/');
+        await pushLink('/', domain.id, linkType.page, requestTime, null);
+
+        if (!followLinks) {
             await prisma.domainCrawl.update({
                 where: { id: domainCrawl.id },
                 data: {
@@ -126,56 +181,123 @@ export const crawlDomain = async (url: string, depth: number, followLinks: boole
             return NextResponse.json({ links: [] }, { status: 200 })
         }
 
+        console.log('extracting links');
         // Load HTML into cheerio
         const $ = cheerio.load(data);
 
         // Extract data using cheerio (links)
-        const links: (string | undefined)[] = [];
-        const externalLinks: (string | undefined)[] = [];
-        const crawledLinks: (string)[] = ['/'];
         const aElements = $('a').toArray();
 
+
+        requestStartTime = new Date().getTime();
+        timePassed = (new Date().getTime() - crawlStartTime);
+        // let prismaOperations = [];
 
         for (let element of aElements) {
             const href = $(element).attr('href');
             if (href) {
-                if (href.startsWith('/')) {
-                    links.push(href);
-                    await pushLink(href, domain.id);
+                const { isInternalPage, normalizedLink } = analyzeLink(href, url);
+                if (isInternalPage) {
+                    links.push(normalizedLink);
                 }
                 else {
-                    externalLinks.push(href);
-                    await pushExternalLink(href, domain.id);
+                    externalLinks.push(normalizedLink);
                 }
             }
-
         }
+        requestTime = new Date().getTime() - requestStartTime;
+        console.log(`extracting links operation time: ${new Date().getTime() - requestStartTime}`);
+        console.log('extracted links count (internal, external): ', links.length, externalLinks.length)
 
-        console.log('Crawling: ' + targetURL);
 
-        const addSlash = targetURL.endsWith('/') ? '' : '/';
+        // const addSlash = targetURL.endsWith('/') ? '' : '/';
 
         for (let j = 0; j < depth; j++) {
             for (let i = 0; i < links.length; i++) {
-                if (links[i] && links[i]?.startsWith('/') && !crawledLinks.includes(links[i]!)) { // Check if the link is defined
-                    console.log('Crawling: ' + links[i]!);
+                if (typeof links[i] !== 'undefined' && links[i]) { // Check if the link is defined
+                    const { subdomain, normalizedLink, isInternalPage, warningDoubleSlash } = analyzeLink(links[i]!, url);
+                    if (warningDoubleSlash) warningDoubleSlashOccured = true;
 
-                    crawledLinks.push(links[i]!); // Use the non-null assertion operator
-                    const { data } = await axios.get(targetURL + addSlash + links[i]!); // Use the non-null assertion operator
-                    const $ = cheerio.load(data);
-                    const aElements = $('a').toArray();
+                    if (isInternalPage) {
+                        if (isInternalPage && !crawledLinks.includes(normalizedLink)) {
+                            console.log('Crawling: ' + normalizedLink);
+                            if (subdomain != analyzedUrl.subdomain) {
+                                console.log(`warning: subdomain (${normalizedLink}) not matching with requested url`)
+                            }
 
-                    for (let element of aElements) {
-                        const href = $(element).attr('href');
-                        if (href) {
-                            if (href.startsWith('/')) {
-                                links.push(href);
-                                await pushLink(href, domain.id);
+                            crawledLinks.push(normalizedLink); // Use the non-null assertion operator
+
+                            timePassed = (new Date().getTime() - crawlStartTime);
+                            if (await checkTimeout(timePassed, maxCrawlTime, domainCrawl.id, domain.id)) {
+                                console.log('timeout: ', timePassed);
+                                return Response.json({ error: 'Timeout' }, { status: 500 });
                             }
-                            else {
-                                externalLinks.push(href);
-                                await pushExternalLink(href, domain.id);
+                            requests++;
+                            console.log('request number: ', requests);
+                            if (checkRequests(requests, maxRequests)) {
+                                console.log('too many requests: ', requests);
+                                return Response.json({ error: 'Too many requests' }, { status: 500 });
                             }
+
+                            requestStartTime = new Date().getTime();
+                            const requestUrl = protocol + normalizedLink;
+                            console.log(`request (${requestUrl})`);
+
+                            let errors = {
+                                err_404: false
+                            }
+
+                            let data
+
+                            try {
+                                data = (await axios.get(requestUrl)).data;
+                            }
+                            catch (error: AxiosError | TypeError | any) {
+                                // Handle any errors
+                                // console.log(error);
+                                timePassed = (new Date().getTime() - crawlStartTime);
+
+                                if (error instanceof AxiosError) {
+                                    if (error.code === 'ERR_BAD_REQUEST') {
+                                        if (error.response?.status == 404) {
+                                            errors.err_404 = true;
+                                            error404Occured = true;
+                                        }
+                                    }
+                                    console.log('error: 404', requestUrl)
+                                }
+                                else {
+                                    throw error;
+                                }
+                            }
+
+                            requestTime = new Date().getTime() - requestStartTime;
+                            console.log(`request time (${requestUrl}): ${new Date().getTime() - requestStartTime}`);
+
+                            await pushLink(normalizedLink, domain.id, linkType.page, requestTime, errors.err_404 ? 404 : null);
+
+                            if (!data) continue;
+                            const $ = cheerio.load(data);
+                            const aElements = $('a').toArray();
+
+                            for (let element of aElements) {
+                                const href = $(element).attr('href');
+                                if (href) {
+                                    const { isInternalPage } = analyzeLink(href, url);
+                                    if (isInternalPage) {
+                                        links.push(href);
+                                    }
+                                    else {
+                                        externalLinks.push(href);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    else {
+                        if (!crawledLinks.includes(normalizedLink)) {
+                            crawledLinks.push(normalizedLink);
+                            await pushExternalLink(normalizedLink, domain.id);
                         }
                     }
                 }
@@ -188,11 +310,16 @@ export const crawlDomain = async (url: string, depth: number, followLinks: boole
             data: {
                 status: 'done',
                 error: false,
-                endTime: new Date()
+                endTime: new Date(),
+                warningDoubleSlash: warningDoubleSlashOccured,
+                error404: error404Occured
             }
         });
 
-        console.timeEnd("Execution Time");
+        if (error404Occured) {
+            crawlNotification(user, crawlNotificationType.Error404, analyzedUrl.normalizedLink);
+        }
+
 
         // Send the extracted data as a response
         return NextResponse.json({ links }, { status: 200 })
@@ -200,6 +327,7 @@ export const crawlDomain = async (url: string, depth: number, followLinks: boole
     } catch (error: AxiosError | TypeError | any) {
         // Handle any errors
         console.log(error);
+        timePassed = (new Date().getTime() - crawlStartTime);
 
         if (error instanceof AxiosError) {
             console.log('set axios update')
@@ -209,7 +337,8 @@ export const crawlDomain = async (url: string, depth: number, followLinks: boole
                     crawlStatus: 'idle',
                     lastErrorTime: new Date(),
                     lastErrorType: error.code ? error.code : error.name,
-                    lastErrorMessage: error.cause?.message
+                    lastErrorMessage: error.cause?.message,
+                    lastCrawlTime: timePassed
                 }
             });
 
@@ -220,7 +349,8 @@ export const crawlDomain = async (url: string, depth: number, followLinks: boole
                     error: true,
                     endTime: new Date(),
                     errorName: error.code ? error.code : error.name,
-                    errorMessage: error.cause?.message
+                    errorMessage: error.cause?.message,
+                    crawlTime: timePassed
                 }
             });
         }
@@ -232,7 +362,8 @@ export const crawlDomain = async (url: string, depth: number, followLinks: boole
                     crawlStatus: 'idle',
                     lastErrorTime: new Date(),
                     lastErrorType: error.name,
-                    lastErrorMessage: error.message
+                    lastErrorMessage: error.message,
+                    lastCrawlTime: timePassed
                 }
             });
 
@@ -243,7 +374,8 @@ export const crawlDomain = async (url: string, depth: number, followLinks: boole
                     error: true,
                     endTime: new Date(),
                     errorName: error.name,
-                    errorMessage: error.message
+                    errorMessage: error.message,
+                    crawlTime: timePassed
                 }
             });
         }
@@ -255,7 +387,8 @@ export const crawlDomain = async (url: string, depth: number, followLinks: boole
                     crawlStatus: 'idle',
                     lastErrorTime: new Date(),
                     lastErrorType: error.name ? error.name : 'unknown',
-                    lastErrorMessage: ''
+                    lastErrorMessage: '',
+                    lastCrawlTime: timePassed
                 }
             });
 
@@ -267,19 +400,24 @@ export const crawlDomain = async (url: string, depth: number, followLinks: boole
                     error: true,
                     endTime: new Date(),
                     errorName: error.name ? error.name : 'unknown',
-                    errorMessage: error.cause?.message
+                    errorMessage: error.cause?.message,
+                    crawlTime: timePassed
                 }
             });
         }
         return Response.json({ error: 'Error fetching data' }, { status: 500 })
     }
     finally {
+        timePassed = (new Date().getTime() - crawlStartTime);
         await prisma.domain.update({
             where: { id: domain.id },
             data: {
-                crawlStatus: 'idle'
+                crawlStatus: 'idle',
+                lastCrawlTime: timePassed
             }
         });
+
+        console.log('crawling done: ', timePassed);
     }
 
 }
