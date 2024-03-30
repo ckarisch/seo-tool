@@ -13,9 +13,10 @@ export enum linkType {
     page
 }
 
-const pushLink = (href: string, domainId: string, type: linkType, requestTime: number, errorCode: 404 | null) => {
+const pushLink = (foundOnPath: string, href: string, warningDoubleSlash: boolean, domainId: string, type: linkType, requestTime: number, errorCode: errorTypes | null) => {
     return prisma.internalLink.upsert({
         create: {
+            foundOnPath,
             path: href,
             domain: {
                 connect: {
@@ -25,21 +26,25 @@ const pushLink = (href: string, domainId: string, type: linkType, requestTime: n
             lastCheck: new Date(),
             lastLoadTime: requestTime,
             type: linkType[type],
-            errorCode
+            errorCode,
+            warningDoubleSlash
         },
         update: {
+            foundOnPath,
             lastCheck: new Date(),
             lastLoadTime: requestTime,
             type: linkType[type],
-            errorCode
+            errorCode,
+            warningDoubleSlash
         },
         where: { domainId_path: { domainId, path: href } }
     });
 }
 
-const pushExternalLink = (href: string, domainId: string) => {
+const pushExternalLink = (foundOnPath: string, href: string, domainId: string) => {
     return prisma.externalLink.upsert({
         create: {
+            foundOnPath,
             url: href,
             domain: {
                 connect: {
@@ -49,6 +54,7 @@ const pushExternalLink = (href: string, domainId: string) => {
             lastCheck: new Date(),
         },
         update: {
+            foundOnPath,
             lastCheck: new Date(),
         },
         where: { domainId_url: { domainId, url: href } }
@@ -84,22 +90,51 @@ const checkRequests = (requests: number, maxRequests: number) => {
     return requests >= maxRequests;
 }
 
+interface Link {
+    foundOnPath: string,
+    path: string
+}
+
+
+interface linkErros {
+    err_404: boolean,
+    err_503: boolean
+}
+
+enum errorTypes {
+    err_503 = 503,
+    err_404 = 404
+}
+
+const getStrongestErrorCode = (errors: linkErros): errorTypes | null => {
+    if (errors.err_503) {
+        return errorTypes.err_503;
+    }
+    if (errors.err_404) {
+        return errorTypes.err_404;
+    }
+    return null;
+}
+
 export const crawlDomain = async (url: string, depth: number, followLinks: boolean, maxDuration: number): Promise<Response> => {
     const crawlStartTime = new Date().getTime();
     const maxCrawlTime = maxDuration - 1000; // milliseconds
     const seconds = 30; // min seconds between crawls
     const maxRequests = 100;
+    const maxLinkEntries = 300; // with documents and images
 
     const analyzedUrl = analyzeLink(url, url);
 
-    const links: (string | undefined)[] = [];
-    const externalLinks: (string | undefined)[] = [];
+    const links: Link[] = [];
     const crawledLinks: (string)[] = ['/'];
 
     let timePassed, requestStartTime, requestTime;
     let requests = 0;
+    let linkEntries = 0;
     let warningDoubleSlashOccured = false;
     let error404Occured = false;
+    let error503Occured = false;
+    let error404Links = [];
 
     const domain = await prisma.domain.findFirst({ where: { domainName: url } });
     const user = await prisma.user.findFirst({ where: { id: domain?.userId }, include: { notificationContacts: true } });
@@ -156,12 +191,38 @@ export const crawlDomain = async (url: string, depth: number, followLinks: boole
         }
 
         requestStartTime = new Date().getTime();
-        const { data } = await axios.get(targetURL, { timeout: maxCrawlTime - timePassed });
+        let data;
+        try {
+            data = (await axios.get(targetURL, { timeout: maxCrawlTime - timePassed })).data;
+        }
+        catch (error: AxiosError | TypeError | any) {
+            // Handle any errors
+            // console.log(error);
+            timePassed = (new Date().getTime() - crawlStartTime);
+
+            if (error instanceof AxiosError) {
+                if (error.code === 'ERR_BAD_REQUEST') {
+                    if (error.response?.status == 404) {
+                        crawlNotification(user, crawlNotificationType.Error404, analyzedUrl.normalizedLink, [analyzedUrl.normalizedLink]);
+                    }
+                    console.log('error: 404', targetURL)
+                }
+                else if (error.code === 'ERR_BAD_RESPONSE') {
+                    if (error.response?.status == 503) {
+                        crawlNotification(user, crawlNotificationType.Error503, analyzedUrl.normalizedLink, [analyzedUrl.normalizedLink]);
+                    }
+                    console.log('error:503', targetURL)
+                }
+            }
+            else {
+                throw error;
+            }
+        }
         requestTime = new Date().getTime() - requestStartTime;
         console.log(`request time (${targetURL}): ${requestTime}`);
 
-        links.push('/');
-        await pushLink('/', domain.id, linkType.page, requestTime, null);
+        links.push({ path: '/', foundOnPath: '/' });
+        await pushLink('/', '/', false, domain.id, linkType.page, requestTime, null);
 
         if (!followLinks) {
             await prisma.domainCrawl.update({
@@ -196,18 +257,12 @@ export const crawlDomain = async (url: string, depth: number, followLinks: boole
         for (let element of aElements) {
             const href = $(element).attr('href');
             if (href) {
-                const { isInternalPage, normalizedLink } = analyzeLink(href, url);
-                if (isInternalPage) {
-                    links.push(normalizedLink);
-                }
-                else {
-                    externalLinks.push(normalizedLink);
-                }
+                const { normalizedLink } = analyzeLink(href, url);
+                links.push({ path: normalizedLink, foundOnPath: targetURL });
             }
         }
         requestTime = new Date().getTime() - requestStartTime;
         console.log(`extracting links operation time: ${new Date().getTime() - requestStartTime}`);
-        console.log('extracted links count (internal, external): ', links.length, externalLinks.length)
 
 
         // const addSlash = targetURL.endsWith('/') ? '' : '/';
@@ -215,11 +270,13 @@ export const crawlDomain = async (url: string, depth: number, followLinks: boole
         for (let j = 0; j < depth; j++) {
             for (let i = 0; i < links.length; i++) {
                 if (typeof links[i] !== 'undefined' && links[i]) { // Check if the link is defined
-                    const { subdomain, normalizedLink, isInternalPage, warningDoubleSlash } = analyzeLink(links[i]!, url);
-                    if (warningDoubleSlash) warningDoubleSlashOccured = true;
+                    const { subdomain, normalizedLink, isInternal, isInternalPage, warningDoubleSlash } = analyzeLink(links[i]!.path, url);
 
-                    if (isInternalPage) {
-                        if (isInternalPage && !crawledLinks.includes(normalizedLink)) {
+                    if (!crawledLinks.includes(normalizedLink)) {
+                        crawledLinks.push(normalizedLink);
+                        if (warningDoubleSlash) warningDoubleSlashOccured = true;
+
+                        if (isInternal) {
                             console.log('Crawling: ' + normalizedLink);
                             if (subdomain != analyzedUrl.subdomain) {
                                 console.log(`warning: subdomain (${normalizedLink}) not matching with requested url`)
@@ -232,78 +289,92 @@ export const crawlDomain = async (url: string, depth: number, followLinks: boole
                                 console.log('timeout: ', timePassed);
                                 return Response.json({ error: 'Timeout' }, { status: 500 });
                             }
-                            requests++;
-                            console.log('request number: ', requests);
-                            if (checkRequests(requests, maxRequests)) {
-                                console.log('too many requests: ', requests);
-                                return Response.json({ error: 'Too many requests' }, { status: 500 });
+
+                            linkEntries++;
+                            if (checkRequests(linkEntries, maxLinkEntries)) {
+                                console.log('too many link entries: ', linkEntries);
+                                return Response.json({ error: 'Too many link entries' }, { status: 500 });
                             }
 
-                            requestStartTime = new Date().getTime();
-                            const requestUrl = protocol + normalizedLink;
-                            console.log(`request (${requestUrl})`);
+                            if (isInternalPage) {
+                                // only crawl pages
+                                requests++;
+                                console.log('request number: ', requests);
+                                if (checkRequests(requests, maxRequests)) {
+                                    console.log('too many requests: ', requests);
+                                    return Response.json({ error: 'Too many requests' }, { status: 500 });
+                                }
 
-                            let errors = {
-                                err_404: false
-                            }
+                                requestStartTime = new Date().getTime();
+                                const requestUrl = protocol + normalizedLink;
+                                console.log(`request (${requestUrl})`);
 
-                            let data
+                                let errors = {
+                                    err_404: false,
+                                    err_503: false
+                                }
 
-                            try {
-                                data = (await axios.get(requestUrl)).data;
-                            }
-                            catch (error: AxiosError | TypeError | any) {
-                                // Handle any errors
-                                // console.log(error);
-                                timePassed = (new Date().getTime() - crawlStartTime);
+                                let data
+                                try {
+                                    data = (await axios.get(requestUrl)).data;
+                                }
+                                catch (error: AxiosError | TypeError | any) {
+                                    // Handle any errors
+                                    // console.log(error);
+                                    timePassed = (new Date().getTime() - crawlStartTime);
 
-                                if (error instanceof AxiosError) {
-                                    if (error.code === 'ERR_BAD_REQUEST') {
-                                        if (error.response?.status == 404) {
-                                            errors.err_404 = true;
-                                            error404Occured = true;
+                                    if (error instanceof AxiosError) {
+                                        if (error.code === 'ERR_BAD_REQUEST') {
+                                            if (error.response?.status == 404) {
+                                                errors.err_404 = true;
+                                                error404Occured = true;
+                                                error404Links.push(normalizedLink);
+                                            }
+                                            console.log('error: 404', requestUrl)
+                                        }
+                                        else if (error.code === 'ERR_BAD_RESPONSE') {
+                                            if (error.response?.status == 503) {
+                                                errors.err_503 = true;
+                                                error503Occured = true;
+                                            }
+                                            console.log('error:503', requestUrl)
                                         }
                                     }
-                                    console.log('error: 404', requestUrl)
+                                    else {
+                                        throw error;
+                                    }
                                 }
-                                else {
-                                    throw error;
+                                requestTime = new Date().getTime() - requestStartTime;
+                                console.log(`request time (${requestUrl}): ${new Date().getTime() - requestStartTime}`);
+
+                                const strongestErrorCode = getStrongestErrorCode(errors);
+                                await pushLink(links[i].foundOnPath, normalizedLink, warningDoubleSlash, domain.id, linkType.page, requestTime, strongestErrorCode);
+
+                                if (!data) continue;
+                                const $ = cheerio.load(data);
+                                const aElements = $('a').toArray();
+
+                                for (let element of aElements) {
+                                    const href = $(element).attr('href');
+                                    if (href) {
+                                        links.push({ path: href, foundOnPath: requestUrl });
+                                    }
                                 }
                             }
-
-                            requestTime = new Date().getTime() - requestStartTime;
-                            console.log(`request time (${requestUrl}): ${new Date().getTime() - requestStartTime}`);
-
-                            await pushLink(normalizedLink, domain.id, linkType.page, requestTime, errors.err_404 ? 404 : null);
-
-                            if (!data) continue;
-                            const $ = cheerio.load(data);
-                            const aElements = $('a').toArray();
-
-                            for (let element of aElements) {
-                                const href = $(element).attr('href');
-                                if (href) {
-                                    const { isInternalPage } = analyzeLink(href, url);
-                                    if (isInternalPage) {
-                                        links.push(href);
-                                    }
-                                    else {
-                                        externalLinks.push(href);
-                                    }
-                                }
+                            else {
+                                // add images and documents
+                                console.log('push to internal links: ' + normalizedLink);
+                                await pushLink(links[i].foundOnPath, normalizedLink, warningDoubleSlash, domain.id, linkType.page, requestTime, null);
                             }
                         }
-                    }
-                    else {
-                        if (!crawledLinks.includes(normalizedLink)) {
-                            crawledLinks.push(normalizedLink);
-                            await pushExternalLink(normalizedLink, domain.id);
+                        else {
+                            console.log('push to external links: ' + normalizedLink);
+                            await pushExternalLink(links[i].foundOnPath, normalizedLink, domain.id);
                         }
                     }
                 }
             }
         }
-
 
         await prisma.domainCrawl.update({
             where: { id: domainCrawl.id },
@@ -317,7 +388,7 @@ export const crawlDomain = async (url: string, depth: number, followLinks: boole
         });
 
         if (error404Occured) {
-            crawlNotification(user, crawlNotificationType.Error404, analyzedUrl.normalizedLink);
+            crawlNotification(user, crawlNotificationType.Error404, analyzedUrl.normalizedLink, error404Links);
         }
 
 

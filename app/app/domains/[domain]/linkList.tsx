@@ -67,14 +67,14 @@ export default function LinkList({ params, linksFetchTag, domainFetchTag }: { pa
     return (
         <div className={styles.linksList}>
 
-            <DomainStatus params={params} domainFetchTag={domainFetchTag} />
+            <DomainStatus params={params} domainFetchTag={domainFetchTag} linksFetchTag={linksFetchTag} setLinksJson={setLinksJson} />
 
             <h2>Links</h2>
             <div className={styles.links}>
                 {linksJson.links.map((link: any, index: number) => {
                     return <div key={index}>
-                        <div className={[styles.linkInner, (link.errorCode && link.errorCode == 404) ? styles.error : null].join(' ')}>
-                            {link.path}, {link.lastCheck}, {link.type}, load {link.lastLoadTime > 0 ? link.lastLoadTime + 'ms' : 'no data'}, {link.errorCode == 404 ? 'error 404' : null}
+                        <div className={[styles.linkInner, link.warningDoubleSlash ? styles.warning : null, link.errorCode ? styles.error : null].join(' ')}>
+                            {link.path}, {link.lastCheck}, {link.type}, load {link.lastLoadTime > 0 ? link.lastLoadTime + 'ms' : 'no data'}{link.errorCode ? ', error ' + link.errorCode : null}, found on: {link.foundOnPath}
                         </div>
                     </div>
                 })}
@@ -88,7 +88,7 @@ export default function LinkList({ params, linksFetchTag, domainFetchTag }: { pa
                     return <div key={index}>
 
                         <div className={styles.externalLinkInner}>
-                            {link.url}, {link.lastCheck}, load {link.lastLoadTime}
+                            {link.url}, {link.lastCheck}, load {link.lastLoadTime}, found on: {link.foundOnPath}
                         </div>
                     </div>
                 })}

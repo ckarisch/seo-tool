@@ -27,12 +27,12 @@ model User {
 }
 
 model NotificationContact {
-  id     String @id @default(auto()) @map("_id") @db.ObjectId
+  id     String  @id @default(auto()) @map("_id") @db.ObjectId
   email  String?
   name   String
   type   String
-  user   User   @relation(fields: [userId], references: [id])
-  userId String @db.ObjectId
+  user   User    @relation(fields: [userId], references: [id])
+  userId String  @db.ObjectId
 
   @@map("notificationcontact")
 }
@@ -79,16 +79,18 @@ model DomainCrawl {
 }
 
 model InternalLink {
-  id           String   @id @default(auto()) @map("_id") @db.ObjectId
-  path         String
-  lastCheck    DateTime
-  lastLoadTime Int
-  seoData      SeoData?
-  seoDataId    String?
-  domain       Domain   @relation(fields: [domainId], references: [id])
-  domainId     String   @db.ObjectId
-  type         String?
-  errorCode    Int?
+  id                 String   @id @default(auto()) @map("_id") @db.ObjectId
+  path               String
+  lastCheck          DateTime
+  lastLoadTime       Int
+  seoData            SeoData?
+  seoDataId          String?
+  domain             Domain   @relation(fields: [domainId], references: [id])
+  domainId           String   @db.ObjectId
+  type               String?
+  errorCode          Int?
+  foundOnPath        String?
+  warningDoubleSlash Boolean?
 
   @@unique([domainId, path])
   @@map("internalLink")
@@ -106,11 +108,12 @@ model SeoData {
 }
 
 model ExternalLink {
-  id        String   @id @default(auto()) @map("_id") @db.ObjectId
-  url       String
-  domain    Domain   @relation(fields: [domainId], references: [id])
-  domainId  String   @db.ObjectId
-  lastCheck DateTime
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  url         String
+  domain      Domain   @relation(fields: [domainId], references: [id])
+  domainId    String   @db.ObjectId
+  lastCheck   DateTime
+  foundOnPath String?
 
   @@unique([domainId, url])
   @@map("externallink")

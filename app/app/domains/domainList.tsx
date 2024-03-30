@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import styles from "./page.module.scss";
+import domainList from "./domainList.module.scss";
 import { useSession } from "next-auth/react";
 import { useEffect, useState } from "react";
 
@@ -48,12 +49,24 @@ export default function DomainList() {
             {domainsJson.domains.map((domain: { name: string, domainName: string }, index: number) => {
                 return <div key={index} className={styles.domain}>
                     <Link href={'/app/domains/' + domain.domainName}>
-                        <div key={index} className={styles.domainInner}>
-                            {domain.name}, {domain.domainName}
+                        <div key={index} className={domainList.domainInner}>
+                            <div className={domainList.header}>
+                                <div className={domainList.image}>
+                                    img
+                                </div>
+                                <div className={domainList.info}>
+                                    <div className={domainList.name}>{domain.name}</div>
+                                    <div className={domainList.domain}>{domain.domainName}</div>
+                                </div>
+                            </div>
+                            <div className={domainList.devider}></div>
+                            <div className={domainList.content}>
+                                status content
+                            </div>
                         </div>
                     </Link>
-                </div>
+                </div >
             })}
-        </div>
+        </div >
     );
 }

@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import Providers from "./providers";
-import Signin from "./signin";
+import Signin from "../components/user/signin";
 import { getServerSession } from "next-auth";
 import { authOptions } from "./api/auth/[...nextauth]/authOptions";
 
@@ -19,17 +19,15 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  
+
   const session = await getServerSession(authOptions)
   return (
     <html lang="en">
       <body className={inter.className}>
-
         <Providers session={session}>
-          <Signin />
           {children}
-
-        </Providers></body>
+        </Providers>
+      </body>
     </html>
   );
 }

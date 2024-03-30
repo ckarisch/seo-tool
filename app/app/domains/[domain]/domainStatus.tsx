@@ -3,17 +3,17 @@
 import Link from "next/link";
 import styles from "./page.module.scss";
 import { useSession } from "next-auth/react";
-import { useEffect, useState } from "react";
+import { Dispatch, useEffect, useState } from "react";
 import { revalidateTag } from "next/cache";
 
-const fetchData = async (domain: string, domainFetchTag: string, setLinksJson: Function) => {
+const fetchData = async (domain: string, domainFetchTag: string, setDomainJson: Function | null) => {
     return fetch(process.env.NEXT_PUBLIC_API_DOMAIN + '/api/seo/domains/' + domain,
         { next: { tags: [domainFetchTag] } })
         .then(res => res.json())
-        .then(data => setLinksJson(data));
+        .then(data => setDomainJson && setDomainJson(data));
 }
 
-export default function DomainStatus({ params, domainFetchTag }: { params: { domain: string }, domainFetchTag: string }) {
+export default function DomainStatus({ params, domainFetchTag, linksFetchTag, setLinksJson}: { params: { domain: string }, domainFetchTag: string, linksFetchTag: string, setLinksJson: Function }) {
     const { data: session, status } = useSession({
         required: true,
         onUnauthenticated() {
@@ -21,12 +21,12 @@ export default function DomainStatus({ params, domainFetchTag }: { params: { dom
         },
     });
 
-    const [linksJson, setLinksJson] = useState({ loaded: false, crawlStatus: '', lastErrorType: '', lastErrorTime: '', lastErrorMessage: '', crawlInterval: '', crawlDepth: '', crawlEnabled: false, lastCrawlTime: 0 });
+    const [domainJson, setDomainJson] = useState({ loaded: false, crawlStatus: '', lastErrorType: '', lastErrorTime: '', lastErrorMessage: '', crawlInterval: '', crawlDepth: '', crawlEnabled: false, lastCrawlTime: 0 });
     const [crawlStatus, setcrawlStatus] = useState('idle');
 
     useEffect(() => {
         if (status !== "loading") {
-            fetchData(params.domain, domainFetchTag, setLinksJson);
+            fetchData(params.domain, domainFetchTag, setDomainJson);
         }
     }, [status]);
 
@@ -45,7 +45,7 @@ export default function DomainStatus({ params, domainFetchTag }: { params: { dom
 
         // fetch after timeout when crawling started
         setTimeout(async () => {
-            await fetchData(params.domain, domainFetchTag, setLinksJson);
+            await fetchData(params.domain, domainFetchTag, setDomainJson);
         }, 3000);
 
         setcrawlStatus('crawling');
@@ -54,7 +54,8 @@ export default function DomainStatus({ params, domainFetchTag }: { params: { dom
         setcrawlStatus('idle');
 
         // fetch after crawling finished
-        await fetchData(params.domain, domainFetchTag, setLinksJson);
+        await fetchData(params.domain, domainFetchTag, setDomainJson);
+        // await fetchData(params.domain, linksFetchTag, setLinksJson);
 
         return jsonData;
     };
@@ -80,7 +81,7 @@ export default function DomainStatus({ params, domainFetchTag }: { params: { dom
         setcrawlStatus('idle');
 
         // fetch after crawling finished
-        await fetchData(params.domain, domainFetchTag, setLinksJson);
+        await fetchData(params.domain, domainFetchTag, setDomainJson);
 
         return jsonData;
     };
@@ -103,13 +104,13 @@ export default function DomainStatus({ params, domainFetchTag }: { params: { dom
         const jsonData = await response.json();
 
         // fetch after crawling finished
-        await fetchData(params.domain, domainFetchTag, setLinksJson);
+        await fetchData(params.domain, domainFetchTag, setDomainJson);
 
         return jsonData;
     };
 
 
-    if (status === "loading" || !linksJson || !linksJson.loaded) {
+    if (status === "loading" || !domainJson || !domainJson.loaded) {
         return (
             <div className={styles.domainStatus}>
                 <div className={[styles.domainData, styles.idle].join(' ')}>Crawling status: {'loading'}</div>
@@ -117,8 +118,8 @@ export default function DomainStatus({ params, domainFetchTag }: { params: { dom
                     <form onSubmit={handleCrawl}>
                         <button type="submit" disabled={true}>request crawl</button>
                     </form>
-                    <form onSubmit={($e) => handleSetCrawlEnalbed($e, !linksJson.crawlEnabled)}>
-                        <button className={[styles.setCrawlEnabledButton, linksJson.crawlEnabled ? styles.crawlEnabled : styles.crawlDisabled].join(' ')} type="submit" disabled={true}>{linksJson.crawlEnabled ? 'disable crawling' : 'enable crawling'}</button>
+                    <form onSubmit={($e) => handleSetCrawlEnalbed($e, !domainJson.crawlEnabled)}>
+                        <button className={[styles.setCrawlEnabledButton, domainJson.crawlEnabled ? styles.crawlEnabled : styles.crawlDisabled].join(' ')} type="submit" disabled={true}>{domainJson.crawlEnabled ? 'disable crawling' : 'enable crawling'}</button>
                     </form>
                 </div>
                 <div className={styles.domainData}>
@@ -134,30 +135,30 @@ export default function DomainStatus({ params, domainFetchTag }: { params: { dom
     return (
         <div>
             <div className={styles.domainStatus}>
-                <div className={[styles.domainData, linksJson.crawlStatus === 'crawling' ? styles.crawling : styles.idle].join(' ')}>Crawling status: {linksJson.crawlStatus}</div>
+                <div className={[styles.domainData, domainJson.crawlStatus === 'crawling' ? styles.crawling : styles.idle].join(' ')}>Crawling status: {domainJson.crawlStatus}</div>
                 <div className={styles.domainData}>
                     <form onSubmit={handleCrawl}>
-                        <button className={styles.crawlButton} type="submit" disabled={linksJson.crawlStatus === 'crawling' || crawlStatus === 'crawling'}>request crawl</button>
+                        <button className={styles.crawlButton} type="submit" disabled={domainJson.crawlStatus === 'crawling' || crawlStatus === 'crawling'}>request crawl</button>
                     </form>
                     <form onSubmit={handleResetLinks}>
-                        <button className={styles.crawlButton} type="submit" disabled={linksJson.crawlStatus === 'crawling' || crawlStatus === 'crawling'}>reset links</button>
+                        <button className={styles.crawlButton} type="submit" disabled={domainJson.crawlStatus === 'crawling' || crawlStatus === 'crawling'}>reset links</button>
                     </form>
-                    <form onSubmit={($e) => handleSetCrawlEnalbed($e, !linksJson.crawlEnabled)}>
-                        <button className={[styles.setCrawlEnabledButton, linksJson.crawlEnabled ? styles.crawlEnabled : styles.crawlDisabled].join(' ')} type="submit">{linksJson.crawlEnabled ? 'disable crawling' : 'enable crawling'}</button>
+                    <form onSubmit={($e) => handleSetCrawlEnalbed($e, !domainJson.crawlEnabled)}>
+                        <button className={[styles.setCrawlEnabledButton, domainJson.crawlEnabled ? styles.crawlEnabled : styles.crawlDisabled].join(' ')} type="submit">{domainJson.crawlEnabled ? 'disable crawling' : 'enable crawling'}</button>
                     </form>
                 </div>
             </div>
 
             <div className={styles.domainInfos}>
-                <div className={styles.domainInfo}>Crawl interval: {linksJson.crawlInterval}</div>
-                <div className={styles.domainInfo}>Crawl depth: {linksJson.crawlDepth}</div>
-                <div className={styles.domainInfo}>Crawl enabled: {linksJson.crawlEnabled ? 'yes' : 'no'}</div>
-                <div className={styles.domainInfo}>Last Crawltime: {linksJson.lastCrawlTime}</div>
+                <div className={styles.domainInfo}>Crawl interval: {domainJson.crawlInterval}</div>
+                <div className={styles.domainInfo}>Crawl depth: {domainJson.crawlDepth}</div>
+                <div className={styles.domainInfo}>Crawl enabled: {domainJson.crawlEnabled ? 'yes' : 'no'}</div>
+                <div className={styles.domainInfo}>Last Crawltime: {domainJson.lastCrawlTime}</div>
             </div>
             <div className={styles.domainCrawlErrors}>
-                <div className={styles.domainCrawlError}>{linksJson.lastErrorType ? 'Last error: ' + linksJson.lastErrorType : ''}</div>
-                <div className={styles.domainCrawlError}>{linksJson.lastErrorTime ? ' at ' + (new Date(linksJson.lastErrorTime).toLocaleDateString() + ' ' + new Date(linksJson.lastErrorTime).toLocaleTimeString()) : ''}</div>
-                <div className={styles.domainCrawlError}>{linksJson.lastErrorMessage ? '(' + linksJson.lastErrorMessage + ')' : ''}</div>
+                <div className={styles.domainCrawlError}>{domainJson.lastErrorType ? 'Last error: ' + domainJson.lastErrorType : ''}</div>
+                <div className={styles.domainCrawlError}>{domainJson.lastErrorTime ? ' at ' + (new Date(domainJson.lastErrorTime).toLocaleDateString() + ' ' + new Date(domainJson.lastErrorTime).toLocaleTimeString()) : ''}</div>
+                <div className={styles.domainCrawlError}>{domainJson.lastErrorMessage ? '(' + domainJson.lastErrorMessage + ')' : ''}</div>
             </div>
         </div>
     );

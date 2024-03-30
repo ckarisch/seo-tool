@@ -7,10 +7,7 @@ export default async function Home() {
   return (
     <div className={styles.main}>
       Domains:
-      <div className={styles.domains}>
-        <DomainList />
-      </div>
-
+      <DomainList />
       <AddDomainForm />
     </div >
   );
