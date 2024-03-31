@@ -1,0 +1,33 @@
+@import "@/app/variables";
+
+.domainStatusContent {
+  display: grid;
+  grid-template-columns: repeat(1fr, 4);
+}
+
+.contentEntry {
+  display: flex;
+  flex-direction: column;
+}
+
+.score {
+  $w: 2em;
+  width: $w;
+  height: $w;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 20px;
+  padding: 5px;
+  align-self: flex-start;
+}
+.veryGoodScore {
+  background-color: $veryGood;
+}
+.goodScore {
+  background-color: $good;
+}
+.badScore {
+  color: #fff;
+  background-color: $bad;
+}

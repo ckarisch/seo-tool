@@ -68,6 +68,7 @@ model Domain {
   error503                          Boolean?
   error503NotificationDisabled      Boolean?
   error503NotificationDisabledUntil DateTime?
+  score                             Int?
 
   @@map("domain")
 }

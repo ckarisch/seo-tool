@@ -5,6 +5,7 @@ import cheerio from 'cheerio';
 import { NextResponse } from 'next/server';
 import { analyzeLink } from "./linkTools";
 import { crawlNotification, crawlNotificationType } from "./crawlNotification";
+import { CalculateScore } from "@/apiComponents/domain/calculateScore";
 
 const prisma = new PrismaClient();
 
@@ -502,6 +503,8 @@ export const crawlDomain = async (url: string, depth: number, followLinks: boole
                 error503: error503Occured
             }
         });
+
+        await CalculateScore(domain.id);
 
         if (!domain.disableNotifications && !errorUnknownOccured) {
             // only send 1 error notification

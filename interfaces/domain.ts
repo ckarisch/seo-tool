@@ -18,5 +18,6 @@ export interface Domain {
     lastCrawlTime: number,
     lastErrorType: string,
     lastErrorTime: Date,
-    lastErrorMessage: string
+    lastErrorMessage: string,
+    score: number
 }
