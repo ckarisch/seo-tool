@@ -5,6 +5,20 @@ import styles from "./page.module.scss";
 import { useSession } from "next-auth/react";
 import { Dispatch, useEffect, useState } from "react";
 import { revalidateTag } from "next/cache";
+import { Domain } from "@/interfaces/domain"
+
+const defaultDomainState: Partial<Domain> = {
+    id: '',
+    name: "name", // Default value for name
+    domainName: "domain", // Default value for domainName
+    error: false,
+    error404: false,
+    error503: false,
+    warning: false,
+    crawlEnabled: false,
+    crawlStatus: 'idle',
+    lastCrawlTime: 0
+};
 
 const fetchData = async (domain: string, domainFetchTag: string, setDomainJson: Function | null) => {
     return fetch(process.env.NEXT_PUBLIC_API_DOMAIN + '/api/seo/domains/' + domain,
@@ -13,7 +27,7 @@ const fetchData = async (domain: string, domainFetchTag: string, setDomainJson: 
         .then(data => setDomainJson && setDomainJson(data));
 }
 
-export default function DomainStatus({ params, domainFetchTag, linksFetchTag, setLinksJson}: { params: { domain: string }, domainFetchTag: string, linksFetchTag: string, setLinksJson: Function }) {
+export default function DomainStatus({ params, domainFetchTag, linksFetchTag, setLinksJson }: { params: { domain: string }, domainFetchTag: string, linksFetchTag: string, setLinksJson: Function }) {
     const { data: session, status } = useSession({
         required: true,
         onUnauthenticated() {
@@ -21,7 +35,7 @@ export default function DomainStatus({ params, domainFetchTag, linksFetchTag, se
         },
     });
 
-    const [domainJson, setDomainJson] = useState({ loaded: false, crawlStatus: '', lastErrorType: '', lastErrorTime: '', lastErrorMessage: '', crawlInterval: '', crawlDepth: '', crawlEnabled: false, lastCrawlTime: 0 });
+    const [domainJson, setDomainJson] = useState(defaultDomainState);
     const [crawlStatus, setcrawlStatus] = useState('idle');
 
     useEffect(() => {
@@ -63,8 +77,7 @@ export default function DomainStatus({ params, domainFetchTag, linksFetchTag, se
     const handleResetLinks = async (event: any) => {
         event.preventDefault();
         setcrawlStatus('crawling');
-        if(!confirm('do you really want to reset all links?'))
-        {
+        if (!confirm('do you really want to reset all links?')) {
             return false;
         }
         const endpoint = process.env.NEXT_PUBLIC_API_DOMAIN + '/api/seo/domains/' + params.domain + '/links';
@@ -110,7 +123,7 @@ export default function DomainStatus({ params, domainFetchTag, linksFetchTag, se
     };
 
 
-    if (status === "loading" || !domainJson || !domainJson.loaded) {
+    if (status === "loading" || !domainJson || !domainJson.id) {
         return (
             <div className={styles.domainStatus}>
                 <div className={[styles.domainData, styles.idle].join(' ')}>Crawling status: {'loading'}</div>
@@ -136,6 +149,16 @@ export default function DomainStatus({ params, domainFetchTag, linksFetchTag, se
         <div>
             <div className={styles.domainStatus}>
                 <div className={[styles.domainData, domainJson.crawlStatus === 'crawling' ? styles.crawling : styles.idle].join(' ')}>Crawling status: {domainJson.crawlStatus}</div>
+                {domainJson.error &&
+                    <div className={[styles.crawlError].join(' ')}>
+                        Crawling Error: {[domainJson.error404 ? '404' : null, domainJson.error503 ? '503' : null].join(', ')}
+                    </div>
+                }
+                {domainJson.warning &&
+                    <div className={[styles.crawlWarning].join(' ')}>
+                        Crawling Warning
+                    </div>
+                }
                 <div className={styles.domainData}>
                     <form onSubmit={handleCrawl}>
                         <button className={styles.crawlButton} type="submit" disabled={domainJson.crawlStatus === 'crawling' || crawlStatus === 'crawling'}>request crawl</button>

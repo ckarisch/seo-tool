@@ -2,7 +2,7 @@ import { getServerSession } from 'next-auth';
 import { crawlDomain } from './crawlDomain';
 import { authOptions } from '@/app/api/auth/[...nextauth]/authOptions';
 
-export const maxDuration = parseInt(process.env.CRON_MAX_DURATION!)
+export const maxDuration = 120000; // 2min in milliseconds
 
 export async function POST(
   request: Request,

@@ -132,6 +132,7 @@ export const crawlDomain = async (url: string, depth: number, followLinks: boole
     let requests = 0;
     let linkEntries = 0;
     let warningDoubleSlashOccured = false;
+    let errorUnknownOccured = false;
     let error404Occured = false;
     let error503Occured = false;
     let error404Links = [];
@@ -387,11 +388,6 @@ export const crawlDomain = async (url: string, depth: number, followLinks: boole
             }
         });
 
-        if (error404Occured) {
-            crawlNotification(user, crawlNotificationType.Error404, analyzedUrl.normalizedLink, error404Links);
-        }
-
-
         // Send the extracted data as a response
         return NextResponse.json({ links }, { status: 200 })
 
@@ -399,6 +395,7 @@ export const crawlDomain = async (url: string, depth: number, followLinks: boole
         // Handle any errors
         console.log(error);
         timePassed = (new Date().getTime() - crawlStartTime);
+        errorUnknownOccured = true;
 
         if (error instanceof AxiosError) {
             console.log('set axios update')
@@ -409,7 +406,8 @@ export const crawlDomain = async (url: string, depth: number, followLinks: boole
                     lastErrorTime: new Date(),
                     lastErrorType: error.code ? error.code : error.name,
                     lastErrorMessage: error.cause?.message,
-                    lastCrawlTime: timePassed
+                    lastCrawlTime: timePassed,
+                    errorUnknown: true
                 }
             });
 
@@ -434,7 +432,8 @@ export const crawlDomain = async (url: string, depth: number, followLinks: boole
                     lastErrorTime: new Date(),
                     lastErrorType: error.name,
                     lastErrorMessage: error.message,
-                    lastCrawlTime: timePassed
+                    lastCrawlTime: timePassed,
+                    errorUnknown: true
                 }
             });
 
@@ -459,7 +458,8 @@ export const crawlDomain = async (url: string, depth: number, followLinks: boole
                     lastErrorTime: new Date(),
                     lastErrorType: error.name ? error.name : 'unknown',
                     lastErrorMessage: '',
-                    lastCrawlTime: timePassed
+                    lastCrawlTime: timePassed,
+                    errorUnknown: true
                 }
             });
 
@@ -480,13 +480,38 @@ export const crawlDomain = async (url: string, depth: number, followLinks: boole
     }
     finally {
         timePassed = (new Date().getTime() - crawlStartTime);
+
+        const error = (
+            error404Occured ||
+            error503Occured
+        )
+
+        const warning = (
+            warningDoubleSlashOccured
+        );
+
         await prisma.domain.update({
             where: { id: domain.id },
             data: {
                 crawlStatus: 'idle',
-                lastCrawlTime: timePassed
+                lastCrawlTime: timePassed,
+                errorUnknown: errorUnknownOccured,
+                error,
+                warning,
+                error404: error404Occured,
+                error503: error503Occured
             }
         });
+
+        if (!domain.disableNotifications && !errorUnknownOccured) {
+            // only send 1 error notification
+            if (error503Occured) {
+                crawlNotification(user, crawlNotificationType.Error503, analyzedUrl.normalizedLink, error404Links);
+            }
+            else if (error404Occured) {
+                crawlNotification(user, crawlNotificationType.Error404, analyzedUrl.normalizedLink, error404Links);
+            }
+        }
 
         console.log('crawling done: ', timePassed);
     }

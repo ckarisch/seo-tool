@@ -92,3 +92,14 @@ a {
     color-scheme: dark;
   }
 }
+
+svg {
+  display: block;
+}
+
+.dummyText {
+  background-color: #eee;
+  color: #eee;
+  display: block;
+  border-radius: 0.5em;
+}

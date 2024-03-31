@@ -6,7 +6,7 @@ import DomainList from "./domainList";
 export default async function Home() {
   return (
     <div className={styles.main}>
-      Domains:
+      <h1>Domains</h1>
       <DomainList />
       <AddDomainForm />
     </div >
