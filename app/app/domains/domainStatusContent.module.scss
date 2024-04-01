@@ -2,7 +2,9 @@
 
 .domainStatusContent {
   display: grid;
-  grid-template-columns: repeat(1fr, 4);
+  grid-template-columns: 1fr auto;
+  justify-content: space-between;
+  width: 100%;
 }
 
 .contentEntry {

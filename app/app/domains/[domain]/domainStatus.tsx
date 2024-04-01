@@ -5,28 +5,9 @@ import styles from "./page.module.scss";
 import { useSession } from "next-auth/react";
 import { Dispatch, useEffect, useState } from "react";
 import { revalidateTag } from "next/cache";
-import { Domain } from "@/interfaces/domain"
+import { Domain, defaultDomainState } from "@/interfaces/domain"
 import Card from "@/components/layout/card";
-
-const defaultDomainState: Partial<Domain> = {
-    id: '',
-    name: "name", // Default value for name
-    domainName: "domain", // Default value for domainName
-    error: false,
-    error404: false,
-    error503: false,
-    warning: false,
-    crawlEnabled: false,
-    crawlStatus: 'idle',
-    lastCrawlTime: 0
-};
-
-const fetchData = async (domain: string, domainFetchTag: string, setDomainJson: Function | null) => {
-    return fetch(process.env.NEXT_PUBLIC_API_DOMAIN + '/api/seo/domains/' + domain,
-        { next: { tags: [domainFetchTag] } })
-        .then(res => res.json())
-        .then(data => setDomainJson && setDomainJson(data));
-}
+import { fetchData } from "@/util/client/fetchData";
 
 export default function DomainStatus({ params, domainFetchTag, linksFetchTag, setLinksJson }: { params: { domain: string }, domainFetchTag: string, linksFetchTag: string, setLinksJson: Function }) {
     const { data: session, status } = useSession({
@@ -41,7 +22,7 @@ export default function DomainStatus({ params, domainFetchTag, linksFetchTag, se
 
     useEffect(() => {
         if (status !== "loading") {
-            fetchData(params.domain, domainFetchTag, setDomainJson);
+            fetchData('api/seo/domains/' + params.domain, domainFetchTag, setDomainJson);
         }
     }, [status]);
 
@@ -60,7 +41,7 @@ export default function DomainStatus({ params, domainFetchTag, linksFetchTag, se
 
         // fetch after timeout when crawling started
         setTimeout(async () => {
-            await fetchData(params.domain, domainFetchTag, setDomainJson);
+            await fetchData('api/seo/domains/' + params.domain, domainFetchTag, setDomainJson);
         }, 3000);
 
         setcrawlStatus('crawling');
@@ -69,7 +50,7 @@ export default function DomainStatus({ params, domainFetchTag, linksFetchTag, se
         setcrawlStatus('idle');
 
         // fetch after crawling finished
-        await fetchData(params.domain, domainFetchTag, setDomainJson);
+        await fetchData('api/seo/domains/' + params.domain, domainFetchTag, setDomainJson);
         // await fetchData(params.domain, linksFetchTag, setLinksJson);
 
         return jsonData;
@@ -95,7 +76,7 @@ export default function DomainStatus({ params, domainFetchTag, linksFetchTag, se
         setcrawlStatus('idle');
 
         // fetch after crawling finished
-        await fetchData(params.domain, domainFetchTag, setDomainJson);
+        await fetchData('api/seo/domains/' + params.domain, domainFetchTag, setDomainJson);
 
         return jsonData;
     };
@@ -118,7 +99,7 @@ export default function DomainStatus({ params, domainFetchTag, linksFetchTag, se
         const jsonData = await response.json();
 
         // fetch after crawling finished
-        await fetchData(params.domain, domainFetchTag, setDomainJson);
+        await fetchData('api/seo/domains/' + params.domain, domainFetchTag, setDomainJson);
 
         return jsonData;
     };

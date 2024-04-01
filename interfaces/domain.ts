@@ -19,5 +19,20 @@ export interface Domain {
     lastErrorType: string,
     lastErrorTime: Date,
     lastErrorMessage: string,
-    score: number
+    score: number,
+    disableNotifications: boolean
 }
+
+export const defaultDomainState: Partial<Domain> = {
+    id: '',
+    name: "name", // Default value for name
+    domainName: "domain", // Default value for domainName
+    error: false,
+    error404: false,
+    error503: false,
+    warning: false,
+    crawlEnabled: false,
+    crawlStatus: 'idle',
+    lastCrawlTime: 0,
+    disableNotifications: false
+};

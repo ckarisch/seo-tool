@@ -9,6 +9,8 @@ export default function Proiders({
 }: {
   children: React.ReactNode
   session: any
-}) : React.ReactNode{
-  return <SessionProvider session={session}>{children}</SessionProvider>;
+}): React.ReactNode {
+  return <SessionProvider session={session}>
+      {children}
+  </SessionProvider>;
 }
