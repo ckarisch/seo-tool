@@ -1,14 +1,16 @@
 @import "@/app/variables";
 
 
-.main {
-    max-width: 1024px;
-    margin: 0 auto;
-  }  
+#domainheader {
+    border-bottom: 1px solid $background-light;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
 
-
-#globalheader {
-    background-color: $background-light;
+    .domain {
+        font-weight: bold;
+    }
 
     @media (prefers-color-scheme: dark) {
         background-color: $background-light-dark;
@@ -18,7 +20,7 @@
         display: block;
     }
 
-    .globalheaderList {
+    .domainheaderList {
         max-width: 1024px;
         margin: 0 auto;
         padding: 20px;
@@ -27,11 +29,11 @@
         align-items: center;
     }
 
-    .globalheaderLi {
+    .domainheaderLi {
         list-style: none;
     }
 
-    .globalheaderLink {
+    .domainheaderLink {
         display: block;
         padding: 5px 20px;
         border-radius: $border-radius;
@@ -41,7 +43,7 @@
         }
     }
 
-    .globalheaderLink:hover {
+    .domainheaderLink:hover {
         background-color: $accent;
 
         @media (prefers-color-scheme: dark) {

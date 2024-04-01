@@ -57,7 +57,6 @@ export default function CrawlList({ params }: { params: { domain: string } }) {
     if (status === "loading" || !crawlsJson || !crawlsJson.loaded || !crawlsJson.crawls) {
         return (
             <div className={styles.crawlList}>
-                <h2>Logs</h2>
                 <div className={styles.crawls}>
                     {dummyCrawls.map((crawl: any, index: number) => {
                         return <div key={index}>
@@ -79,7 +78,6 @@ export default function CrawlList({ params }: { params: { domain: string } }) {
 
     return (
         <div className={styles.crawlList}>
-            <h2>Logs</h2>
             <div className={styles.crawls}>
                 {crawlsJson.crawls.length ? crawlsJson.crawls.map((crawl: any, index: number) => {
                     return <div key={index}>

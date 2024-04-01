@@ -67,6 +67,7 @@ export async function POST(
       name,
       domainName,
       userId: admin.id,
+      crawlInterval: 24 * 60 // once a day
     }
   })
 

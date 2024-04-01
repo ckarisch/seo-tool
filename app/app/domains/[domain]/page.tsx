@@ -14,12 +14,6 @@ export default async function Home({ params }: { params: { domain: string } }) {
 
   return (
     <div className={styles.main}>
-      <div className={styles.domain}>
-        <div className={styles.domainData}>{params.domain}</div>
-        <Link href={'/app/domains/' + params.domain + '/crawls'}>
-          Crawling Log
-        </Link>
-      </div>
 
       <LinkList params={params} linksFetchTag={linksFetchTag} domainFetchTag={domainFetchTag} />
     </div>

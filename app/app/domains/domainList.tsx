@@ -1,7 +1,7 @@
 "use client";
 
 
-import styles from "./page.module.scss";
+import styles from "./domainList.module.scss";
 import { useSession } from "next-auth/react";
 import { useEffect, useState } from "react";
 import { Domain } from "@/interfaces/domain";

@@ -178,7 +178,7 @@ export const crawlDomain = async (url: string, depth: number, followLinks: boole
     await prisma.domain.update({
         where: { id: domain.id },
         data: {
-            lastCrawl: new Date(),
+            lastCrawl: new Date(), // important for crawl reset to set lastCrawl here
             crawlStatus: 'crawling'
         }
     });

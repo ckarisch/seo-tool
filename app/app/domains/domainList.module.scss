@@ -1,67 +1,9 @@
 @import "@/app/variables";
 
-.domainInner {
-  display: flex;
-  gap: 10px;
-  flex-direction: column;
-  align-items: flex-start;
-  padding: 20px;
-  border-radius: 5px;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-  transition: box-shadow 0.3s;
-  text-decoration: none;
-  color: #333;
-  margin: 10px auto;
-  max-width: 100vw;
-
-  @media all and (min-width: 426px) {
-    margin: 10px;
-    max-width: calc(100vw - 20px);
-  }
-}
-
-.devider {
-  background-color: #888;
-  width: 100%;
-  height: 0.6px;
-}
-
-.notifications {
-  color: $warning;
-  display: flex;
-}
-
-.notification {
-  padding: 8px;
-}
-
-.err {
-  color: $error;
-}
-
-.header {
-  width: 100%;
+.domains {
   display: grid;
-  grid-template-columns: auto 1fr auto;
-  gap: 20px;
-  justify-content: flex-start;
-
-  .image {
-    background-color: $accent;
-    padding: 20px;
-  }
-  .info {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-
-    .name {
-      font-weight: bold;
-      display: inline;
-    }
-  }
-}
-
-.content {
-  min-height: 100px;
+  grid-template-columns: repeat(1, 1fr);
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-top: 20px;
 }

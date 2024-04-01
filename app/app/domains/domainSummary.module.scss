@@ -1,0 +1,47 @@
+@import "@/app/variables";
+
+.devider {
+  background-color: #888;
+  width: 100%;
+  height: 0.6px;
+}
+
+.notifications {
+  color: $warning;
+  display: flex;
+}
+
+.notification {
+  padding: 8px;
+}
+
+.err {
+  color: $error;
+}
+
+.header {
+  width: 100%;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 20px;
+  justify-content: flex-start;
+
+  .image {
+    background-color: $accent;
+    padding: 20px;
+  }
+  .info {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+
+    .name {
+      font-weight: bold;
+      display: inline;
+    }
+  }
+}
+
+.content {
+  min-height: 100px;
+}
