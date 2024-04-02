@@ -3,6 +3,9 @@ const brevo = require('@getbrevo/brevo');
 import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
+var api_key = process.env.MAILGUN_SENDING_API_KEY;
+var domain = process.env.MAILGUN_SENDING_DOMAIN!;
+var mailgun = require('mailgun-js')({ apiKey: api_key, domain: domain });
 
 export enum crawlNotificationType {
     Error503,
@@ -32,9 +35,6 @@ export const crawlNotification = (userWithNotificationContacts: any, type: crawl
 
 export const sendNotification = (toEmail: string, toName: string, title: string, message: string, domain: string, urls: string[]) => {
 
-    var api_key = process.env.MAILGUN_SENDING_API_KEY;
-    var domain = process.env.MAILGUN_SENDING_DOMAIN!;
-    var mailgun = require('mailgun-js')({ apiKey: api_key, domain: domain });
 
     const messageHtml = '<html><body><h1>' + title + '</h1><br/><div>' + message + '</div><div>Betroffene URLs: <div>' + urls.join('<br/>') + '</div></div><br/><div><a href="' + process.env.NEXT_PUBLIC_API_DOMAIN + '/app/domains/' + domain + '">Details anzeigen</a></div></body></html>';
 

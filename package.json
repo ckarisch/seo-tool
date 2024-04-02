@@ -15,6 +15,7 @@
     "axios": "^1.6.7",
     "cheerio": "^1.0.0-rc.12",
     "date-fns": "^3.3.1",
+    "mailgun-js": "^0.22.0",
     "next": "14.1.1",
     "next-auth": "^4.24.7",
     "nextjs": "^0.0.3",
