@@ -19,10 +19,6 @@ export async function GET(req: NextRequest, res: NextResponse) {
     authOptions
   );
 
-  // const session = await getServerSession(authOptions)
-  // const session = await getServerSession(req, authOptions)
-  
-  // console.log(req.headers);
   console.log('session', session)
 
   if (!session || !session!.user) {
@@ -35,10 +31,7 @@ export async function GET(req: NextRequest, res: NextResponse) {
     return Response.json({ error: 'Not authenticated', domains: [] }, { status: 401 })
   }
 
-  console.log('session working');
-
   const domains = await prisma.domain.findMany({ where: { userId: user.id } });
-  console.log('domains', domains)
 
   return Response.json({ domains, loaded: true }, { status: 200 })
 }
