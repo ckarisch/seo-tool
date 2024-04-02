@@ -22,7 +22,7 @@ export default function DomainStatus({ params, domainFetchTag, linksFetchTag, se
 
     useEffect(() => {
         if (status !== "loading") {
-            fetchData('api/seo/domains/' + params.domain, domainFetchTag, setDomainJson);
+            fetchData('api/seo/domains/' + params.domain, domainFetchTag, setDomainJson, null);
         }
     }, [status]);
 
@@ -41,7 +41,7 @@ export default function DomainStatus({ params, domainFetchTag, linksFetchTag, se
 
         // fetch after timeout when crawling started
         setTimeout(async () => {
-            await fetchData('api/seo/domains/' + params.domain, domainFetchTag, setDomainJson);
+            await fetchData('api/seo/domains/' + params.domain, domainFetchTag, setDomainJson, null);
         }, 3000);
 
         setcrawlStatus('crawling');
@@ -50,7 +50,7 @@ export default function DomainStatus({ params, domainFetchTag, linksFetchTag, se
         setcrawlStatus('idle');
 
         // fetch after crawling finished
-        await fetchData('api/seo/domains/' + params.domain, domainFetchTag, setDomainJson);
+        await fetchData('api/seo/domains/' + params.domain, domainFetchTag, setDomainJson, null);
         // await fetchData(params.domain, linksFetchTag, setLinksJson);
 
         return jsonData;
@@ -76,7 +76,7 @@ export default function DomainStatus({ params, domainFetchTag, linksFetchTag, se
         setcrawlStatus('idle');
 
         // fetch after crawling finished
-        await fetchData('api/seo/domains/' + params.domain, domainFetchTag, setDomainJson);
+        await fetchData('api/seo/domains/' + params.domain, domainFetchTag, setDomainJson, null);
 
         return jsonData;
     };
@@ -99,7 +99,7 @@ export default function DomainStatus({ params, domainFetchTag, linksFetchTag, se
         const jsonData = await response.json();
 
         // fetch after crawling finished
-        await fetchData('api/seo/domains/' + params.domain, domainFetchTag, setDomainJson);
+        await fetchData('api/seo/domains/' + params.domain, domainFetchTag, setDomainJson, null);
 
         return jsonData;
     };
