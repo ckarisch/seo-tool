@@ -2,7 +2,7 @@
 import { PrismaClient } from '@prisma/client';
 import { crawlDomain } from '../seo/domains/[domainName]/crawl/crawlDomain';
 
-// export const maxDuration = parseInt(process.env.CRON_MAX_DURATION!)
+export const maxDuration = 200; // in seconds
 
 const prisma = new PrismaClient();
 
@@ -11,11 +11,14 @@ const resetCrawlTime = 3600000 // 1h
 export async function GET(
   request: Request
 ) {
-  const maxDuration = 120000;
 
-  // if (request.headers.get('Authorization') !== `Bearer ${process.env.CRON_SECRET}`) {
-  //   return Response.json({ error: 'unauthorized' }, { status: 401 });
-  // }
+  // maxExecutionTime ist 20 seconds lower than maxDuration to prevent hard timeouts
+  const maxExecutionTime = 180000; // in milliseconds
+  
+
+  if (request.headers.get('Authorization') !== `Bearer ${process.env.CRON_SECRET}`) {
+    return Response.json({ error: 'unauthorized' }, { status: 401 });
+  }
 
   console.log('start auto crawl');
   const domains = await prisma.domain.findMany({});
@@ -46,9 +49,9 @@ export async function GET(
           if (diffMinutes > domain.crawlInterval) {
             console.log('auto crawl: ' + domain.domainName + ' last crawl was ' + diffMinutes + ' minutes ago');
 
-            const depth = 0;
-            const followLinks = false;
-            await crawlDomain(domain.domainName, depth, followLinks, maxDuration);
+            const depth = 2;
+            const followLinks = true;
+            await crawlDomain(domain.domainName, depth, followLinks, maxExecutionTime);
 
             continue;
           }
