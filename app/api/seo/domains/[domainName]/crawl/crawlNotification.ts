@@ -1,11 +1,9 @@
 
 const brevo = require('@getbrevo/brevo');
 import { PrismaClient } from "@prisma/client";
+const nodemailer = require("nodemailer");
 
 const prisma = new PrismaClient();
-var api_key = process.env.MAILGUN_SENDING_API_KEY;
-var domain = process.env.MAILGUN_SENDING_DOMAIN!;
-var mailgun = require('mailgun-js')({ apiKey: api_key, domain: domain });
 
 export enum crawlNotificationType {
     Error503,
@@ -33,22 +31,35 @@ export const crawlNotification = (userWithNotificationContacts: any, type: crawl
 }
 
 
-export const sendNotification = (toEmail: string, toName: string, title: string, message: string, domain: string, urls: string[]) => {
+export const sendNotification = async (toEmail: string, toName: string, title: string, message: string, domain: string, urls: string[]) => {
 
 
     const messageHtml = '<html><body><h1>' + title + '</h1><br/><div>' + message + '</div><div>Betroffene URLs: <div>' + urls.join('<br/>') + '</div></div><br/><div><a href="' + process.env.NEXT_PUBLIC_API_DOMAIN + '/app/domains/' + domain + '">Details anzeigen</a></div></body></html>';
 
-    var data = {
-        from: 'SEO Notification <notification@formundzeichen.at>',
-        to: toName + '<' + toEmail + '>',
-        subject: 'Neue Benachrichtigung',
-        text: messageHtml,
-        html: messageHtml
-    };
 
-    mailgun.messages().send(data, function (error: any, body: any) {
-        console.log(body);
+    const transporter = nodemailer.createTransport({
+        host: process.env.MAIL_HOST,
+        port: process.env.MAIL_PORT,
+        secure: false, // true for 465, false for other ports
+        auth: {
+            user: process.env.MAIL_USER, // generated ethereal user
+            pass: process.env.MAIL_PASSWORD // generated ethereal password
+        }
     });
+
+    console.log("sending mail");
+    // send mail with defined transport object
+    let info = await transporter.sendMail({
+        from: "SEO Notification <notification@formundzeichen.at>",
+        to: [toEmail], // list of receivers
+        subject: "Neue Benachrichtigung", // Subject line
+        text: messageHtml,
+        html: messageHtml,
+        replyTo: 'notification@formundzeichen.at'
+
+    });
+
+    console.log('message sent');
 
     // let apiInstance = new brevo.TransactionalEmailsApi();
 
