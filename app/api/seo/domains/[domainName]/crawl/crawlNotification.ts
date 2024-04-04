@@ -48,17 +48,20 @@ export const sendNotification = async (toEmail: string, toName: string, title: s
             }
         });
 
-        console.log("sending mail");
-        // send mail with defined transport object
-        let info = await transporter.sendMail({
+        console.log('mail info');
+        const mailInfo = {
             from: "SEO Notification <notification@formundzeichen.at>",
             to: [toEmail], // list of receivers
             subject: "Neue Benachrichtigung", // Subject line
             text: messageHtml,
             html: messageHtml,
             replyTo: 'notification@formundzeichen.at'
+        };
+        console.log(mailInfo);
 
-        });
+        console.log("sending mail");
+        // send mail with defined transport object
+        let info = await transporter.sendMail(mailInfo);
 
         console.log(info);
 
@@ -66,6 +69,7 @@ export const sendNotification = async (toEmail: string, toName: string, title: s
 
     }
     catch (e: any) {
+        console.log('sendNotification error');
         console.log(e);
     }
 
