@@ -51,7 +51,7 @@ export enum crawlNotificationType {
     ErrorUnknown
 }
 
-export const crawlNotification = (userWithNotificationContacts: any, type: crawlNotificationType, domain: string, urls: string[]) => {
+export const crawlNotification = async (userWithNotificationContacts: any, type: crawlNotificationType, domain: string, urls: string[]) => {
     const user = userWithNotificationContacts;
     const notificationContacts = user.notificationContacts.length ? user.notificationContacts : [user];
 
@@ -59,11 +59,11 @@ export const crawlNotification = (userWithNotificationContacts: any, type: crawl
         switch (type) {
             case crawlNotificationType.Error503:
                 console.log('prepare error 503 notification');
-                sendNotification(contact.email, contact.name, '503 Fehler erkannt', `Ein 503 Fehler wurde auf der Website ${domain} gefunden.`, domain, urls)
+                await sendNotification(contact.email, contact.name, '503 Fehler erkannt', `Ein 503 Fehler wurde auf der Website ${domain} gefunden.`, domain, urls)
                 break;
             case crawlNotificationType.Error404:
                 console.log('prepare error 404 notification');
-                sendNotification(contact.email, contact.name, '404 Fehler erkannt', `Ein 404 Fehler wurde auf der Website ${domain} gefunden.`, domain, urls)
+                await sendNotification(contact.email, contact.name, '404 Fehler erkannt', `Ein 404 Fehler wurde auf der Website ${domain} gefunden.`, domain, urls)
                 break;
         }
     }

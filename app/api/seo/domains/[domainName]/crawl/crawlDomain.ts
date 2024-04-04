@@ -509,10 +509,10 @@ export const crawlDomain = async (url: string, depth: number, followLinks: boole
         if (!domain.disableNotifications && !errorUnknownOccured) {
             // only send 1 error notification
             if (error503Occured) {
-                crawlNotification(user, crawlNotificationType.Error503, analyzedUrl.normalizedLink, error404Links);
+                await crawlNotification(user, crawlNotificationType.Error503, analyzedUrl.normalizedLink, error404Links);
             }
             else if (error404Occured) {
-                crawlNotification(user, crawlNotificationType.Error404, analyzedUrl.normalizedLink, error404Links);
+                await crawlNotification(user, crawlNotificationType.Error404, analyzedUrl.normalizedLink, error404Links);
             }
         }
 
