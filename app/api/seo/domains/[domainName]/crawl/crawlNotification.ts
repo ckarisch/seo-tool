@@ -36,30 +36,38 @@ export const sendNotification = async (toEmail: string, toName: string, title: s
 
     const messageHtml = '<html><body><h1>' + title + '</h1><br/><div>' + message + '</div><div>Betroffene URLs: <div>' + urls.join('<br/>') + '</div></div><br/><div><a href="' + process.env.NEXT_PUBLIC_API_DOMAIN + '/app/domains/' + domain + '">Details anzeigen</a></div></body></html>';
 
+    try {
 
-    const transporter = nodemailer.createTransport({
-        host: process.env.MAIL_HOST,
-        port: process.env.MAIL_PORT,
-        secure: false, // true for 465, false for other ports
-        auth: {
-            user: process.env.MAIL_USER, // generated ethereal user
-            pass: process.env.MAIL_PASSWORD // generated ethereal password
-        }
-    });
+        const transporter = nodemailer.createTransport({
+            host: process.env.MAIL_HOST,
+            port: process.env.MAIL_PORT,
+            secure: false, // true for 465, false for other ports
+            auth: {
+                user: process.env.MAIL_USER, // generated ethereal user
+                pass: process.env.MAIL_PASSWORD // generated ethereal password
+            }
+        });
 
-    console.log("sending mail");
-    // send mail with defined transport object
-    let info = await transporter.sendMail({
-        from: "SEO Notification <notification@formundzeichen.at>",
-        to: [toEmail], // list of receivers
-        subject: "Neue Benachrichtigung", // Subject line
-        text: messageHtml,
-        html: messageHtml,
-        replyTo: 'notification@formundzeichen.at'
+        console.log("sending mail");
+        // send mail with defined transport object
+        let info = await transporter.sendMail({
+            from: "SEO Notification <notification@formundzeichen.at>",
+            to: [toEmail], // list of receivers
+            subject: "Neue Benachrichtigung", // Subject line
+            text: messageHtml,
+            html: messageHtml,
+            replyTo: 'notification@formundzeichen.at'
 
-    });
+        });
 
-    console.log('message sent');
+        console.log(info);
+
+        console.log('message sent');
+
+    }
+    catch (e: any) {
+        console.log(e);
+    }
 
     // let apiInstance = new brevo.TransactionalEmailsApi();
 
