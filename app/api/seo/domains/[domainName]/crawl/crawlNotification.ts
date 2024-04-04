@@ -16,12 +16,12 @@ export class Emailer {
         });
     }
 
-    public sendEmail(mailOptions: MailOptions) {
-        return this.transporter.sendMail(mailOptions);
+    public async sendEmail(mailOptions: MailOptions) {
+        return await this.transporter.sendMail(mailOptions);
     }
 
-    public sendNotification(toEmail: string, messageHtml: string) {
-        this.sendEmail(sendMessageTemplate(toEmail, messageHtml));
+    public async sendNotification(toEmail: string, messageHtml: string) {
+        await this.sendEmail(sendMessageTemplate(toEmail, messageHtml));
     }
 
 }
@@ -76,7 +76,7 @@ export const sendNotification = async (toEmail: string, toName: string, title: s
     const messageHtml = '<html><body><h1>' + title + '</h1><br/><div>' + message + '</div><div>Betroffene URLs: <div>' + urls.join('<br/>') + '</div></div><br/><div><a href="' + process.env.NEXT_PUBLIC_API_DOMAIN + '/app/domains/' + domain + '">Details anzeigen</a></div></body></html>';
 
     try {
-        emailer.sendNotification(toEmail, messageHtml);
+        await emailer.sendNotification(toEmail, messageHtml);
         console.log('message sent');
 
     }
