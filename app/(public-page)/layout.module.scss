@@ -1,5 +1,11 @@
 @import "@/app/variables";
 
+.layout {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
 #globalheader {
     background-color: $background-light;
 
@@ -23,6 +29,12 @@
     .globalheaderLi {
         list-style: none;
     }
+    .desktop {
+        display: none;
+        @media all and (min-width: 687px) {
+            display: block;
+        }
+    }
 
     .globalheaderLink {
         display: block;
@@ -45,4 +57,11 @@
     .logoLink {
         padding: 0;
     }
+}
+
+
+#globalfooter {
+    background-color: $background-light;
+    min-height: 100px;
+    margin-top: auto;
 }

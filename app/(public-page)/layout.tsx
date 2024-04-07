@@ -3,6 +3,7 @@ import Signin from "@/components/user/signin";
 import layout from "./layout.module.scss";
 import Link from "next/link";
 import Image from "next/image";
+import Section from "@/components/layout/section";
 
 export const metadata: Metadata = {
   title: "SEO Tool",
@@ -17,7 +18,7 @@ export default async function RootLayout({
 }>) {
 
   return (
-    <div>
+    <div className={layout.layout}>
       <div id={layout.globalheader} className={layout.globalheader}>
         <nav id={layout.globalnav}>
           <ul className={layout.globalheaderList}>
@@ -27,28 +28,23 @@ export default async function RootLayout({
               </Link>
             </li>
             <li className={layout.globalheaderLi}>
+              <Link href={'/app'} className={layout.globalheaderLink}>
+                SEO App
+              </Link>
+            </li>
+            <li className={[layout.globalheaderLi, layout.desktop].join(' ')}>
               <Link href={'/'} className={layout.globalheaderLink}>
                 Produkte
               </Link>
             </li>
-            <li className={layout.globalheaderLi}>
-              <Link href={'/'} className={layout.globalheaderLink}>
-                Lösungen
-              </Link>
-            </li>
-            <li className={layout.globalheaderLi}>
+            <li className={[layout.globalheaderLi, layout.desktop].join(' ')}>
               <Link href={'/'} className={layout.globalheaderLink}>
                 Tools
               </Link>
             </li>
-            <li className={layout.globalheaderLi}>
+            <li className={[layout.globalheaderLi, layout.desktop].join(' ')}>
               <Link href={'/'} className={layout.globalheaderLink}>
                 Preise
-              </Link>
-            </li>
-            <li className={layout.globalheaderLi}>
-              <Link href={'/app'} className={layout.globalheaderLink}>
-                SEO App
               </Link>
             </li>
             <li className={layout.globalheaderLi}>
@@ -58,6 +54,11 @@ export default async function RootLayout({
         </nav>
       </div>
       {children}
+      <div id={layout.globalfooter} className={layout.globalfooter}>
+        <Section>
+          Footer
+        </Section>
+      </div>
     </div>
   );
 }
