@@ -317,8 +317,10 @@ export const crawlDomain = async (url: string, depth: number, followLinks: boole
                                 }
 
                                 let data
+
                                 try {
-                                    data = (await axios.get(requestUrl)).data;
+                                    timePassed = (new Date().getTime() - crawlStartTime);
+                                    data = (await axios.get(requestUrl, { timeout: maxCrawlTime - timePassed })).data;
                                 }
                                 catch (error: AxiosError | TypeError | any) {
                                     // Handle any errors

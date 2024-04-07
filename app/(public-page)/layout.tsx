@@ -22,7 +22,7 @@ export default async function RootLayout({
         <nav id={layout.globalnav}>
           <ul className={layout.globalheaderList}>
             <li className={layout.globalheaderLi}>
-              <Link href={'/'} className={layout.globalheaderLink}>
+              <Link href={'/'} className={[layout.globalheaderLink, layout.logoLink].join(' ')}>
                 <Image className={layout.logo} src={'/next.svg'} alt="logo" width={150} height={30.5}></Image>
               </Link>
             </li>

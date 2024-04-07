@@ -4,6 +4,7 @@ import styles from "./page.module.scss";
 import { useSession } from "next-auth/react";
 import { useEffect, useState } from "react";
 import DomainStatus from "./domainStatus";
+import Section from "@/components/layout/section";
 
 const dummyLinks = [
     { path: 'Loading', lastCheck: 'loading', lastLoadTime: 'loading' }
@@ -36,30 +37,32 @@ export default function LinkList({ params, linksFetchTag, domainFetchTag }: { pa
     if (status === "loading" || !linksJson || !linksJson.loaded || !linksJson.links) {
         return (
             <div className={styles.linksList}>
-                <h2>Links</h2>
-                <div className={styles.links}>
-                    {dummyLinks.map((link: any, index: number) => {
-                        return <div key={index}>
-                            <div className={styles.linkInner}>
-                                {link.path}, {link.lastCheck}, {link.lastLoadTime}
+                <Section>
+                    <h2>Links</h2>
+                    <div className={styles.links}>
+                        {dummyLinks.map((link: any, index: number) => {
+                            return <div key={index}>
+                                <div className={styles.linkInner}>
+                                    {link.path}, {link.lastCheck}, {link.lastLoadTime}
+                                </div>
                             </div>
-                        </div>
-                    })}
-                </div>
+                        })}
+                    </div>
 
-                <br />
+                    <br />
 
-                <h2>External Links</h2>
-                <div className={styles.externalLinks}>
-                    {dummyExternalLinks.map((link: any, index: number) => {
-                        return <div key={index}>
+                    <h2>External Links</h2>
+                    <div className={styles.externalLinks}>
+                        {dummyExternalLinks.map((link: any, index: number) => {
+                            return <div key={index}>
 
-                            <div className={styles.externalLinkInner}>
-                                {link.url}, {link.lastCheck}, {link.lastLoadTime}
+                                <div className={styles.externalLinkInner}>
+                                    {link.url}, {link.lastCheck}, {link.lastLoadTime}
+                                </div>
                             </div>
-                        </div>
-                    })}
-                </div>
+                        })}
+                    </div>
+                </Section>
             </div>
         )
     }
@@ -69,30 +72,32 @@ export default function LinkList({ params, linksFetchTag, domainFetchTag }: { pa
 
             <DomainStatus params={params} domainFetchTag={domainFetchTag} linksFetchTag={linksFetchTag} setLinksJson={setLinksJson} />
 
-            <h2>Links</h2>
-            <div className={styles.links}>
-                {linksJson.links.map((link: any, index: number) => {
-                    return <div key={index}>
-                        <div className={[styles.linkInner, link.warningDoubleSlash ? styles.warning : null, link.errorCode ? styles.error : null].join(' ')}>
-                            {link.path}, {link.lastCheck}, {link.type}, load {link.lastLoadTime > 0 ? link.lastLoadTime + 'ms' : 'no data'}{link.errorCode ? ', error ' + link.errorCode : null}, found on: {link.foundOnPath}
+            <Section>
+                <h2>Links</h2>
+                <div className={styles.links}>
+                    {linksJson.links.map((link: any, index: number) => {
+                        return <div key={index}>
+                            <div className={[styles.linkInner, link.warningDoubleSlash ? styles.warning : null, link.errorCode ? styles.error : null].join(' ')}>
+                                {link.path}, {link.lastCheck}, {link.type}, load {link.lastLoadTime > 0 ? link.lastLoadTime + 'ms' : 'no data'}{link.errorCode ? ', error ' + link.errorCode : null}, found on: {link.foundOnPath}
+                            </div>
                         </div>
-                    </div>
-                })}
-            </div>
+                    })}
+                </div>
 
-            <br />
+                <br />
 
-            <h2>External Links</h2>
-            <div className={styles.externalLinks}>
-                {linksJson.externalLinks && linksJson.externalLinks.map((link: any, index: number) => {
-                    return <div key={index}>
+                <h2>External Links</h2>
+                <div className={styles.externalLinks}>
+                    {linksJson.externalLinks && linksJson.externalLinks.map((link: any, index: number) => {
+                        return <div key={index}>
 
-                        <div className={styles.externalLinkInner}>
-                            {link.url}, {link.lastCheck}, load {link.lastLoadTime}, found on: {link.foundOnPath}
+                            <div className={styles.externalLinkInner}>
+                                {link.url}, {link.lastCheck}, load {link.lastLoadTime}, found on: {link.foundOnPath}
+                            </div>
                         </div>
-                    </div>
-                })}
-            </div>
+                    })}
+                </div>
+            </Section>
         </div>
     );
 }

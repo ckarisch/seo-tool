@@ -8,6 +8,7 @@ import { revalidateTag } from "next/cache";
 import { Domain, defaultDomainState } from "@/interfaces/domain"
 import Card from "@/components/layout/card";
 import { fetchData } from "@/util/client/fetchData";
+import Section from "@/components/layout/section";
 
 export default function DomainStatus({ params, domainFetchTag, linksFetchTag, setLinksJson }: { params: { domain: string }, domainFetchTag: string, linksFetchTag: string, setLinksJson: Function }) {
     const { data: session, status } = useSession({
@@ -144,17 +145,19 @@ export default function DomainStatus({ params, domainFetchTag, linksFetchTag, se
 
     return (
         <div>
-            <div className={[styles.domainData, domainJson.crawlStatus === 'crawling' ? styles.crawling : styles.idle].join(' ')}>Crawling status: {domainJson.crawlStatus}</div>
-            {domainJson.error &&
-                <div className={[styles.crawlError].join(' ')}>
-                    Crawling Error: {[domainJson.error404 ? '404' : null, domainJson.error503 ? '503' : null].join(', ')}
-                </div>
-            }
-            {domainJson.warning &&
-                <div className={[styles.crawlWarning].join(' ')}>
-                    Crawling Warning
-                </div>
-            }
+            <Section>
+                <div className={[styles.domainData, domainJson.crawlStatus === 'crawling' ? styles.crawling : styles.idle].join(' ')}>Crawling status: {domainJson.crawlStatus}</div>
+                {domainJson.error &&
+                    <div className={[styles.crawlError].join(' ')}>
+                        Crawling Error: {[domainJson.error404 ? '404' : null, domainJson.error503 ? '503' : null].join(', ')}
+                    </div>
+                }
+                {domainJson.warning &&
+                    <div className={[styles.crawlWarning].join(' ')}>
+                        Crawling Warning
+                    </div>
+                }
+            </Section>
             <Card>
                 <div className={styles.domainStatus}>
                     <div className={styles.domainData}>

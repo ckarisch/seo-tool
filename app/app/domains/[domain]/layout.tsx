@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import layout from "./layout.module.scss";
-import Image from "next/image";
-import Signin from "@/components/user/signin";
+import Section from "@/components/layout/section";
 
 export const metadata: Metadata = {
   title: "SEO App",
@@ -19,7 +18,7 @@ export default function RootLayout({
 }>) {
   return (
     <div>
-      <div id={layout.domainheader} className={layout.domainheader}>
+      <Section id={layout.domainheader} className={layout.domainheader}>
 
         <div className={layout.domain}>
           <div className={layout.domainData}>
@@ -45,7 +44,7 @@ export default function RootLayout({
             </li>
           </ul>
         </nav>
-      </div>
+      </Section>
 
       <div className={layout.main}>
         {children}
