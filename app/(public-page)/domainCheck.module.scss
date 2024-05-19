@@ -1,0 +1,32 @@
+.domainCheck {
+  width: 100%;
+  padding: 100px 0px;
+  display: grid;
+  flex-direction: row;
+  gap: 40px;
+  align-items: flex-end;
+  justify-content: space-between;
+  grid-template-columns: 50% 1fr;
+}
+
+.text {
+  display: flex;
+  flex-direction: column;
+}
+
+.check {
+  display: grid;
+  gap: 20px;
+  grid-template-columns: 1fr auto;
+}
+
+.checkButton {
+  padding: 5px 15px;
+  border-radius: 5px;
+}
+
+.input {
+  padding: 5px;
+  border-radius: 5px;
+}
+
