@@ -1,0 +1,16 @@
+.check {
+  display: grid;
+  gap: 20px;
+  grid-template-columns: 1fr auto;
+}
+
+.checkButton {
+  padding: 5px 15px;
+  border-radius: 5px;
+}
+
+.input {
+  padding: 5px;
+  border-radius: 5px;
+}
+

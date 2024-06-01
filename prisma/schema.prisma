@@ -91,6 +91,23 @@ model DomainCrawl {
   @@map("domaincrawl")
 }
 
+model AnonymousCrawl {
+  id                 String    @id @default(auto()) @map("_id") @db.ObjectId
+  domainName                        String
+  crawlType          String? // 2do: make not nullable
+  startTime          DateTime
+  endTime            DateTime?
+  crawlTime          Int?
+  status             String
+  error              Boolean
+  errorName          String?
+  errorMessage       String?
+  warningDoubleSlash Boolean?
+  error404           Boolean?
+
+  @@map("anonymouscrawl")
+}
+
 model InternalLink {
   id                 String   @id @default(auto()) @map("_id") @db.ObjectId
   path               String
