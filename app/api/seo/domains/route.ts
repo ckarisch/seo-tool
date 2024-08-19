@@ -4,6 +4,7 @@ import { getServerSession } from 'next-auth';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { authOptions } from '../../auth/[...nextauth]/authOptions';
+import { VerificationCodeGenerator } from '@/util/api/domainVerificationKey';
 
 
 const prisma = new PrismaClient();
@@ -23,7 +24,7 @@ export async function GET(req: NextRequest, res: NextResponse) {
 
   if (!session || !session!.user) {
     console.log('no session')
-    return Response.json({ error: 'Not authenticated', domains: []}, { status: 401 })
+    return Response.json({ error: 'Not authenticated', domains: [] }, { status: 401 })
   }
   const user = await prisma.user.findUnique({ where: { email: session!.user!.email! } })
   if (!user) {
@@ -31,7 +32,18 @@ export async function GET(req: NextRequest, res: NextResponse) {
     return Response.json({ error: 'Not authenticated', domains: [] }, { status: 401 })
   }
 
-  const domains = await prisma.domain.findMany({ where: { userId: user.id } });
+  let domains = await prisma.domain.findMany({ where: { userId: user.id } });
+
+  for (const d of domains) {
+    // set domain verification key if it does not exist
+    if (!d.domainVerificationKey) {
+      const verificationKey = VerificationCodeGenerator.generate();
+      await prisma.domain.update({ where: { id: d.id }, data: { domainVerificationKey: verificationKey } });
+    }
+  }
+
+  // refresh domains
+  domains = await prisma.domain.findMany({ where: { userId: user.id } });
 
   return Response.json({ domains, loaded: true }, { status: 200 })
 }

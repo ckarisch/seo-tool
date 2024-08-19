@@ -7,13 +7,8 @@ import { useEffect, useState } from "react";
 import { Domain } from "@/interfaces/domain";
 import DomainSummary from "./domainSummary";
 
-const dummyDomains = [
-    { name: 'Domains loading', domainName: 'example.com' },
-    { name: 'Domains loading', domainName: 'example.com' },
-    { name: 'Domains loading', domainName: 'example.com' },
-    { name: 'Domains loading', domainName: 'example.com' },
-    { name: 'Domains loading', domainName: 'example.com' },
-]
+const dummyDomains: Partial<Domain>[] = [0, 1, 2, 3, 4].map(i => (
+    { name: 'Domains loading', domainName: 'example.com', domainVerified: true }));
 
 
 const debugDummyText = false;
@@ -39,8 +34,8 @@ export default function DomainList() {
     if (status === "loading" || !domainsJson || !domainsJson.loaded || !domainsJson.domains) {
         return (
             <div className={styles.domains}>
-            {dummyDomains.map((domain: Partial<Domain>, index: number) => (
-                    <DomainSummary key={index} domain={domain} debugDummyText={debugDummyText} />
+                {dummyDomains.map((domain: Partial<Domain>, index: number) => (
+                    <DomainSummary key={index} domain={domain} dummyText={true} />
                 ))}
             </div >
         )
@@ -49,7 +44,7 @@ export default function DomainList() {
     return (
         <div className={styles.domains}>
             {domainsJson.domains.map((domain: Domain, index: number) => (
-                <DomainSummary key={index} domain={domain} debugDummyText={debugDummyText} />
+                <DomainSummary key={index} domain={domain} dummyText={debugDummyText} />
             ))}
         </div >
     );

@@ -14,7 +14,7 @@ export async function GET(
 
   // maxExecutionTime ist 20 seconds lower than maxDuration to prevent hard timeouts
   const maxExecutionTime = 180000; // in milliseconds
-  
+
 
   if (request.headers.get('Authorization') !== `Bearer ${process.env.CRON_SECRET}`) {
     return Response.json({ error: 'unauthorized' }, { status: 401 });
@@ -29,6 +29,11 @@ export async function GET(
   }
 
   for (const domain of domains) {
+    if (!domain.domainVerified) {
+      console.log(`error: domain ${domain.name} not verified`);
+      continue;
+    }
+
     if (domain.crawlStatus === 'crawling') {
       if (domain.lastCrawl && Date.now() - domain.lastCrawl.getTime() > resetCrawlTime) {
         // reset domain crawl status, when it was remains in that status for a long time

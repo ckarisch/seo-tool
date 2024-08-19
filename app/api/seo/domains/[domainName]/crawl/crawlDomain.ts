@@ -41,6 +41,11 @@ export const crawlDomain = async (url: string, depth: number, followLinks: boole
         return Response.json({ error: 'domain not found' }, { status: 404 })
     }
 
+    if (!domain.domainVerified) {
+        console.log('error: domain not verified');
+        return Response.json({ error: 'Domain not verified', domains: [] }, { status: 401 })
+    }
+
     if (!user) {
         return Response.json({ error: 'domain has no user' }, { status: 500 })
     }

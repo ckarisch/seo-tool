@@ -2,6 +2,8 @@ export interface Domain {
     id: string,
     name: string,
     domainName: string,
+    domainVerificationKey: string,
+    domainVerified: boolean,
     warning: boolean,
     error: boolean,
     // error states
@@ -27,6 +29,8 @@ export const defaultDomainState: Partial<Domain> = {
     id: '',
     name: "name", // Default value for name
     domainName: "domain", // Default value for domainName
+    domainVerificationKey: '',
+    domainVerified: false,
     error: false,
     error404: false,
     error503: false,

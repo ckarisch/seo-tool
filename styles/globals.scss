@@ -1,6 +1,7 @@
-@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;700;900&display=swap');
-@import './variables.scss';
+@import url("https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;700;900&display=swap");
+@import "./variables.scss";
+
 html,
 body {
     padding: 0;
@@ -51,7 +52,7 @@ input,
 button,
 textarea {
     margin: 5px 0;
-    background-color: #EDEFF2;
+    background-color: #edeff2;
     padding: 12px 18px;
     border: none;
     border-radius: 8px;
@@ -67,12 +68,12 @@ input {
 button {
     background-color: $buttonColor1;
     color: #fff;
-    letter-spacing: .04em;
+    letter-spacing: 0.04em;
     font-weight: bold;
     cursor: pointer;
 
     a {
-        color: #fff
+        color: #fff;
     }
 
     &.type1 {

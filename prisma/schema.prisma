@@ -41,6 +41,8 @@ model Domain {
   id                                String         @id @default(auto()) @map("_id") @db.ObjectId
   name                              String
   domainName                        String
+  domainVerificationKey             String?
+  domainVerified                    Boolean?
   internalLinks                     InternalLink[]
   externalLinks                     ExternalLink[]
   user                              User           @relation(fields: [userId], references: [id])
@@ -93,7 +95,7 @@ model DomainCrawl {
 
 model AnonymousCrawl {
   id                 String    @id @default(auto()) @map("_id") @db.ObjectId
-  domainName                        String
+  domainName         String
   crawlType          String? // 2do: make not nullable
   startTime          DateTime
   endTime            DateTime?

@@ -8,8 +8,8 @@ import Link from "next/link";
 import DomainStatusContent from "./domainStatusContent";
 import Card from "@/components/layout/card";
 
-export default function DomainSummary(params: { domain: Partial<Domain> , debugDummyText: boolean}) {
-    const { domain, debugDummyText } = params;
+export default function DomainSummary(params: { domain: Partial<Domain> , dummyText: boolean}) {
+    const { domain, dummyText } = params;
 
     return (
         <div >
@@ -20,8 +20,8 @@ export default function DomainSummary(params: { domain: Partial<Domain> , debugD
                             img
                         </div>
                         <div className={domainSummary.info}>
-                            <div className={[domainSummary.name, debugDummyText ? 'dummyText' : null].join(' ')}>{domain.name}</div>
-                            <div className={[domainSummary.domain, debugDummyText ? 'dummyText' : null].join(' ')}>{domain.domainName}</div>
+                            <div className={[domainSummary.name, dummyText ? 'dummyText' : null].join(' ')}>{domain.name}</div>
+                            <div className={[domainSummary.domain, dummyText ? 'dummyText' : null].join(' ')}>{domain.domainName}</div>
                         </div>
                         <div className={domainSummary.notifications}>
                             {domain.warning &&
@@ -29,6 +29,9 @@ export default function DomainSummary(params: { domain: Partial<Domain> , debugD
                             }
                             {domain.error &&
                                 <div className={[domainSummary.notification, domainSummary.err].join(' ')} title={'Fehler'}><Warning /></div>
+                            }
+                            {!domain.domainVerified &&
+                                <div className={[domainSummary.notification, domainSummary.err].join(' ')} title={'Nicht verifiziert'}><Warning /></div>
                             }
                         </div>
                     </div>

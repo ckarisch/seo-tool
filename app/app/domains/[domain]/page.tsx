@@ -14,7 +14,6 @@ export default async function Home({ params }: { params: { domain: string } }) {
 
   return (
     <div className={styles.main}>
-
       <LinkList params={params} linksFetchTag={linksFetchTag} domainFetchTag={domainFetchTag} />
     </div>
   );

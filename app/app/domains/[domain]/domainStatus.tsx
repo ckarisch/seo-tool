@@ -105,6 +105,17 @@ export default function DomainStatus({ params, domainFetchTag, linksFetchTag, se
         return jsonData;
     };
 
+    if (!domainJson.domainVerified) {
+        return (
+            <div>
+                <Card>
+                    <div className={styles.domainStatus}>
+                        <div className={[styles.domainData, styles.idle].join(' ')}>Domain not verified</div>
+                    </div>
+                </Card>
+            </div>
+        )
+    }
 
     if (status === "loading" || !domainJson || !domainJson.id) {
         return (

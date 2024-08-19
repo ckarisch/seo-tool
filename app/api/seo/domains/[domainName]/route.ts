@@ -1,5 +1,6 @@
 
 import { authOptions } from '@/app/api/auth/[...nextauth]/authOptions';
+import { VerificationCodeGenerator } from '@/util/api/domainVerificationKey';
 import { PrismaClient } from '@prisma/client'
 import { getServerSession } from 'next-auth';
 
@@ -16,15 +17,28 @@ export async function GET(
     return Response.json({ error: 'Not authenticated', domains: [] }, { status: 401 })
   }
 
-  const domain = await prisma.domain.findFirst({ where: { domainName: params.domainName } })
+  let domain = await prisma.domain.findFirst({ where: { domainName: params.domainName } });
 
   if (!domain) {
     return Response.json({ error: 'domain not found' }, { status: 404 })
   }
+
+  // set domain verification key if it does not exist
+  if (!domain.domainVerificationKey) {
+    const verificationKey = VerificationCodeGenerator.generate();
+    await prisma.domain.update({ where: { id: domain.id }, data: { domainVerificationKey: verificationKey } });
+    domain = await prisma.domain.findFirst({ where: { domainName: params.domainName } });
+  }
   
+  if (!domain) {
+    return Response.json({ error: 'domain update error' }, { status: 404 })
+  }
+
   const domainResponse = {
     id: domain.id,
     domainName: domain.domainName,
+    domainVerificationKey: domain.domainVerificationKey,
+    domainVerified: domain.domainVerified,
     crawlStatus: domain.crawlStatus,
     lastErrorTime: domain.lastErrorTime,
     lastErrorType: domain.lastErrorType,

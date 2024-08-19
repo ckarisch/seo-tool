@@ -61,7 +61,8 @@ export default function CrawlRequestPublic() {
             </form>
             {crawlStatus !== 'crawling' ?
                 <div>
-                    {crawlResponse?.error ? <div>error</div> : <div>no errors</div>}
+                    {crawlResponse?.error ? <div>
+                    </div> : <div>no errors</div>}
                     {crawlResponse?.warning ? <div>warning</div> : <div>no warnings</div>}
                     <div className={styles.errors}>
                         {
