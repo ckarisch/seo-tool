@@ -9,6 +9,7 @@ import { Domain, defaultDomainState } from "@/interfaces/domain"
 import Card from "@/components/layout/card";
 import { fetchData } from "@/util/client/fetchData";
 import Section from "@/components/layout/section";
+import { defaultUserState } from "@/interfaces/user";
 
 export default function DomainStatus({ params, domainFetchTag, linksFetchTag, setLinksJson }: { params: { domain: string }, domainFetchTag: string, linksFetchTag: string, setLinksJson: Function }) {
     const { data: session, status } = useSession({
@@ -19,10 +20,12 @@ export default function DomainStatus({ params, domainFetchTag, linksFetchTag, se
     });
 
     const [domainJson, setDomainJson] = useState(defaultDomainState);
+    const [apiUser, setApiUser] = useState(defaultUserState);
     const [crawlStatus, setcrawlStatus] = useState('idle');
 
     useEffect(() => {
         if (status !== "loading") {
+            fetchData('api/user/', 'api/user/', setApiUser, null);
             fetchData('api/seo/domains/' + params.domain, domainFetchTag, setDomainJson, null);
         }
     }, [status]);
@@ -105,7 +108,7 @@ export default function DomainStatus({ params, domainFetchTag, linksFetchTag, se
         return jsonData;
     };
 
-    if (!domainJson.domainVerified) {
+    if (apiUser.role !== 'admin' && !domainJson.domainVerified) {
         return (
             <div>
                 <Card>

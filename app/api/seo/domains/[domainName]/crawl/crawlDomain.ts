@@ -10,6 +10,8 @@ import { initialCrawl } from "@/crawler/initialCrawl";
 import { Link, checkRequests, checkTimeoutAndPush, getStrongestErrorCode, linkType, pushExternalLink, pushLink } from "./crawlLinkHelper";
 import { extractLinks } from "@/crawler/extractLinks";
 import { recursiveCrawl } from "@/crawler/recursiveCrawl";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/app/api/auth/[...nextauth]/authOptions";
 
 const prisma = new PrismaClient();
 
@@ -34,6 +36,16 @@ export const crawlDomain = async (url: string, depth: number, followLinks: boole
     let error503Occured = false;
     let error404Links: string[] = [];
 
+
+    const session = await getServerSession(authOptions);
+
+    if (!session || !session!.user) {
+        console.log('error: no session')
+        return Response.json({ error: 'Not authenticated', domains: [] }, { status: 401 })
+    }
+
+    const sessionUser = await prisma.user.findFirst({ where: { email: session.user.email! } })
+
     const domain = await prisma.domain.findFirst({ where: { domainName: url } });
     const user = await prisma.user.findFirst({ where: { id: domain?.userId }, include: { notificationContacts: true } });
 
@@ -41,13 +53,16 @@ export const crawlDomain = async (url: string, depth: number, followLinks: boole
         return Response.json({ error: 'domain not found' }, { status: 404 })
     }
 
-    if (!domain.domainVerified) {
-        console.log('error: domain not verified');
-        return Response.json({ error: 'Domain not verified', domains: [] }, { status: 401 })
-    }
+    if (sessionUser && sessionUser.role !== 'admin') {
+        // admins are allowed to crawl unverified domains
+        if (!domain.domainVerified) {
+            console.log('error: domain not verified');
+            return Response.json({ error: 'Domain not verified', domains: [] }, { status: 401 })
+        }
 
-    if (!user) {
-        return Response.json({ error: 'domain has no user' }, { status: 500 })
+        if (!user) {
+            return Response.json({ error: 'domain has no user' }, { status: 500 })
+        }
     }
 
     const targetURL = 'https://' + url; // URL of the website you want to crawl
