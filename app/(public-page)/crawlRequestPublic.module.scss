@@ -1,3 +1,16 @@
+@import "@/app/variables";
+
+.crawlRequestPublic {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.form {
+  display: flex;
+  gap: 5px;
+}
+
 .check {
   display: grid;
   gap: 20px;
@@ -12,5 +25,17 @@
 .input {
   padding: 5px;
   border-radius: 5px;
+  flex-grow: 1;
 }
 
+.findings {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.finding {
+  padding: 20px;
+  border-radius: $border-radius;
+  background-color: #eee;
+}

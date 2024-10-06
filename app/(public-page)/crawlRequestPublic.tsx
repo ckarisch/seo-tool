@@ -1,7 +1,11 @@
 "use client";
 
+import { Loading } from "@/icons/loading";
 import styles from "./crawlRequestPublic.module.scss";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { Check } from "@/icons/checkmark";
+import { Cross } from "@/icons/cross";
+import { Warning } from "@/icons/warningAnimated";
 
 interface publicCrawlResponse {
     error: boolean,
@@ -17,6 +21,29 @@ interface publicCrawlResponse {
 export default function CrawlRequestPublic() {
 
     const [domainInput, setDomainInput] = useState('');
+    const [isVisible, setIsVisible] = useState(false); // Track if content is visible
+    const [height, setHeight] = useState('0px'); // Track current height
+    const contentRef = useRef<HTMLDivElement | null>(null); // Reference to the element to animate
+
+
+    useEffect(() => {
+        if (isVisible) {
+            // Calculate the full height and apply it
+            if (contentRef.current) {
+                setHeight(`${contentRef.current.scrollHeight}px`);
+            }
+            // After transition is complete, set height to 'auto' for dynamic content adjustment
+            const timer = setTimeout(() => {
+                setHeight('auto');
+            }, 500); // Matches the CSS transition time (0.5s)
+
+            return () => clearTimeout(timer); // Cleanup timeout on unmount
+        } else {
+            // Collapse the height back to 0
+            setHeight('0px');
+        }
+    }, [isVisible]);
+
 
     const handleInputChange = (event: any) => {
         setDomainInput(event.target.value);
@@ -39,11 +66,24 @@ export default function CrawlRequestPublic() {
         console.log('crawl: ', endpoint);
 
         setcrawlStatus('crawling');
+        setIsVisible(false);
         const response = await fetch(endpoint, options);
         let jsonData: publicCrawlResponse;
         jsonData = await response.json();
         setCrawlResponse(jsonData);
-        setcrawlStatus('idle');
+        if (!jsonData.error && !jsonData.warning) {
+            setcrawlStatus('great');
+        }
+        else if (jsonData.error) {
+            setcrawlStatus('error');
+        }
+        else if (jsonData.warning) {
+            setcrawlStatus('warning');
+        }
+        else {
+            setcrawlStatus('error');
+        }
+        setIsVisible(true);
 
         console.log(jsonData);
 
@@ -51,54 +91,89 @@ export default function CrawlRequestPublic() {
     };
 
     return (
-        <>
-            <input className={styles.input}
-                type="text"
-                placeholder="www.example.com"
-                onChange={handleInputChange} />
-            <form onSubmit={handleCrawl}>
-                <button className={styles.checkButton} type="submit" disabled={crawlStatus === 'crawling'}>check</button>
-            </form>
-            {crawlStatus !== 'crawling' ?
-                <div>
+        <div className={styles.crawlRequestPublic} >
+            <div>
+                <form className={styles.form} onSubmit={handleCrawl}>
+                    <input className={styles.input}
+                        type="text"
+                        placeholder="www.example.com"
+                        onChange={handleInputChange} />
+                    <button className={styles.checkButton} type="submit" disabled={crawlStatus === 'crawling'}>check</button>
+                    {crawlStatus == 'great' && <Check />}
+                    {crawlStatus == 'crawling' && <Loading />}
+                    {['warning'].includes(crawlStatus) && <Warning />}
+                    {!['crawling', 'great', 'idle', 'warning'].includes(crawlStatus) && <Cross />}
+                </form>
+            </div>
+            {crawlStatus !== 'crawling' && crawlStatus !== 'idle' ?
+                <div className={styles.findings}
+                    ref={contentRef}
+                    style={{ height, overflow: 'hidden', transition: 'height 0.5s ease' }}>
                     {crawlResponse?.error ? <div>
-                    </div> : <div>no errors</div>}
-                    {crawlResponse?.warning ? <div>warning</div> : <div>no warnings</div>}
-                    <div className={styles.errors}>
-                        {
-                            crawlResponse?.error404Occured ?
-                                <div className={styles.error}>
-                                    404 errors detected
-                                </div>
-                                : null
+                        <Cross width={20} height={20} />
+                        <strong>
+                            Errors detected: Some critical errors require attention.
+                        </strong>
+                        {crawlResponse?.error && <div className={[styles.finding, styles.errors].join(' ')}>
+                            {
+                                crawlResponse?.error404Occured ?
+                                    <div className={styles.error}>
+                                        404 errors identified: Some pages are not accessible.
+                                    </div>
+                                    : null
+                            }
+                            {
+                                crawlResponse?.errorTooManyLinksOccured ?
+                                    <div className={styles.error}>
+                                        too many links
+                                    </div>
+                                    : null
+                            }
+                            {
+                                crawlResponse?.errorTimeoutOccured ?
+                                    <div className={styles.error}>
+                                        timeout occured
+                                    </div>
+                                    : null
+                            }
+                        </div>
                         }
-                        {
-                            crawlResponse?.errorTooManyLinksOccured ?
-                                <div className={styles.error}>
-                                    too many links
+                    </div> :
+                        <div className={styles.finding}>
+                            <strong>
+                                <Check width={26} height={26} /> <br />
+                                Great!
+                            </strong> There are no errors on your page. <br />
+                            Sign in to analyze your whole Website and keep track of your score.
+                        </div>}
+                    {crawlResponse?.warning ?
+                        <div className={styles.finding}>
+                            <strong>
+                                <Warning width={28} height={28} /> <br />
+                                Warnings detected: Some issues require attention.
+
+                            </strong>
+                            <p>
+                                {crawlResponse?.warning && <div className={[styles.finding, styles.warnings].join(' ')}>
+                                    {
+                                        crawlResponse?.warningDoubleSlashOccured ?
+                                            <div className={styles.error}>
+                                                URL issues detected: Some URLs appear to be incorrect.
+                                            </div>
+                                            : null
+                                    }
                                 </div>
-                                : null
-                        }
-                        {
-                            crawlResponse?.errorTimeoutOccured ?
-                                <div className={styles.error}>
-                                    timeout occured
-                                </div>
-                                : null
-                        }
-                    </div>
-                    <div className={styles.warnings}>
-                        {
-                            crawlResponse?.warningDoubleSlashOccured ?
-                                <div className={styles.error}>
-                                    incorrect urls
-                                </div>
-                                : null
-                        }
-                    </div>
+                                }
+                            </p>
+                        </div> :
+                        <div className={styles.finding}>
+                            <strong>There are no warnings.</strong> <br />
+                            We're continually enhancing our analysis to deliver even more practical recommendations. Stay tuned for new tips to help you improve your website!
+                        </div>
+                    }
                 </div>
                 : null
             }
-        </>
+        </div>
     );
 }
