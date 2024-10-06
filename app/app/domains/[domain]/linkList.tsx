@@ -1,10 +1,12 @@
 "use client";
 
-import styles from "./page.module.scss";
+import styles from "./linkList.module.scss";
 import { useSession } from "next-auth/react";
 import { useEffect, useState } from "react";
-import DomainStatus from "./domainStatus";
 import Section from "@/components/layout/section";
+import { defaultLinksState } from "@/interfaces/link";
+import { format } from "date-fns";
+import { visibleDateFormat } from "@/config/config";
 
 const dummyLinks = [
     { path: 'Loading', lastCheck: 'loading', lastLoadTime: 'loading' }
@@ -22,7 +24,7 @@ export default function LinkList({ params, linksFetchTag, domainFetchTag }: { pa
         },
     });
 
-    const [linksJson, setLinksJson] = useState({ links: [], externalLinks: [], loaded: false, crawlingStatus: '', lastErrorType: '', lastErrorTime: '', lastErrorMessage: '' });
+    const [linksJson, setLinksJson] = useState(defaultLinksState);
 
     useEffect(() => {
         if (status !== "loading") {
@@ -67,18 +69,47 @@ export default function LinkList({ params, linksFetchTag, domainFetchTag }: { pa
         )
     }
 
+    const handleLinkClick = ($e: React.MouseEvent<HTMLDivElement>, index: number): void => {
+        if (linksJson.links) {
+            const tempLinks = linksJson.links;
+            tempLinks[index].descriptionVisible = !tempLinks[index].descriptionVisible;
+            setLinksJson({ ...linksJson, links: tempLinks })
+        }
+    }
+
     return (
         <div className={styles.linksList}>
 
-            <DomainStatus params={params} domainFetchTag={domainFetchTag} linksFetchTag={linksFetchTag} setLinksJson={setLinksJson} />
-
             <Section>
-                <h2>Links</h2>
+                <h2>Links ({linksJson.links.length})</h2>
                 <div className={styles.links}>
                     {linksJson.links.map((link: any, index: number) => {
                         return <div key={index}>
                             <div className={[styles.linkInner, link.warningDoubleSlash ? styles.warning : null, link.errorCode ? styles.error : null].join(' ')}>
-                                {link.path}, {link.lastCheck}, {link.type}, load {link.lastLoadTime > 0 ? link.lastLoadTime + 'ms' : 'no data'}{link.errorCode ? ', error ' + link.errorCode : null}, found on: {link.foundOnPath}
+                                <div className={[styles.linkHeading].join(' ')} onClick={($e) => handleLinkClick($e, index)}>
+                                    <div>
+                                        {link.path}
+                                    </div>
+                                    <div>
+                                        {format(new Date(link.lastCheck), visibleDateFormat)}
+                                    </div>
+                                    <div>
+                                        {link.lastLoadTime > 0 ? link.lastLoadTime + 'ms' : 'no data'}
+                                    </div>
+                                </div>
+                                <div className={[styles.linkDetails, link.descriptionVisible ? styles.visible : styles.hidden].join(' ')}>
+                                    <div>
+                                        <strong>Type:</strong> {link.type}
+                                    </div>
+                                    {link.errorCode &&
+                                        <div>
+                                            <strong>Error:</strong> {link.errorCode}
+                                        </div>
+                                    }
+                                    <div>
+                                        <strong>Found on:</strong> {link.foundOnPath}
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     })}
@@ -86,7 +117,7 @@ export default function LinkList({ params, linksFetchTag, domainFetchTag }: { pa
 
                 <br />
 
-                <h2>External Links</h2>
+                <h2>External Links ({linksJson.externalLinks?.length})</h2>
                 <div className={styles.externalLinks}>
                     {linksJson.externalLinks && linksJson.externalLinks.map((link: any, index: number) => {
                         return <div key={index}>
@@ -97,7 +128,7 @@ export default function LinkList({ params, linksFetchTag, domainFetchTag }: { pa
                         </div>
                     })}
                 </div>
-            </Section>
-        </div>
+            </Section >
+        </div >
     );
 }

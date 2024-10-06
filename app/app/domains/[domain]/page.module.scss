@@ -1,6 +1,5 @@
-.main {
+.domain {
     button {
-        margin: 5px;
         padding: 5px;
         border-radius: 5px;
         box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
@@ -8,58 +7,12 @@
         text-decoration: none;
         color: #333;
         background-color: #fff;
-        font-size: 1.5rem;
+        font-size: 1.1rem;
         font-weight: 600;
         cursor: pointer;
 
         &:hover {
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
-        }
-    }
-
-    .domain,
-    .domainStatus {
-        width: 100%;
-        display: flex;
-        flex-wrap: wrap;
-        justify-content: left;
-        align-items: center;
-        margin-top: 20px;
-        background-color: #fff;
-        padding: 20px;
-        font-size: 1.5rem;
-
-        .setCrawlEnabledButton {
-            margin-left: auto;
-
-            &.crawlEnabled {
-                background-color: rgb(47, 184, 123);
-                color: #fff;
-            }
-
-            &.crawlDisabled {
-                background-color: rgb(190, 156, 54);
-                color: #fff;
-            }
-        }
-
-        .domainData {
-            padding: 5px;
-        }
-
-        .crawling {
-            background-color: rgb(47, 184, 123);
-            color: #fff;
-        }
-
-        .idle {
-            background-color: rgb(190, 156, 54);
-            color: #fff;
-        }
-
-        .crawlButton[disabled] {
-            background-color: #bebebe;
-            color: #fff;
         }
     }
 
@@ -79,87 +32,6 @@
             margin: 5px;
             border-radius: 5px;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-        }
-    }
-
-    .links {
-        display: flex;
-        flex-wrap: wrap;
-        justify-content: center;
-        margin-top: 20px;
-        flex-direction: column;
-
-        .linkInner {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            margin: 5px 0;
-            padding: 5px;
-            border-radius: 5px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-            transition: box-shadow 0.3s;
-            text-decoration: none;
-            color: #333;
-            background-color: #fff;
-
-            &:hover {
-                box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
-            }
-
-            &.error {
-                background-color: rgb(184, 47, 47);
-                color: #fff;
-            }
-
-            &.warning {
-                background-color: rgb(225, 184, 36);
-            }
-
-            .linkIcon {
-                font-size: 3rem;
-                margin-bottom: 10px;
-            }
-
-            .linkName {
-                font-size: 1.5rem;
-                font-weight: 600;
-            }
-        }
-    }
-
-    .externalLinks {
-        display: flex;
-        flex-wrap: wrap;
-        justify-content: center;
-        margin-top: 20px;
-        flex-direction: column;
-
-        .externalLinkInner {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            margin: 5px 0;
-            padding: 5px;
-            border-radius: 5px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-            transition: box-shadow 0.3s;
-            text-decoration: none;
-            color: #333;
-            background-color: #fff;
-
-            &:hover {
-                box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
-            }
-
-            .externalLinkIcon {
-                font-size: 3rem;
-                margin-bottom: 10px;
-            }
-
-            .externalLinkName {
-                font-size: 1.5rem;
-                font-weight: 600;
-            }
         }
     }
 }

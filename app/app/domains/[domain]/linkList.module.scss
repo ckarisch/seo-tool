@@ -1,0 +1,118 @@
+@import "@/app/variables";
+
+.links {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin-top: 20px;
+    flex-direction: column;
+
+    .linkInner {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin: 5px 0;
+        padding: 5px;
+        border-radius: 5px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        transition: box-shadow 0.3s;
+        text-decoration: none;
+        color: #333;
+        background-color: #fff;
+
+        &:hover {
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+        }
+
+        &.error {
+            background-color: rgb(184, 47, 47);
+            color: #fff;
+        }
+
+        &.warning {
+            background-color: rgb(225, 184, 36);
+        }
+
+        .linkIcon {
+            font-size: 3rem;
+            margin-bottom: 10px;
+        }
+
+        .linkName {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+    }
+}
+
+.linkHeading {
+    cursor: pointer;
+    padding: 5px;
+    width: 100%;
+    display: flex;
+    gap: 15px;
+    justify-content: space-between;
+
+    :first-child {
+        flex-grow: 1;
+        max-width: 70%;
+    }
+
+    &:hover {
+        background-color: $background-light;
+    }
+}
+
+.externalLinks {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin-top: 20px;
+    flex-direction: column;
+
+    .externalLinkInner {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin: 5px 0;
+        padding: 5px;
+        border-radius: 5px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        transition: box-shadow 0.3s;
+        text-decoration: none;
+        color: #333;
+        background-color: #fff;
+
+        &:hover {
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .externalLinkIcon {
+            font-size: 3rem;
+            margin-bottom: 10px;
+        }
+
+        .externalLinkName {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+    }
+}
+
+.linkDetails {
+    width: 100%;
+    padding: 20px;
+    display: none;
+
+    &.visible {
+        display: flex;
+        flex-direction: column;
+        justify-content: stretch;
+        gap: 10px;
+    }
+
+    >:first-child {
+        padding-top: 10px;
+        border-top: 1px solid $background-light;
+    }
+}

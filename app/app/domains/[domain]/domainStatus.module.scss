@@ -1,0 +1,71 @@
+.domainCard {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    align-items: stretch;
+
+    & > div:nth-child(n + 3) {
+        padding-top: 20px;
+        border-top: 1px solid #aaa;
+    }
+}
+
+.domainIcon {
+    $pos: 10px;
+    position: absolute;
+    right: $pos;
+    top: $pos;
+    padding: 5px;
+}
+
+.domain,
+.domainStatus {
+    width: 100%;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: left;
+    align-items: center;
+    background-color: #fff;
+    font-size: 1.5rem;
+
+    .setCrawlEnabledButton {
+        margin-left: auto;
+
+        &.crawlEnabled {
+            background-color: rgb(47, 184, 123);
+            color: #fff;
+        }
+
+        &.crawlDisabled {
+            background-color: rgb(190, 156, 54);
+            color: #fff;
+        }
+    }
+
+    .crawling {
+        background-color: rgb(47, 184, 123);
+        color: #fff;
+    }
+
+    .idle {
+        background-color: rgb(190, 156, 54);
+        color: #fff;
+    }
+
+    .crawlButton[disabled] {
+        background-color: #bebebe;
+        color: #fff;
+    }
+}
+
+.domainActions {
+    h2 {
+        margin-bottom: 20px;
+    }
+}
+
+.domainActionButtons {
+    display: flex;
+    gap: 10px;
+}

@@ -26,7 +26,7 @@ export interface Domain {
 }
 
 export const defaultDomainState: Partial<Domain> = {
-    id: '',
+    id: '-1',
     name: "name", // Default value for name
     domainName: "domain", // Default value for domainName
     domainVerificationKey: '',

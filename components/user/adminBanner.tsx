@@ -5,6 +5,8 @@ import { useEffect, useState } from "react";
 import Section from "@/components/layout/section";
 import { fetchData } from "@/util/client/fetchData";
 import { defaultUserState } from "@/interfaces/user";
+import { Admin } from "@/icons/admin";
+import styles from "./adminBanner.module.scss";
 
 export default function AdminBanner() {
     const { data: session, status } = useSession({
@@ -30,10 +32,10 @@ export default function AdminBanner() {
     }
 
     return (
-        <div className={''}>
-            <Section>
-                {apiUser.role === 'admin' ? 'Your are an admin.' : ''}
-            </Section>
+        <div className={styles.adminBanner}>
+                {apiUser.role === 'admin' ? <div>
+                    <Admin />
+                </div> : ''}
         </div>
     );
 }

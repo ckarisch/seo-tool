@@ -54,11 +54,6 @@ export default async function RootLayout({
         </nav>
       </div>
       {children}
-      <div id={layout.globalfooter} className={layout.globalfooter}>
-        <Section>
-          Footer
-        </Section>
-      </div>
     </div>
   );
 }

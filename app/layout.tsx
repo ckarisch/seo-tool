@@ -1,10 +1,14 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
+import layout from "./layout.module.scss";
 import Providers from "./providers";
 import Signin from "../components/user/signin";
 import { getServerSession } from "next-auth";
 import { authOptions } from "./api/auth/[...nextauth]/authOptions";
+import Section from "@/components/layout/section";
+import Link from "next/link";
+import Image from "next/image";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -27,6 +31,35 @@ export default async function RootLayout({
         <Providers session={session}>
           {children}
         </Providers>
+        <div id={layout.globalfooter} className={layout.globalfooter}>
+          <Section>
+            <nav id={layout.globalnav}>
+              <ul className={layout.globalfooterList}>
+                <li className={layout.globalfooterLi}>
+                  <Link href={'/'} className={[layout.globalfooterLink, layout.logoLink].join(' ')}>
+                    <Image className={layout.logo} src={'/next.svg'} alt="logo" width={150} height={30.5}></Image> <br />
+                    Form und Zeichen Austria<br />
+                  </Link>
+                </li>
+                <li className={layout.globalfooterLi}>
+                  <Link href={'/imprint'} className={layout.globalfooterLink}>
+                    Imprint
+                  </Link>
+                </li>
+                <li className={layout.globalfooterLi}>
+                  <Link href={'/accessibility'} className={layout.globalfooterLink}>
+                    Accessibility
+                  </Link>
+                </li>
+                <li className={layout.globalfooterLi}>
+                  <Link href={'/privacy'} className={layout.globalfooterLink}>
+                    Data Privacy
+                  </Link>
+                </li>
+              </ul>
+            </nav>
+          </Section>
+        </div>
       </body>
     </html>
   );

@@ -1,6 +1,7 @@
 @import "@/app/variables";
 
 .signOut, .signIn {
+    position: relative;
     border: none;
     padding: 5px;
     display: flex;

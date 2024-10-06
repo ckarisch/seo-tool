@@ -4,6 +4,7 @@ import { format } from 'date-fns';
 import styles from "./page.module.scss";
 import { useSession } from "next-auth/react";
 import { useEffect, useState } from "react";
+import { dateFormat } from '@/config/config';
 
 const dummyCrawls = [
     { startTime: '', endTime: '', status: 'loading', error: false, errorName: 'loading', errorMessage: 'loading', warningDoubleSlash: false }]
@@ -12,10 +13,10 @@ const getLogTime = (crawl: { startTime: string, endTime: string, status: string,
     let output = '';
     if (crawl.startTime) {
         if (crawl.endTime) {
-            output = (format(crawl.startTime, 'dd.MM.yyyy HH:mm') + ' - ' + format(crawl.endTime, 'dd.MM.yyyy HH:mm'));
+            output = (format(crawl.startTime, dateFormat) + ' - ' + format(crawl.endTime, dateFormat));
         }
         else {
-            output = format(crawl.startTime, 'dd.MM.yyyy HH:mm');
+            output = format(crawl.startTime, dateFormat);
         }
         output = output + ', ' + crawl.status + (crawl.warningDoubleSlash ? ', Warnung: Doppelslash "//" in Links gefunden' : '');
         output = crawl.error404 ? (output + ', 404 error') : output;

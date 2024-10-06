@@ -5,6 +5,7 @@ import Toggle from "@/components/layout/input/toggle";
 import { fetchData } from "@/util/client/fetchData";
 import { useSession } from "next-auth/react";
 import { defaultDomainState } from "@/interfaces/domain";
+import Section from "@/components/layout/section";
 
 enum loadingBooleanState {
   on,
@@ -56,11 +57,37 @@ export default function Settings({ params }: { params: { domain: string } }) {
     return jsonData;
   }
 
+  const handleSetCrawlEnalbed = async (event: any, value: boolean) => {
+    event.preventDefault();
+    const endpoint = process.env.NEXT_PUBLIC_API_DOMAIN + '/api/seo/domains/' + params.domain + '/settings/crawlEnabled';
+
+    const options = {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credetials: 'include',
+      body: JSON.stringify({ value: value })
+    }
+
+    const response = await fetch(endpoint, options);
+    const jsonData = await response.json();
+
+    // fetch after crawling finished
+    await fetchData('api/seo/domains/' + params.domain, domainFetchTag, setDomainJson, null);
+
+    return jsonData;
+  };
 
   return (
-    <div className={styles.settings}>
-      <Toggle loading={disableNotificationsLoading} checked={!!domainJson.disableNotifications} onChange={handleSendNotificationChange} label={'Alle Benachrichtigungen deaktivieren'} />
+    <Section>
+      <div className={styles.settings}>
+        <Toggle loading={disableNotificationsLoading} checked={!!domainJson.disableNotifications} onChange={handleSendNotificationChange} label={'Alle Benachrichtigungen deaktivieren'} />
 
-    </div>
+        <form onSubmit={($e) => handleSetCrawlEnalbed($e, !domainJson.crawlEnabled)}>
+          <button className={[styles.setCrawlEnabledButton, domainJson.crawlEnabled ? styles.crawlEnabled : styles.crawlDisabled].join(' ')} type="submit">{domainJson.crawlEnabled ? 'disable crawling' : 'enable crawling'}</button>
+        </form>
+      </div>
+    </Section>
   );
 }

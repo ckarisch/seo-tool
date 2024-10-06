@@ -1,12 +1,19 @@
+import Section from "@/components/layout/section";
+import layout from "./layout.module.scss";
+
 export default function RootLayout({
   children
 }: Readonly<{
   children: React.ReactNode;
 }>) {
   return (
-    <div>
-      <h2>Settings</h2>
+    <>
+      <Section>
+        <div id={layout.settingsHeader}>
+          <h2>Settings</h2>
+        </div>
+      </Section>
       {children}
-    </div>
+    </>
   );
 }

@@ -1,0 +1,15 @@
+@import "@/app/variables";
+
+
+#settingsHeader {
+    border-bottom: 1px solid $background-light;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding: 20px 0px;
+
+    @media (prefers-color-scheme: dark) {
+        background-color: $background-light-dark;
+    }
+}

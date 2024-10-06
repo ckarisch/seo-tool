@@ -4,7 +4,8 @@ import { getServerSession } from "next-auth";
 import LinkList from "./linkList";
 import Link from "next/link";
 import { authOptions } from "@/app/api/auth/[...nextauth]/authOptions";
-import AdminBanner from "./adminBanner";
+import AdminBanner from "../../../../components/user/adminBanner";
+import DomainStatus from "./domainStatus";
 
 export default async function Home({ params }: { params: { domain: string } }) {
   const linksFetchTag = 'seo/domain/' + params.domain + '/links';
@@ -14,8 +15,8 @@ export default async function Home({ params }: { params: { domain: string } }) {
   console.log('session on page', session);
 
   return (
-    <div className={styles.main}>
-      <AdminBanner />
+    <div className={styles.domain}>
+      <DomainStatus params={params} domainFetchTag={domainFetchTag} linksFetchTag={linksFetchTag} />
       <LinkList params={params} linksFetchTag={linksFetchTag} domainFetchTag={domainFetchTag} />
     </div>
   );
