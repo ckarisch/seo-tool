@@ -16,6 +16,7 @@ export const recursiveCrawl = async (
     crawledLinks: any[],
     depth: number,
     analyzedUrl: any,
+    extractedDomain: string,
     crawlStartTime: number,
     maxCrawlTime: number,
     maxLinkEntries: number,
@@ -51,7 +52,7 @@ export const recursiveCrawl = async (
     for (let j = 0; (crawlActive && j < depth); j++) {
         for (let i = 0; (crawlActive && i < links.length); i++) {
             if (typeof links[i] !== 'undefined' && links[i]) { // Check if the link is defined
-                const { subdomain, normalizedLink, isInternal, isInternalPage, warningDoubleSlash } = analyzeLink(links[i]!.path, url);
+                const { subdomain, normalizedLink, isInternal, isInternalPage, warningDoubleSlash } = analyzeLink(links[i]!.path, extractedDomain);
 
                 if (!crawledLinks.includes(normalizedLink)) {
                     crawledLinks.push(normalizedLink);
@@ -61,6 +62,7 @@ export const recursiveCrawl = async (
                     }
 
                     if (isInternal) {
+                        console.log('extractedDomain: ' + extractedDomain);
                         console.log('Crawling: ' + normalizedLink);
                         if (subdomain != analyzedUrl.subdomain) {
                             console.log(`warning: subdomain (${normalizedLink}) not matching with requested url`)
@@ -161,7 +163,8 @@ export const recursiveCrawl = async (
                             for (let element of aElements) {
                                 const href = $(element).attr('href');
                                 if (href) {
-                                    links.push({ path: href, foundOnPath: requestUrl });
+                                    const { normalizedLink } = analyzeLink(href, extractedDomain);
+                                    links.push({ path: normalizedLink, foundOnPath: requestUrl });
                                 }
                             }
                         }

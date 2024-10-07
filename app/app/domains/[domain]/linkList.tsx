@@ -121,9 +121,8 @@ export default function LinkList({ params, linksFetchTag, domainFetchTag }: { pa
                 <div className={styles.externalLinks}>
                     {linksJson.externalLinks && linksJson.externalLinks.map((link: any, index: number) => {
                         return <div key={index}>
-
                             <div className={styles.externalLinkInner}>
-                                {link.url}, {link.lastCheck}, load {link.lastLoadTime}, found on: {link.foundOnPath}
+                                {link.url}, {link.lastCheck}, found on: {link.foundOnPath}
                             </div>
                         </div>
                     })}

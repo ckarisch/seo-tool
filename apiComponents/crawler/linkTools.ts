@@ -1,12 +1,15 @@
 export function analyzeLink(link: string, currentDomain: string) {
     // Normalize current domain for consistency
-    currentDomain = currentDomain.replace(/^https?:\/\//, '').replace('www.', '');
+    currentDomain = currentDomain.replace(/^https?:\/\//, '');
 
     // Step 1: Strip away "https://" or "http://"
+    console.log('link', link);
     let normalizedLink = link.replace(/^https?:\/\//, '');
+    console.log('normalizedLink', normalizedLink);
     if (link.startsWith('/')) {
         normalizedLink = currentDomain + link;
     }
+    console.log('normalizedLink', normalizedLink);
 
     // Step 2: Recognize if it starts with the subdomain "www" and save it
     let subdomain = normalizedLink.startsWith('www.') ? 'www' : '';
@@ -23,12 +26,12 @@ export function analyzeLink(link: string, currentDomain: string) {
 
     // Prepare for domain extraction and checking if the link is external
     let isExternal = false;
-    let linkWithoutProtocolAndSubdomain = normalizedLink.replace(/^www\./, '');
+    // let linkWithoutProtocolAndSubdomain = normalizedLink.replace(/^www\./, '');
     let linkDomain = '';
 
     if (!isAnchor || !link.startsWith('#')) { // Process for non-simple anchors or potential external links
         // Extract the domain from the link without the protocol and potential "www."
-        linkDomain = linkWithoutProtocolAndSubdomain.split('/')[0].split('#')[0]; // Removes path or anchor
+        linkDomain = normalizedLink.split('/')[0].split('#')[0]; // Removes path or anchor
 
         // Step 4: Check if the link is external by comparing the domain part
         isExternal = !!currentDomain && !linkDomain.endsWith(currentDomain);
@@ -47,5 +50,5 @@ export function analyzeLink(link: string, currentDomain: string) {
     // console.log(`Link Domain: ${linkDomain}`);
     // console.log(`Is Anchor: ${isAnchor}`);
     // console.log(`Is External: ${isExternal}`);
-    return { isExternal, subdomain, normalizedLink, isAnchor, isMailto, isTel, isInternal, isInternalPage, isExternalPage, warningDoubleSlash, isFile }
+    return { isExternal, subdomain, linkDomain, normalizedLink, isAnchor, isMailto, isTel, isInternal, isInternalPage, isExternalPage, warningDoubleSlash, isFile }
 }

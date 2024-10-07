@@ -39,11 +39,10 @@ export const Check = ({
     >
       <animate
         attributeName="stroke-dasharray"
-        from="0 60"
+        from="0 80"
         to="60 60"
-        dur="0.4s"
+        dur=".6s"
         fill="freeze"
-        begin="0.6s"
       />
     </path>
   </svg>

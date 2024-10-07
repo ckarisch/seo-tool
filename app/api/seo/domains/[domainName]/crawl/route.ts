@@ -17,7 +17,7 @@ export async function POST(
     return Response.json({ error: 'Not authenticated', domains: [] }, { status: 401 })
   }
 
-  const depth = 2;
+  const depth = 1;
   const followLinks = true;
   const maxExecutionTime = 180000; // in milliseconds
 

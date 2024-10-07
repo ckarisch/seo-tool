@@ -22,20 +22,5 @@ export const Admin = ({ width = 30, height = 30 }: { width?: number; height?: nu
         fill="freeze"
       />
     </path>
-    <path 
-      d="M25 65 L75 65" 
-      stroke="rgb(147, 51, 234)" 
-      strokeWidth="8" 
-      strokeLinecap="round"
-    >
-      <animate 
-        attributeName="stroke-dasharray" 
-        from="0 50" 
-        to="50 50"
-        dur="0.3s"
-        fill="freeze"
-        begin="0.6s"
-      />
-    </path>
   </svg>
 );

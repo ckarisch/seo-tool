@@ -4,7 +4,6 @@ import { load } from "cheerio";
 export const extractLinks = (data: any, url: string, targetURL: string) => {
     const links = [];
     let startTime: number;
-
     console.log('extracting links');
     const $ = load(data);
     const aElements = $('a').toArray();
@@ -18,6 +17,5 @@ export const extractLinks = (data: any, url: string, targetURL: string) => {
         }
     }
     console.log(`extracting links operation time: ${new Date().getTime() - startTime}`);
-
     return links;
 }

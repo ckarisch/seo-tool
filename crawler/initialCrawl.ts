@@ -1,39 +1,84 @@
 
 import axios, { AxiosError } from 'axios';
-import cheerio from 'cheerio';
-import { Prisma, PrismaClient } from "@prisma/client";
 import { crawlNotification, crawlNotificationType } from '@/app/api/seo/domains/[domainName]/crawl/crawlNotification';
 
 
 export const initialCrawl = async (targetURL: string, maxCrawlTime: number, crawlStartTime: number, sendNotification: boolean, user: any, analyzedUrl: any) => {
-    let data;
     let timePassed = (new Date().getTime() - crawlStartTime);
+    let finalURL = targetURL;
+    const urlObject = new URL(targetURL);
+    let finalURLObject;
+    finalURLObject = new URL(finalURL, urlObject.origin);
+    let data;
+
     try {
-        data = (await axios.get(targetURL, { timeout: maxCrawlTime - timePassed })).data;
-    }
-    catch (error: AxiosError | TypeError | any) {
-        // Handle any errors
-        // console.log(error);
+        // First make a HEAD request to check for redirects
+        const headResponse = await axios.head(targetURL, {
+            timeout: maxCrawlTime - timePassed,
+            maxRedirects: 0, // Prevent automatic redirects
+            validateStatus: (status) => {
+                return status >= 200 && status < 400; // Accept 3xx status codes
+            }
+        });
+
+        // If we detect a redirect
+        if (headResponse.status >= 300 && headResponse.status < 400) {
+            finalURL = headResponse.headers.location;
+            finalURLObject = new URL(finalURL, urlObject.origin);
+
+            // If the location is a relative URL, resolve it
+            if (!finalURL.startsWith('http')) {
+                finalURLObject = new URL(finalURL, urlObject.origin);
+                finalURL = finalURLObject.toString();
+            }
+
+            console.log(`Redirect detected from ${targetURL} to ${finalURL}`);
+        }
+
+        // Now make the actual GET request to the final URL
+        timePassed = (new Date().getTime() - crawlStartTime);
+        data = (await axios.get(finalURL, {
+            timeout: maxCrawlTime - timePassed
+        })).data;
+
+        return {
+            data,
+            finalURL,
+            finalURLObject
+        };
+    } catch (error: AxiosError | TypeError | any) {
         timePassed = (new Date().getTime() - crawlStartTime);
 
         if (error instanceof AxiosError) {
             if (error.code === 'ERR_BAD_REQUEST') {
                 if (error.response?.status == 404 && sendNotification && user) {
-                    crawlNotification(user, crawlNotificationType.Error404, analyzedUrl.normalizedLink, [analyzedUrl.normalizedLink]);
+                    crawlNotification(
+                        user,
+                        crawlNotificationType.Error404,
+                        analyzedUrl.normalizedLink,
+                        [analyzedUrl.normalizedLink]
+                    );
                 }
-                console.log('error: 404', targetURL)
+                console.log('error: 404', finalURL);
             }
             else if (error.code === 'ERR_BAD_RESPONSE') {
                 if (error.response?.status == 503 && sendNotification && user) {
-                    crawlNotification(user, crawlNotificationType.Error503, analyzedUrl.normalizedLink, [analyzedUrl.normalizedLink]);
+                    crawlNotification(
+                        user,
+                        crawlNotificationType.Error503,
+                        analyzedUrl.normalizedLink,
+                        [analyzedUrl.normalizedLink]
+                    );
                 }
-                console.log('error:503', targetURL)
+                console.log('error: 503', finalURL);
             }
-        }
-        else {
+        } else {
             throw error;
         }
+        return {
+            data: null,
+            finalURL,
+            finalURLObject
+        };
     }
-
-    return data;
 }

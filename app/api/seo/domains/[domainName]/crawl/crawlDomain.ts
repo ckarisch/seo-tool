@@ -22,7 +22,8 @@ export const crawlDomain = async (url: string, depth: number, followLinks: boole
     const maxRequests = 100;
     const maxLinkEntries = 300; // with documents and images
 
-    const analyzedUrl = analyzeLink(url, url);
+    let analyzedUrl = analyzeLink(url, url);
+    let extractedDomain = analyzedUrl.linkDomain;
 
     const links: Link[] = [];
     const crawledLinks: (string)[] = ['/'];
@@ -46,7 +47,7 @@ export const crawlDomain = async (url: string, depth: number, followLinks: boole
 
     const sessionUser = await prisma.user.findFirst({ where: { email: session.user.email! } })
 
-    const domain = await prisma.domain.findFirst({ where: { domainName: url } });
+    const domain = await prisma.domain.findFirst({ where: { domainName: extractedDomain } });
     const user = await prisma.user.findFirst({ where: { id: domain?.userId }, include: { notificationContacts: true } });
 
     if (!domain) {
@@ -65,7 +66,7 @@ export const crawlDomain = async (url: string, depth: number, followLinks: boole
         }
     }
 
-    const targetURL = 'https://' + url; // URL of the website you want to crawl
+    let targetURL = 'https://' + extractedDomain; // URL of the website you want to crawl
     const protocol = 'https://';
 
     if (domain.crawlStatus === 'crawling') {
@@ -109,13 +110,27 @@ export const crawlDomain = async (url: string, depth: number, followLinks: boole
         }
 
         requestStartTime = new Date().getTime();
-        let data;
-        data = await initialCrawl(targetURL, maxCrawlTime, crawlStartTime, true, user, analyzedUrl);
+        
+        const {
+            data,
+            finalURL,
+            finalURLObject
+        } = await initialCrawl(targetURL, maxCrawlTime, crawlStartTime, true, user, analyzedUrl);
+
         requestTime = new Date().getTime() - requestStartTime;
         console.log(`request time (${targetURL}): ${requestTime}`);
 
+        // extractedDomain = analyzeLink(targetURL, '').linkDomain;
+        // extractedDomain
+        targetURL = finalURLObject.hostname;
+        analyzedUrl = analyzeLink(targetURL, targetURL);
+        extractedDomain = analyzedUrl.linkDomain;
+        console.log(`now using finalURL ${targetURL}`);
+        const analyzedFinalUrl = analyzeLink(finalURL, extractedDomain);
+
+
         // links.push({ path: '/', foundOnPath: '/' });
-        await pushLink(prisma, '/', '/', false, domain.id, linkType.page, requestTime, null);
+        await pushLink(prisma, '', analyzedFinalUrl.normalizedLink, false, domain.id, linkType.page, requestTime, null);
 
         if (!followLinks) {
             await prisma.domainCrawl.update({
@@ -135,128 +150,17 @@ export const crawlDomain = async (url: string, depth: number, followLinks: boole
             return NextResponse.json({ links: [] }, { status: 200 })
         }
 
-        links.push(...extractLinks(data, url, targetURL));
+        links.push(...extractLinks(data, targetURL, targetURL));
 
         // const addSlash = targetURL.endsWith('/') ? '' : '/';
 
-        const recursiveCrawlResponse = await recursiveCrawl(prisma, links, crawledLinks, depth, analyzedUrl, crawlStartTime, maxCrawlTime, maxLinkEntries, maxRequests, url, domain.id, true, requestStartTime);
+        const recursiveCrawlResponse = await recursiveCrawl(prisma, links, crawledLinks, depth, analyzedUrl, extractedDomain, crawlStartTime, maxCrawlTime, maxLinkEntries, maxRequests, extractedDomain, domain.id, true, requestStartTime);
         if (recursiveCrawlResponse.timeout) {
             return Response.json({ error: 'Timeout' }, { status: 500 });
         }
         else if (recursiveCrawlResponse.tooManyRequests) {
             return Response.json({ error: 'Too many link entries' }, { status: 500 });
         }
-
-        // for (let j = 0; j < depth; j++) {
-        //     for (let i = 0; i < links.length; i++) {
-        //         if (typeof links[i] !== 'undefined' && links[i]) { // Check if the link is defined
-        //             const { subdomain, normalizedLink, isInternal, isInternalPage, warningDoubleSlash } = analyzeLink(links[i]!.path, url);
-
-        //             if (!crawledLinks.includes(normalizedLink)) {
-        //                 crawledLinks.push(normalizedLink);
-        //                 if (warningDoubleSlash) warningDoubleSlashOccured = true;
-
-        //                 if (isInternal) {
-        //                     console.log('Crawling: ' + normalizedLink);
-        //                     if (subdomain != analyzedUrl.subdomain) {
-        //                         console.log(`warning: subdomain (${normalizedLink}) not matching with requested url`)
-        //                     }
-
-        //                     crawledLinks.push(normalizedLink); // Use the non-null assertion operator
-
-        //                     timePassed = (new Date().getTime() - crawlStartTime);
-        //                     if (await checkTimeoutAndPush(prisma, timePassed, maxCrawlTime, domainCrawl.id, domain.id)) {
-        //                         console.log('timeout: ', timePassed);
-        //                         return Response.json({ error: 'Timeout' }, { status: 500 });
-        //                     }
-
-        //                     linkEntries++;
-        //                     if (checkRequests(linkEntries, maxLinkEntries)) {
-        //                         console.log('too many link entries: ', linkEntries);
-        //                         return Response.json({ error: 'Too many link entries' }, { status: 500 });
-        //                     }
-
-        //                     if (isInternalPage) {
-        //                         // only crawl pages
-        //                         requests++;
-        //                         console.log('request number: ', requests);
-        //                         if (checkRequests(requests, maxRequests)) {
-        //                             console.log('too many requests: ', requests);
-        //                             return Response.json({ error: 'Too many requests' }, { status: 500 });
-        //                         }
-
-        //                         requestStartTime = new Date().getTime();
-        //                         const requestUrl = protocol + normalizedLink;
-        //                         console.log(`request (${requestUrl})`);
-
-        //                         let errors = {
-        //                             err_404: false,
-        //                             err_503: false
-        //                         }
-
-        //                         let data
-
-        //                         try {
-        //                             timePassed = (new Date().getTime() - crawlStartTime);
-        //                             data = (await axios.get(requestUrl, { timeout: maxCrawlTime - timePassed })).data;
-        //                         }
-        //                         catch (error: AxiosError | TypeError | any) {
-        //                             // Handle any errors
-        //                             // console.log(error);
-        //                             timePassed = (new Date().getTime() - crawlStartTime);
-
-        //                             if (error instanceof AxiosError) {
-        //                                 if (error.code === 'ERR_BAD_REQUEST') {
-        //                                     if (error.response?.status == 404) {
-        //                                         errors.err_404 = true;
-        //                                         error404Occured = true;
-        //                                         error404Links.push(normalizedLink);
-        //                                     }
-        //                                     console.log('error: 404', requestUrl)
-        //                                 }
-        //                                 else if (error.code === 'ERR_BAD_RESPONSE') {
-        //                                     if (error.response?.status == 503) {
-        //                                         errors.err_503 = true;
-        //                                         error503Occured = true;
-        //                                     }
-        //                                     console.log('error:503', requestUrl)
-        //                                 }
-        //                             }
-        //                             else {
-        //                                 throw error;
-        //                             }
-        //                         }
-        //                         requestTime = new Date().getTime() - requestStartTime;
-        //                         console.log(`request time (${requestUrl}): ${new Date().getTime() - requestStartTime}`);
-
-        //                         const strongestErrorCode = getStrongestErrorCode(errors);
-        //                         await pushLink(prisma, links[i].foundOnPath, normalizedLink, warningDoubleSlash, domain.id, linkType.page, requestTime, strongestErrorCode);
-
-        //                         if (!data) continue;
-        //                         const $ = cheerio.load(data);
-        //                         const aElements = $('a').toArray();
-
-        //                         for (let element of aElements) {
-        //                             const href = $(element).attr('href');
-        //                             if (href) {
-        //                                 links.push({ path: href, foundOnPath: requestUrl });
-        //                             }
-        //                         }
-        //                     }
-        //                     else {
-        //                         // add images and documents
-        //                         console.log('push to internal links: ' + normalizedLink);
-        //                         await pushLink(prisma, links[i].foundOnPath, normalizedLink, warningDoubleSlash, domain.id, linkType.page, requestTime, null);
-        //                     }
-        //                 }
-        //                 else {
-        //                     console.log('push to external links: ' + normalizedLink);
-        //                     await pushExternalLink(prisma, links[i].foundOnPath, normalizedLink, domain.id);
-        //                 }
-        //             }
-        //         }
-        //     }
-        // }
 
         await prisma.domainCrawl.update({
             where: { id: domainCrawl.id },
