@@ -2,7 +2,7 @@ import { getServerSession } from 'next-auth';
 import { crawlDomain } from './crawlDomain';
 import { authOptions } from '@/app/api/auth/[...nextauth]/authOptions';
 
-export const maxDuration = 200; // in seconds
+export const maxDuration = 60; // in seconds
 
 export async function POST(
   request: Request,
