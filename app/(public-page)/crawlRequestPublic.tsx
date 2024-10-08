@@ -168,7 +168,7 @@ export default function CrawlRequestPublic() {
                         </div> :
                         <div className={styles.finding}>
                             <strong>There are no warnings.</strong> <br />
-                            We're continually enhancing our analysis to deliver even more practical recommendations. Stay tuned for new tips to help you improve your website!
+                            We&apos;re continually enhancing our analysis to deliver even more practical recommendations. Stay tuned for new tips to help you improve your website!
                         </div>
                     }
                 </div>
