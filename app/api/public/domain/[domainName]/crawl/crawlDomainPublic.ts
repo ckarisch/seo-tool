@@ -15,7 +15,7 @@ export const crawlDomainPublic = async (url: string, depth: number, followLinks:
     const crawlStartTime = new Date().getTime();
     const maxCrawlTime = maxDuration - 1000; // milliseconds
 
-    const analyzedUrl = analyzeLink(url, url);
+    let analyzedUrl = analyzeLink(url, url);
 
     const links: Link[] = [];
 
@@ -33,7 +33,8 @@ export const crawlDomainPublic = async (url: string, depth: number, followLinks:
 
 
     const targetURL = 'https://' + url; // URL of the website you want to crawl
-    const protocol = 'https://';
+    analyzedUrl = analyzeLink(targetURL, targetURL);
+    const extractedDomain = analyzedUrl.linkDomain;
 
     if (domain) {
         // no public crawls during normal crawl
@@ -71,7 +72,7 @@ export const crawlDomainPublic = async (url: string, depth: number, followLinks:
         const maxLinkEntries = 50;
         const maxRequests = 50;
         
-        const recursiveCrawlResponse = await recursiveCrawl(prisma, links, crawledLinks, depth, analyzedUrl, crawlStartTime, maxCrawlTime, maxLinkEntries, maxRequests, url, '', true, requestStartTime);
+        const recursiveCrawlResponse = await recursiveCrawl(prisma, links, crawledLinks, depth, analyzedUrl, extractedDomain, crawlStartTime, maxCrawlTime, maxLinkEntries, maxRequests, url, '', true, requestStartTime);
 
         if(recursiveCrawlResponse.warningDoubleSlashOccured) {
             warningDoubleSlashOccured = true;
