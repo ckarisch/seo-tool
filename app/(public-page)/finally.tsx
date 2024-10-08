@@ -3,6 +3,8 @@ import Section from "@/components/layout/section";
 import styles from "./finally.module.scss";
 import Background from "@/components/layout/background";
 import Image from "next/image";
+import { AbstractSeo } from "@/grafics/abstractSeo";
+import { AbstractSeo2 } from "@/grafics/abstractSeo2";
 
 export default function Finally() {
   return (
@@ -21,7 +23,7 @@ export default function Finally() {
           </div>
 
           <div className={styles.imageContainer}>
-            <Image className={styles.image} src={'/images/finally.png'} alt="Finally a good SEO Tool" width={340} height={427} />
+          <AbstractSeo2 />
           </div>
         </div>
       </Section>
