@@ -5,6 +5,7 @@ import Background from "@/components/layout/background";
 import Image from "next/image";
 import { AbstractSeo } from "@/grafics/abstractSeo";
 import { AbstractSeo2 } from "@/grafics/abstractSeo2";
+import { AbstractSeo3 } from "@/grafics/abstractSeo3";
 
 export default function Finally() {
   return (
@@ -23,7 +24,7 @@ export default function Finally() {
           </div>
 
           <div className={styles.imageContainer}>
-          <AbstractSeo2 />
+          <AbstractSeo3 />
           </div>
         </div>
       </Section>
