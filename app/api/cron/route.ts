@@ -2,7 +2,7 @@
 import { PrismaClient } from '@prisma/client';
 import { crawlDomain } from '../seo/domains/[domainName]/crawl/crawlDomain';
 
-export const maxDuration = 200; // in seconds
+export const maxDuration = 60; // in seconds
 
 const prisma = new PrismaClient();
 

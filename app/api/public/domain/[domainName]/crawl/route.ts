@@ -1,6 +1,6 @@
 import { crawlDomainPublic } from './crawlDomainPublic';
 
-export const maxDuration = 200; // in seconds
+export const maxDuration = 60; // in seconds
 
 export async function POST(
   request: Request,
