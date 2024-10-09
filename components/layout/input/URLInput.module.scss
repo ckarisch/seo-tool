@@ -1,0 +1,51 @@
+.wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.input {
+  width: 100%;
+  padding: 8px 12px;
+  padding-right: 36px; // Space for the icon
+  border: 1px solid #e2e8f0;
+  border-radius: 4px;
+  font-size: 14px;
+  transition: all 0.2s;
+
+  &:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 1px #3b82f6;
+  }
+
+  &.valid {
+    border-color: #22c55e;
+    
+    &:focus {
+      border-color: #22c55e;
+      box-shadow: 0 0 0 1px #22c55e;
+    }
+  }
+}
+
+.iconWrapper {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  pointer-events: none;
+}
+
+.validIcon {
+  color: #22c55e;
+  width: 20px;
+  height: 20px;
+}
+
+.invalidIcon {
+  color: #ef4444;
+  width: 20px;
+  height: 20px;
+}

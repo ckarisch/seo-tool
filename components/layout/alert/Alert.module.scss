@@ -1,0 +1,32 @@
+.alert {
+    position: relative;
+    width: 100%;
+    border-radius: 4px;
+    border: 1px solid;
+    padding: 12px 16px;
+    font-size: 14px;
+  
+    &.default {
+      background-color: #ffffff;
+      border-color: #e2e8f0;
+      color: #1a202c;
+    }
+  
+    &.destructive {
+      border-color: rgba(239, 68, 68, 0.5);
+      color: #ef4444;
+    }
+  }
+  
+  .description {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+  
+  .icon {
+    width: 16px;
+    height: 16px;
+  }

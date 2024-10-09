@@ -6,6 +6,7 @@ import { useEffect, useRef, useState } from "react";
 import { Check } from "@/icons/checkmark";
 import { Cross } from "@/icons/cross";
 import { Warning } from "@/icons/warningAnimated";
+import URLInput from "@/components/layout/input/URLinput";
 
 interface publicCrawlResponse {
     error: boolean,
@@ -49,11 +50,25 @@ export default function CrawlRequestPublic() {
         setDomainInput(event.target.value);
     };
 
+    const [url, setUrl] = useState('');
+    const [isUrlValid, setIsUrlValid] = useState(false);
+    const [isError, setIsError] = useState(false);
+
+
     const [crawlStatus, setcrawlStatus] = useState('idle');
     const [crawlResponse, setCrawlResponse] = useState<publicCrawlResponse>();
 
     const handleCrawl = async (event: any) => {
         event.preventDefault();
+        if (!isUrlValid) {
+            setIsError(true);
+
+            // Remove the shake effect after the animation is done (0.5s)
+            setTimeout(() => {
+                setIsError(false);
+            }, 500);
+            return false;
+        }
         const endpoint = process.env.NEXT_PUBLIC_API_DOMAIN + '/api/public/domain/' + domainInput + '/crawl';
 
         const options = {
@@ -84,6 +99,7 @@ export default function CrawlRequestPublic() {
             setcrawlStatus('error');
         }
         setIsVisible(true);
+        setIsError(false);
 
         console.log(jsonData);
 
@@ -94,10 +110,13 @@ export default function CrawlRequestPublic() {
         <div className={styles.crawlRequestPublic} >
             <div>
                 <form className={styles.form} onSubmit={handleCrawl}>
-                    <input className={styles.input}
-                        type="text"
+                    <URLInput
+                        className={[styles.input, isError ? styles.shake: null].join(' ')}
                         placeholder="www.example.com"
-                        onChange={handleInputChange} />
+                        onChange={handleInputChange}
+                        onValidation={setIsUrlValid}
+                        value={domainInput}
+                    />
                     <button className={styles.checkButton} type="submit" disabled={crawlStatus === 'crawling'}>check</button>
                     {crawlStatus == 'great' && <Check />}
                     {crawlStatus == 'crawling' && <Loading />}
