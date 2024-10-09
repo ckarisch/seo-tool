@@ -1,0 +1,124 @@
+/* AnimatedSecureMailto.module.css */
+.link {
+    position: relative;
+    text-decoration: none;
+    color: #2563eb;
+    transition: color 0.3s ease;
+    cursor: pointer;
+  }
+  
+  /* Underline Animation */
+  .underline {
+    padding-bottom: 2px;
+  }
+  
+  .underline::after {
+    content: '';
+    position: absolute;
+    width: 0;
+    height: 2px;
+    bottom: 0;
+    left: 0;
+    background-color: currentColor;
+    transition: width 0.3s ease;
+  }
+  
+  .underline:hover::after {
+    width: 100%;
+  }
+  
+  /* Background Highlight */
+  .highlight {
+    padding: 2px 4px;
+    transition: color 0.3s ease, background-position 0.3s ease;
+    background: linear-gradient(to right, #3b82f6 50%, transparent 50%);
+    background-size: 200% 100%;
+    background-position: 100% 0;
+  }
+  
+  .highlight:hover {
+    color: white;
+    background-position: 0 0;
+  }
+  
+  /* Slide Effect */
+  .slide {
+    padding: 2px 8px;
+    overflow: hidden;
+  }
+  
+  .slide::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: #3b82f6;
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
+    z-index: -1;
+  }
+  
+  .slide:hover {
+    color: white;
+  }
+  
+  .slide:hover::before {
+    transform: translateX(0);
+  }
+  
+  /* Glow Effect */
+  .glow {
+    padding: 2px 8px;
+    transition: all 0.3s ease;
+  }
+  
+  .glow:hover {
+    color: #3b82f6;
+    text-shadow: 0 0 8px rgba(59, 130, 246, 0.5);
+    transform: translateY(-1px);
+  }
+  
+  /* Brackets Effect */
+  .bracketContent {
+    position: relative;
+    padding: 0 10px;
+    display: inline-block;
+  }
+  
+  .bracketContent::before,
+  .bracketContent::after {
+    content: '';
+    position: absolute;
+    width: 8px;
+    height: 8px;
+    transition: all 0.3s ease;
+    opacity: 0;
+  }
+  
+  .bracketContent::before {
+    border-left: 2px solid currentColor;
+    border-top: 2px solid currentColor;
+    left: 0;
+    top: 0;
+  }
+  
+  .bracketContent::after {
+    border-right: 2px solid currentColor;
+    border-bottom: 2px solid currentColor;
+    right: 0;
+    bottom: 0;
+  }
+  
+  .brackets:hover .bracketContent::before,
+  .brackets:hover .bracketContent::after {
+    width: 20px;
+    height: 20px;
+    opacity: 1;
+  }
+  
+  /* Active state */
+  .link:active {
+    transform: scale(0.98);
+  }
