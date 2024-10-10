@@ -3,13 +3,10 @@ export function analyzeLink(link: string, currentDomain: string) {
     currentDomain = currentDomain.replace(/^https?:\/\//, '');
 
     // Step 1: Strip away "https://" or "http://"
-    console.log('link', link);
     let normalizedLink = link.replace(/^https?:\/\//, '');
-    console.log('normalizedLink', normalizedLink);
     if (link.startsWith('/')) {
         normalizedLink = currentDomain + link;
     }
-    console.log('normalizedLink', normalizedLink);
 
     // Step 2: Recognize if it starts with the subdomain "www" and save it
     let subdomain = normalizedLink.startsWith('www.') ? 'www' : '';

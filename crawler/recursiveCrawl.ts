@@ -1,4 +1,5 @@
 import { analyzeLink } from "@/apiComponents/crawler/linkTools";
+import { Logger } from "@/apiComponents/dev/logger";
 import { checkRequests, checkTimeout, createPushLinkInput, getStrongestErrorCode, linkType, pushAllLinks, pushExternalLink } from "@/app/api/seo/domains/[domainName]/crawl/crawlLinkHelper";
 import axios, { AxiosError } from "axios";
 import { load } from "cheerio";
@@ -77,7 +78,7 @@ export const recursiveCrawl = async (
                         // }
 
                         if (checkTimeout(timePassed, maxCrawlTime)) {
-                            console.log('timeout: ', timePassed);
+                            console.log('timeout: ' + timePassed);
                             response.timeout = true;
                             crawlActive = false;
                             break;
@@ -85,7 +86,7 @@ export const recursiveCrawl = async (
 
                         linkEntries++;
                         if (checkRequests(linkEntries, maxLinkEntries)) {
-                            console.log('too many link entries: ', linkEntries);
+                            console.log('too many link entries: ' + linkEntries);
                             // return Response.json({ error: 'Too many link entries' }, { status: 500 });
                             response.tooManyRequests = true;
                             crawlActive = false;
@@ -95,9 +96,9 @@ export const recursiveCrawl = async (
                         if (isInternalPage) {
                             // only crawl pages
                             requests++;
-                            console.log('request number: ', requests);
+                            console.log('request number: ' + requests);
                             if (checkRequests(requests, maxRequests)) {
-                                console.log('too many requests: ', requests);
+                                console.log('too many requests: '+ requests);
                                 // return Response.json({ error: 'Too many requests' }, { status: 500 });
                                 response.tooManyRequests = true;
                                 crawlActive = false;
@@ -131,14 +132,14 @@ export const recursiveCrawl = async (
                                             error404Occured = true;
                                             error404Links.push(normalizedLink);
                                         }
-                                        console.log('error: 404', requestUrl)
+                                        console.log('error: 404' + requestUrl)
                                     }
                                     else if (error.code === 'ERR_BAD_RESPONSE') {
                                         if (error.response?.status == 503) {
                                             errors.err_503 = true;
                                             error503Occured = true;
                                         }
-                                        console.log('error:503', requestUrl)
+                                        console.log('error:503' + requestUrl)
                                     }
                                 }
                                 else {

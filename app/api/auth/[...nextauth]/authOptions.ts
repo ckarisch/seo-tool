@@ -1,5 +1,5 @@
 import { PrismaClient } from '@prisma/client';
-import { scryptSync } from 'crypto';
+import { scryptSync } from 'node:crypto';
 import { NextAuthOptions } from 'next-auth';
 import CredentialsProvider from "next-auth/providers/credentials"
 
