@@ -3,6 +3,8 @@ import React from 'react';
 import styles from './ImprintPage.module.scss';
 import SecureMailto from '../security/SecureMailto';
 import AnimatedSecureMailto from '../security/AnimatedSecureMailto';
+import AnimatedSecurePhone from '../security/AnimatedSecurePhone';
+import SecurePhoneReveal from '../security/SecurePhoneReveal';
 
 interface ContactItemProps {
   title: string;
@@ -107,8 +109,10 @@ export default function ImprintPage({
               {companyInfo.address.country}
             </ContactItem>
             <ContactItem title="Contact">
-              Phone: {companyInfo.contact.phone}<br />
-              Email: <AnimatedSecureMailto email={companyInfo.contact.email} />
+              Phone: <SecurePhoneReveal phoneNumber={companyInfo.contact.phone} /><br />
+              Email: <AnimatedSecureMailto email={companyInfo.contact.email} >
+                Contact us
+              </AnimatedSecureMailto>
             </ContactItem>
           </div>
         </section>
@@ -121,7 +125,9 @@ export default function ImprintPage({
                 {entry.director}
               </ContactItem>
                 <ContactItem title="Email">
-                  <AnimatedSecureMailto email={entry.email} />
+                  <AnimatedSecureMailto email={entry.email} >
+                    Send email
+                  </AnimatedSecureMailto>
                 </ContactItem>
               </>
             ))}
