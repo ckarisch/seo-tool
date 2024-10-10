@@ -2,7 +2,6 @@
 import { PrismaClient } from '@prisma/client';
 import { crawlDomain, performDatabaseOperation } from '../seo/domains/[domainName]/crawl/crawlDomain';
 import { env } from 'process';
-import { LogView } from '@/apiComponents/dev/LogView';
 
 export const maxDuration = 60; // in seconds
 import { NextResponse } from 'next/server'
@@ -15,41 +14,12 @@ import { createLogger } from '@/apiComponents/dev/logger';
 const prisma = new PrismaClient();
 
 const resetCrawlTime = 3600000 // 1h
-const devLogs: string[] = [];
-
-const log_old = (...args: string[]) => {
-  if (env.NODE_ENV == 'development') {
-    devLogs.push(args.join(', '));
-  }
-  console.log(args.join(', '));
-}
-
-// Simulate async work
-async function simulateWork(i: number): Promise<string> {
-  await new Promise(resolve => setTimeout(resolve, 500))
-  return `Processed data ${i}`
-}
-
-function createLogger_old() {
-  return {
-    log: function* (text: string): Generator<LogEntry> {
-      const message = text;
-      if (process.env.NODE_ENV === 'development') {
-        devLogs.push(message);
-      }
-      console.log(message);
-      yield { text: message };
-    }
-  };
-}
-
 
 export async function GET(request: Request) {
   // maxExecutionTime ist 20 seconds lower than maxDuration to prevent hard timeouts
   const maxExecutionTime = 180000; // in milliseconds
 
   const encoder = new TextEncoder()
-
   const stream = new ReadableStream({
     async start(controller) {
       const html = generateStreamingLogViewer({
@@ -63,19 +33,14 @@ export async function GET(request: Request) {
 
       // Example log generator with correct typing
       async function* generateLogs(): AsyncGenerator<LogEntry> {
-        const logger = createLogger();
         const log = (...args: string[]) => {
           const message = args.join(', ');
-          if (process.env.NODE_ENV === 'development') {
-            devLogs.push(message);
-          }
           console.log(message);
           return { text: message };
         }
         const mainLogger = createLogger('MAIN');
         const dbLogger = createLogger('DB');
         const crawlLogger = createLogger('CRAWL');
-        const authLogger = createLogger('AUTH');
 
         yield* mainLogger.log('Starting application...');
 

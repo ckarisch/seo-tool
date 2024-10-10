@@ -21,5 +21,6 @@ export async function POST(
   const followLinks = true;
   const maxExecutionTime = 180000; // in milliseconds
 
-  return crawlDomain(params.domainName, depth, followLinks, maxExecutionTime);
+  crawlDomain(params.domainName, depth, followLinks, maxExecutionTime);
+  return Response.json({ success: true }, { status: 200 });
 }
