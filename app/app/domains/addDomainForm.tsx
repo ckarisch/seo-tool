@@ -1,15 +1,30 @@
 "use client";
 
 import { useRouter } from 'next/navigation';
+import styles from './addDomainForm.module.scss'
+import URLInput from '@/components/layout/input/URLinput';
+import { useState } from 'react';
 
 export default function AddDomainForm() {
     const router = useRouter();
+    const [url, setUrl] = useState('');
+    const [isUrlValid, setIsUrlValid] = useState(false);
+    const [isError, setIsError] = useState(false);
 
     const handleSubmit = async (event: any) => {
         event.preventDefault();
+        if (!isUrlValid) {
+            setIsError(true);
+
+            // Remove the shake effect after the animation is done (0.5s)
+            setTimeout(() => {
+                setIsError(false);
+            }, 500);
+            return false;
+        }
 
         const data = {
-            name: event.target.name.value,
+            name: url,
             domainName: event.target.domainName.value,
         }
 
@@ -45,15 +60,31 @@ export default function AddDomainForm() {
         router.refresh();
     }
 
+    const handleInputChange = (event: any) => {
+        setUrl(event.target.value);
+    };
+
     return (
-        <form onSubmit={handleSubmit}>
-            <input type="text" id="name" name="name" placeholder='Name der Website' required />
-            <input type="text" id="domainName" name="domainName" placeholder='Domain Name der Website' required />
-            <input type="number" id="crawlInterval" name="crawlInterval" placeholder='Crawl Interval in Minuten' required min={1} max={60 * 24} step={1} />
-            <input type="number" id="crawlDepth" name="crawlDepth" placeholder='Crawl Depth' required min={1} max={10} step={1} />
-            <input type="checkbox" id="crawlEnabled" name="crawlEnabled" />
-            <div></div>
-            <button type="submit">Hinzufügen</button>
-        </form>
+        <div className={styles.formContainer}>
+            <form onSubmit={handleSubmit}>
+                <div className={styles.inputGroup}>
+                    <h3>Website Name</h3>
+                    <input type="text" id="domainName" name="domainName" placeholder='Name der Website' required />
+                </div>
+
+                <div className={styles.inputGroup}>
+                    <h3>Domain Name</h3>
+                    <URLInput
+                        className={[styles.input, isError ? styles.shake : null].join(' ')}
+                        placeholder="www.example.com"
+                        onChange={handleInputChange}
+                        onValidation={setIsUrlValid}
+                        value={url}
+                    />
+                </div>
+
+                <button type="submit">Hinzufügen</button>
+            </form>
+        </div>
     )
 }
