@@ -22,6 +22,7 @@ model User {
   role                 String
   domains              Domain[]
   notificationContacts NotificationContact[]
+  AdminLogs            AdminLog[]
 
   @@map("user")
 }
@@ -40,7 +41,7 @@ model NotificationContact {
 model Domain {
   id                                String         @id @default(auto()) @map("_id") @db.ObjectId
   name                              String
-  domainName                        String
+  domainName                        String         @unique
   domainVerificationKey             String?
   domainVerified                    Boolean?
   internalLinks                     InternalLink[]
@@ -71,6 +72,7 @@ model Domain {
   error503NotificationDisabled      Boolean?
   error503NotificationDisabledUntil DateTime?
   score                             Float?
+  adminLogs                         AdminLog[]
 
   @@map("domain")
 }
@@ -149,4 +151,30 @@ model ExternalLink {
 
   @@unique([domainId, url])
   @@map("externallink")
+}
+
+model AdminLog {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  message   String
+  createdAt DateTime
+  domain    Domain   @relation(fields: [domainId], references: [id])
+  domainId  String   @db.ObjectId
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String   @db.ObjectId
+
+  @@map("adminlog")
+}
+
+model CronJobs {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  name      String
+  type      String
+  createdAt DateTime
+  lastStart DateTime
+  lastEnd   DateTime
+  interval  Int // in minutes
+  acitve    Boolean
+  status    String
+
+  @@map("cronjobs")
 }
