@@ -59,19 +59,25 @@ export async function POST(
     return Response.json({ error: 'Not authenticated', domains: [] }, { status: 401 })
   }
 
-  const data = await request.json()
+  const data = await request.json() as { name: string, domainName: string };
   const { name, domainName } = data
 
-  const admin = await prisma.user.findFirst({ where: { role: 'admin' } })
+  const user = await prisma.user.findUnique({ where: { email: session!.user!.email! } });
+  const existingDomain = await prisma.domain.findUnique({ where: { domainName } })
 
-  if (!admin) {
-    return Response.json({ error: 'no admin found' }, { status: 500 })
+  if (existingDomain) {
+    return Response.json({ error: 'domain already exists' }, { status: 500 })
   }
+
+  if (!user) {
+    return Response.json({ error: 'user not found' }, { status: 500 })
+  }
+
   const domain = await prisma.domain.create({
     data: {
       name,
       domainName,
-      userId: admin.id,
+      userId: user.id,
       crawlInterval: 24 * 60 // once a day
     }
   })

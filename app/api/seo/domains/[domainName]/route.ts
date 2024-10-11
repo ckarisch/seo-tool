@@ -16,11 +16,17 @@ export async function GET(
     console.log('error: no session')
     return Response.json({ error: 'Not authenticated', domains: [] }, { status: 401 })
   }
+  const user = await prisma.user.findUnique({ where: { email: session!.user!.email! } });
 
   let domain = await prisma.domain.findFirst({ where: { domainName: params.domainName } });
 
   if (!domain) {
+    console.log('domain not found');
     return Response.json({ error: 'domain not found' }, { status: 404 })
+  }
+  if (domain.userId !== user?.id) {
+    console.log('not allowed');
+    return Response.json({ error: 'not allowed' }, { status: 503 })
   }
 
   // set domain verification key if it does not exist
