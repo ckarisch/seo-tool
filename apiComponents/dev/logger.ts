@@ -19,13 +19,11 @@ export function createLogger(category?: string): Logger {
       console.log(message);
       yield { text: message };
     },
-    
     *warn(text: string): Generator<LogEntry> {
       const message = `${prefix}${text}`;
       console.warn(message);
       yield { text: message, level: 'warn' };
     },
-    
     *error(text: string): Generator<LogEntry> {
       const message = `${prefix}${text}`;
       console.error(message);
@@ -34,5 +32,4 @@ export function createLogger(category?: string): Logger {
   };
 }
 
-// Updated type definition
-export type LoggerFunction = (logger: Logger) => AsyncGenerator<LogEntry>;
+export type LoggerFunctionWithReturn<T> = (logger: Logger) => AsyncGenerator<LogEntry, T, unknown>;

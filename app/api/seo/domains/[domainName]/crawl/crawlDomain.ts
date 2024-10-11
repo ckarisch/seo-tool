@@ -9,31 +9,39 @@ import { CalculateScore } from "@/apiComponents/domain/calculateScore";
 import { initialCrawl } from "@/crawler/initialCrawl";
 import { Link, checkRequests, checkTimeoutAndPush, getStrongestErrorCode, linkType, pushExternalLink, pushLink } from "./crawlLinkHelper";
 import { extractLinks } from "@/crawler/extractLinks";
-import { recursiveCrawl } from "@/crawler/recursiveCrawl";
+import { recursiveCrawl, recursiveCrawlResponse } from "@/crawler/recursiveCrawl";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/authOptions";
-import { LoggerFunction } from "@/apiComponents/dev/logger";
+import { Logger, LoggerFunctionWithReturn } from "@/apiComponents/dev/logger";
+import { LogEntry } from "@/apiComponents/dev/StreamingLogViewer";
 
 const prisma = new PrismaClient();
+// export type LoggerFunction = (logger: Logger, url: string, depth: number, followLinks: boolean, maxDuration: number) => AsyncGenerator<boolean | Generator<LogEntry, any, any>, Response, unknown>;
+
+export type CrawlResponseYieldType = LogEntry | { type: 'result', value: recursiveCrawlResponse };
 
 
-export async function performDatabaseOperation(): Promise<LoggerFunction> {
-    return async function* (logger) {
-        yield* logger.log('Connecting to database...');
-        yield* logger.log('Executing query...');
-        yield* logger.error('Failed to retrieve data');
-        yield* logger.log('Closing database connection...');
-    };
+// Type guard function
+function isLogEntry(value: CrawlResponseYieldType): value is LogEntry {
+    return 'timestamp' in value && 'message' in value; // adjust properties based on your LogEntry type
 }
 
-export const crawlDomain = async (url: string, depth: number, followLinks: boolean, maxDuration: number): Promise<LoggerFunction> => {
+
+export function crawlDomain(
+    url: string,
+    depth: number,
+    followLinks: boolean,
+    maxDuration: number
+): LoggerFunctionWithReturn<Response> {
+
     const crawlStartTime = new Date().getTime();
     const maxCrawlTime = maxDuration - 1000; // milliseconds
     const seconds = 30; // min seconds between crawls
     const maxRequests = 100;
     const maxLinkEntries = 300; // with documents and images
 
-    return async function* (logger) {
+
+    return async function* (logger): AsyncGenerator<LogEntry, Response, unknown> {
 
         let analyzedUrl = analyzeLink(url, url);
         let extractedDomain = analyzedUrl.linkDomain;
@@ -52,6 +60,8 @@ export const crawlDomain = async (url: string, depth: number, followLinks: boole
 
 
         const session = await getServerSession(authOptions);
+        yield* logger.log('test: start crawl');
+        // return Response.json({ error: 'Not authenticated', domains: [] }, { status: 401 });
 
         if (!session || !session!.user) {
             yield* logger.log('error: no session');
@@ -64,10 +74,15 @@ export const crawlDomain = async (url: string, depth: number, followLinks: boole
         const user = await prisma.user.findFirst({ where: { id: domain?.userId }, include: { notificationContacts: true } });
 
         if (!domain) {
+            yield* logger.log('error: domain not found');
             return Response.json({ error: 'domain not found' }, { status: 404 })
         }
+        if (!sessionUser) {
+            yield* logger.log('error: session user not found');
+            return Response.json({ error: 'user not fould' }, { status: 404 })
+        }
 
-        if (sessionUser && sessionUser.role !== 'admin') {
+        if (sessionUser.role !== 'admin') {
             // admins are allowed to crawl unverified domains
             if (!domain.domainVerified) {
                 yield* logger.log('error: domain not verified');
@@ -76,6 +91,11 @@ export const crawlDomain = async (url: string, depth: number, followLinks: boole
 
             if (!user) {
                 return Response.json({ error: 'domain has no user' }, { status: 500 })
+            }
+
+            if (domain.userId !== user.id) {
+                yield* logger.log('error: not allowed');
+                return Response.json({ error: 'not allowed', domains: [] }, { status: 503 })
             }
         }
 
@@ -167,14 +187,51 @@ export const crawlDomain = async (url: string, depth: number, followLinks: boole
 
             // const addSlash = targetURL.endsWith('/') ? '' : '/';
 
-            yield* logger.log('start recursive craw');
-            const recursiveCrawlResponse = await recursiveCrawl(prisma, links, crawledLinks, depth, analyzedUrl, extractedDomain, crawlStartTime, maxCrawlTime, maxLinkEntries, maxRequests, extractedDomain, domain.id, true, requestStartTime);
-            yield* logger.log('end recursive craw');
+            yield* logger.log('start recursive crawl');
+            // const recursiveCrawlResponse = await 
 
-            if (recursiveCrawlResponse.timeout) {
+
+
+            const subfunctionGenerator = recursiveCrawl(prisma,
+                links,
+                crawledLinks,
+                depth,
+                analyzedUrl,
+                extractedDomain,
+                crawlStartTime,
+                maxCrawlTime,
+                maxLinkEntries,
+                maxRequests,
+                extractedDomain,
+                domain.id,
+                true,
+
+                requestStartTime, logger);
+
+
+            // Initialize the result variable
+            let subfunctionResult: recursiveCrawlResponse | undefined = undefined;
+
+            // Process all yields from subfunction
+            let subfunctionItem: IteratorResult<CrawlResponseYieldType>;
+            do {
+                subfunctionItem = await subfunctionGenerator.next();
+                if (!subfunctionItem.done) {
+                    if ('type' in subfunctionItem.value && subfunctionItem.value.type === 'result') {
+                        subfunctionResult = subfunctionItem.value.value;
+                    } else {
+                        if (isLogEntry(subfunctionItem.value)) {
+                            yield subfunctionItem.value;
+                        }
+                    }
+                }
+            } while (!subfunctionItem.done);
+
+            // After the loop, check the final result with null check
+            if (subfunctionResult?.timeout) {
                 return Response.json({ error: 'Timeout' }, { status: 500 });
             }
-            else if (recursiveCrawlResponse.tooManyRequests) {
+            else if (subfunctionResult?.tooManyRequests) {
                 return Response.json({ error: 'Too many link entries' }, { status: 500 });
             }
 
@@ -199,7 +256,7 @@ export const crawlDomain = async (url: string, depth: number, followLinks: boole
             errorUnknownOccured = true;
 
             if (error instanceof AxiosError) {
-                yield* logger.log('set axios update')
+                yield* logger.log('AxiosError' + error.cause?.message)
                 await prisma.domain.update({
                     where: { id: domain.id },
                     data: {
@@ -225,7 +282,7 @@ export const crawlDomain = async (url: string, depth: number, followLinks: boole
                 });
             }
             else if (error instanceof TypeError) {
-                yield* logger.log('set type update')
+                yield* logger.log('TypeError: ' + error.message)
                 await prisma.domain.update({
                     where: { id: domain.id },
                     data: {
@@ -251,7 +308,7 @@ export const crawlDomain = async (url: string, depth: number, followLinks: boole
                 });
             }
             else {
-                yield* logger.log('set unknown update')
+                yield* logger.log('unknown error')
                 await prisma.domain.update({
                     where: { id: domain.id },
                     data: {
@@ -317,6 +374,7 @@ export const crawlDomain = async (url: string, depth: number, followLinks: boole
             }
 
             yield* logger.log('crawling done: ' + timePassed);
+            return Response.json({ error: null, domains: [] }, { status: 200 });
         }
-    };
+    }
 }

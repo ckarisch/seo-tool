@@ -1,15 +1,12 @@
 
 import { PrismaClient } from '@prisma/client';
-import { crawlDomain, performDatabaseOperation } from '../seo/domains/[domainName]/crawl/crawlDomain';
+import { crawlDomain } from '../seo/domains/[domainName]/crawl/crawlDomain';
 import { env } from 'process';
 
 export const maxDuration = 60; // in seconds
 import { NextResponse } from 'next/server'
 import { generateStreamingLogViewer, LogEntry, streamLogs } from '@/apiComponents/dev/StreamingLogViewer';
 import { createLogger } from '@/apiComponents/dev/logger';
-
-// export const runtime = 'edge' // Optional: Use edge runtime for better performance
-
 
 const prisma = new PrismaClient();
 
@@ -39,16 +36,10 @@ export async function GET(request: Request) {
           return { text: message };
         }
         const mainLogger = createLogger('MAIN');
-        const dbLogger = createLogger('DB');
         const crawlLogger = createLogger('CRAWL');
 
-        yield* mainLogger.log('Starting application...');
-
-        // Call external functions with their specific loggers
-        yield* (await performDatabaseOperation())(dbLogger);
-
         if (env.NODE_ENV == 'development') {
-          yield log(`cron in dev mode`);
+          yield* mainLogger.log(`cron in dev mode`);
         }
         else if (request.headers.get('Authorization') !== `Bearer ${process.env.CRON_SECRET}`) {
           return Response.json({ error: 'unauthorized' }, { status: 401 });
@@ -124,10 +115,4 @@ export async function GET(request: Request) {
       'Connection': 'keep-alive',
     }
   })
-
-
-  // if (env.NODE_ENV == 'development') {
-  //   return LogView(devLogs, '/api/cron/route.ts');
-  // }
-  // return Response.json({ success: true }, { status: 200 });
 }
