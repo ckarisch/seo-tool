@@ -7,6 +7,17 @@ import { fetchData } from "@/util/client/fetchData";
 import { defaultUserState } from "@/interfaces/user";
 import { Admin } from "@/icons/admin";
 import styles from "./adminBanner.module.scss";
+import { PremiumUser } from "@/icons/premiumUser";
+
+const image = (role: string | undefined) => {
+    switch (role) {
+        case 'admin':
+            return <div> <Admin /> </div>;
+        case 'premium':
+            return <div> <PremiumUser /> </div>;
+        default: return null;
+    }
+}
 
 export default function AdminBanner() {
     const { data: session, status } = useSession({
@@ -33,9 +44,7 @@ export default function AdminBanner() {
 
     return (
         <div className={styles.adminBanner}>
-                {apiUser.role === 'admin' ? <div>
-                    <Admin />
-                </div> : ''}
+            {image(apiUser.role)}
         </div>
     );
 }
