@@ -24,7 +24,7 @@ export async function POST(
   const maxExecutionTime = 180000; // in milliseconds
   const encoder = new TextEncoder();
   let resolveFinalResponse: (value: Response | undefined) => void;
-  const finalResponsePromise = new Promise<Response | undefined>(resolve => {
+  const generatorResponsePromise = new Promise<Response | undefined>(resolve => {
     resolveFinalResponse = resolve;
   });
 
@@ -70,7 +70,7 @@ export async function POST(
   });
 
   // Wait for the stream to complete and finalResponse to be resolved
-  const finalResponse = await finalResponsePromise;
+  const finalResponse = await generatorResponsePromise;
 
   if (finalResponse) {
     // Combine the stream response headers with the finalResponse

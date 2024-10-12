@@ -5,7 +5,7 @@ export const AbstractSeo3 = () => <svg xmlns="http://www.w3.org/2000/svg" width=
             <stop offset="100%" style={{ stopColor: "#2B2D42", stopOpacity: 0.02 }} />
         </linearGradient>
         <filter id="frameDepth">
-            <feDropShadow dx="0" dy="1" stdDeviation="1" flood-opacity="0.1"/>
+            <feDropShadow dx="0" dy="1" stdDeviation="1" floodOpacity="0.1"/>
         </filter>
     </defs>
 

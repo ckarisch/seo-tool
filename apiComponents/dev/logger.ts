@@ -1,3 +1,5 @@
+import { recursiveCrawlResponse } from "@/crawler/recursiveCrawl";
+
 // logger.ts
 export interface LogEntry {
   text: string;
@@ -33,3 +35,10 @@ export function createLogger(category?: string): Logger {
 }
 
 export type LoggerFunctionWithReturn<T> = (logger: Logger) => AsyncGenerator<LogEntry, T, unknown>;
+
+export type CrawlResponseYieldType = LogEntry | { type: 'result', value: recursiveCrawlResponse };
+
+// Type guard function
+export function isLogEntry(value: CrawlResponseYieldType): value is LogEntry {
+  return 'timestamp' in value && 'message' in value; // adjust properties based on your LogEntry type
+}

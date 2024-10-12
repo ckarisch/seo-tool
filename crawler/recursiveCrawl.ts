@@ -1,18 +1,14 @@
 import { analyzeLink } from "@/apiComponents/crawler/linkTools";
 import { LogEntry, Logger } from "@/apiComponents/dev/logger";
-import { CrawlResponseYieldType } from "@/app/api/seo/domains/[domainName]/crawl/crawlDomain";
 import { checkRequests, checkTimeout, createPushLinkInput, getStrongestErrorCode, linkType, pushAllLinks, pushExternalLink } from "@/app/api/seo/domains/[domainName]/crawl/crawlLinkHelper";
 import axios, { AxiosError } from "axios";
 import { load } from "cheerio";
-
 
 export interface recursiveCrawlResponse {
     timeout: boolean,
     tooManyRequests: boolean,
     warningDoubleSlashOccured: boolean
 }
-
-// async function* subfunction(someValues: any, subLogger: Logger): AsyncGenerator<LogEntry | { type: 'result', value: Promise<boolean> }, Promise<boolean>, unknown> {
 
 export async function* recursiveCrawl(
     prisma: any,
@@ -29,23 +25,7 @@ export async function* recursiveCrawl(
     domainId: string,
     pushLinksToDomain: boolean,
     requestStartTime: number,
-    subLogger: Logger): AsyncGenerator<CrawlResponseYieldType, recursiveCrawlResponse, unknown> {
-    // export const recursiveCrawl = async (
-    //     prisma: any,
-    //     links: any[],
-    //     crawledLinks: any[],
-    //     depth: number,
-    //     analyzedUrl: any,
-    //     extractedDomain: string,
-    //     crawlStartTime: number,
-    //     maxCrawlTime: number,
-    //     maxLinkEntries: number,
-    //     maxRequests: number,
-    //     url: string,
-    //     domainId: string,
-    //     pushLinksToDomain: boolean,
-    //     requestStartTime: number
-    // ): Promise<recursiveCrawlResponse> => {
+    subLogger: Logger): AsyncGenerator<LogEntry, recursiveCrawlResponse, unknown> {
 
     yield* subLogger.log('Subfunction started');
     let timePassed, requestTime;
@@ -77,6 +57,7 @@ export async function* recursiveCrawl(
                 if (!crawledLinks.includes(normalizedLink)) {
                     crawledLinks.push(normalizedLink);
                     if (warningDoubleSlash) {
+                        yield* subLogger.log('❗double slash occured');
                         warningDoubleSlashOccured = true;
                         response.warningDoubleSlashOccured = true;
                     }
@@ -221,6 +202,6 @@ export async function* recursiveCrawl(
 
         yield* subLogger.log(`end pushing links (${pushLinkInputs.length}): ${new Date().getTime() - requestStartTime}`);
     }
-    yield { type: 'result', value: response };
+    
     return response;
 }

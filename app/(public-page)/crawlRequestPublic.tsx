@@ -13,6 +13,7 @@ interface publicCrawlResponse {
     error404Occured: boolean,
     error503Occured: boolean,
     warning: boolean,
+    crawlWarning: boolean,
     warningDoubleSlashOccured: boolean,
     errorTimeoutOccured: boolean,
     errorTooManyLinksOccured: boolean
@@ -111,7 +112,7 @@ export default function CrawlRequestPublic() {
             <div>
                 <form className={styles.form} onSubmit={handleCrawl}>
                     <URLInput
-                        className={[styles.input, isError ? styles.shake: null].join(' ')}
+                        className={[styles.input, isError ? styles.shake : null].join(' ')}
                         placeholder="www.example.com"
                         onChange={handleInputChange}
                         onValidation={setIsUrlValid}
@@ -128,36 +129,37 @@ export default function CrawlRequestPublic() {
                 <div className={styles.findings}
                     ref={contentRef}
                     style={{ height, overflow: 'hidden', transition: 'height 0.5s ease' }}>
-                    {crawlResponse?.error ? <div>
-                        <Cross width={20} height={20} />
-                        <strong>
-                            Errors detected: Some critical errors require attention.
-                        </strong>
-                        {crawlResponse?.error && <div className={[styles.finding, styles.errors].join(' ')}>
-                            {
-                                crawlResponse?.error404Occured ?
-                                    <div className={styles.error}>
-                                        404 errors identified: Some pages are not accessible.
-                                    </div>
-                                    : null
+                    {crawlResponse?.error ?
+                        <div className={styles.finding}>
+                            <Cross width={20} height={20} />
+                            <strong>
+                                Errors detected: Some critical errors require attention.
+                            </strong>
+                            {crawlResponse?.error && <div className={[styles.finding, styles.errors].join(' ')}>
+                                {
+                                    crawlResponse?.error404Occured ?
+                                        <div className={styles.error}>
+                                            404 errors identified: Some pages are not accessible.
+                                        </div>
+                                        : null
+                                }
+                                {
+                                    crawlResponse?.errorTooManyLinksOccured ?
+                                        <div className={styles.error}>
+                                            too many links
+                                        </div>
+                                        : null
+                                }
+                                {
+                                    crawlResponse?.errorTimeoutOccured ?
+                                        <div className={styles.error}>
+                                            timeout occured
+                                        </div>
+                                        : null
+                                }
+                            </div>
                             }
-                            {
-                                crawlResponse?.errorTooManyLinksOccured ?
-                                    <div className={styles.error}>
-                                        too many links
-                                    </div>
-                                    : null
-                            }
-                            {
-                                crawlResponse?.errorTimeoutOccured ?
-                                    <div className={styles.error}>
-                                        timeout occured
-                                    </div>
-                                    : null
-                            }
-                        </div>
-                        }
-                    </div> :
+                        </div> :
                         <div className={styles.finding}>
                             <strong>
                                 <Check width={26} height={26} /> <br />
@@ -188,6 +190,12 @@ export default function CrawlRequestPublic() {
                         <div className={styles.finding}>
                             <strong>There are no warnings.</strong> <br />
                             We&apos;re continually enhancing our analysis to deliver even more practical recommendations. Stay tuned for new tips to help you improve your website!
+                        </div>
+                    }
+                    {crawlResponse?.crawlWarning &&
+                        <div className={styles.finding}>
+                            <strong>Limited Analysis Completed</strong><br />
+                            We've performed a partial review of your website. Some tests were not executed. For a comprehensive analysis including all available tests, please register your domain with our service.
                         </div>
                     }
                 </div>

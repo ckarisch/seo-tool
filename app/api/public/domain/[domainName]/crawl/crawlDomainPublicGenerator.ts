@@ -7,18 +7,28 @@ import { analyzeLink } from "@/apiComponents/crawler/linkTools";
 import { Link, checkTimeout } from "@/app/api/seo/domains/[domainName]/crawl/crawlLinkHelper";
 import { extractLinks } from "@/crawler/extractLinks";
 import { recursiveCrawl, recursiveCrawlResponse } from "@/crawler/recursiveCrawl";
-import { CrawlResponseYieldType, createLogger, isLogEntry } from "@/apiComponents/dev/logger";
+import { CrawlResponseYieldType, createLogger, isLogEntry, LogEntry } from "@/apiComponents/dev/logger";
 
 const prisma = new PrismaClient();
 
+export type crawlDomainPublicResponse = {
+    error?: string,
+    errorTooManyLinksOccured?: boolean,
+    error404Occured?: boolean,
+    error503Occured?: boolean,
+    warning?: boolean,
+    crawlWarning?: boolean,
+    warningDoubleSlashOccured?: boolean
+}
 
-
-export const crawlDomainPublic = async (url: string, depth: number, followLinks: boolean, maxDuration: number): Promise<Response> => {
+export async function* crawlDomainPublicGenerator(url: string, depth: number, followLinks: boolean, maxDuration: number): AsyncGenerator<LogEntry, crawlDomainPublicResponse> {
     const crawlStartTime = new Date().getTime();
     const maxCrawlTime = maxDuration - 1000; // milliseconds
+    const maxLinkEntries = 50;
+    const maxRequests = 50;
 
     let analyzedUrl = analyzeLink(url, url);
-    const cronLogger = createLogger('CRAWL (public)');
+    const crawlDomainPublicLogger = createLogger('CRAWL (public)');
 
     const links: Link[] = [];
 
@@ -42,8 +52,9 @@ export const crawlDomainPublic = async (url: string, depth: number, followLinks:
     if (domain) {
         // no public crawls during normal crawl
         if (domain.crawlStatus === 'crawling') {
-            console.log('domain currently crawling: ' + (new Date().getTime() - (domain.lastCrawl?.getTime() ?? 0)));
-            return Response.json({ error: 'domain currently crawling' }, { status: 500 })
+            yield* crawlDomainPublicLogger.log('domain currently crawling: ' + (new Date().getTime() - (domain.lastCrawl?.getTime() ?? 0)));
+            // return Response.json({ error: 'domain currently crawling' }, { status: 500 })
+            return { error: 'domain currently crawling' };
         }
     }
 
@@ -56,8 +67,10 @@ export const crawlDomainPublic = async (url: string, depth: number, followLinks:
         }
     });
 
+    let crawlError = false;
+
     try {
-        console.log('Public Crawling: ' + targetURL, `depth ${depth}, followLinks ${followLinks}, maxDuration ${maxDuration}`);
+        yield* crawlDomainPublicLogger.log('Public Crawling: ' + targetURL + `depth ${depth}, followLinks ${followLinks}, maxDuration ${maxDuration}`);
 
         // Fetch the HTML content from the target URL
         timePassed = (new Date().getTime() - crawlStartTime);
@@ -67,13 +80,9 @@ export const crawlDomainPublic = async (url: string, depth: number, followLinks:
 
         requestStartTime = new Date().getTime();
         let data;
-        data = await initialCrawl(targetURL, maxCrawlTime, crawlStartTime, true, null, analyzedUrl);
-
+        data = (await initialCrawl(targetURL, maxCrawlTime, crawlStartTime, true, null, analyzedUrl)).data;
 
         links.push(...extractLinks(data, url, targetURL));
-
-        const maxLinkEntries = 50;
-        const maxRequests = 50;
 
         const subfunctionGenerator = recursiveCrawl(prisma,
             links,
@@ -87,43 +96,33 @@ export const crawlDomainPublic = async (url: string, depth: number, followLinks:
             maxRequests,
             url,
             '',
-            true,
+            false, // do not push links to database in public crawls
             requestStartTime,
-            cronLogger);
+            crawlDomainPublicLogger);
 
+        let result: IteratorResult<LogEntry, recursiveCrawlResponse>;
+        do {
+            result = await subfunctionGenerator.next();
+            if (!result.done) {
+                yield result.value;
+            }
+        } while (!result.done);
 
         // Initialize the result variable
         let subfunctionResult: recursiveCrawlResponse | undefined = undefined;
+        subfunctionResult = result.value;
 
-        // Process all yields from subfunction
-        let subfunctionItem: IteratorResult<CrawlResponseYieldType>;
-        do {
-            subfunctionItem = await subfunctionGenerator.next();
-            if (!subfunctionItem.done) {
-                if ('type' in subfunctionItem.value && subfunctionItem.value.type === 'result') {
-                    subfunctionResult = subfunctionItem.value.value;
-                } else {
-                    if (isLogEntry(subfunctionItem.value)) {
-                        // yield subfunctionItem.value;
-                        console.log(subfunctionItem.value);
-                    }
-                }
-            }
-        } while (!subfunctionItem.done);
+        yield* crawlDomainPublicLogger.log(`subfunctionResult` + subfunctionResult);
 
-        
+        // yield* crawlDomainPublicLogger.log(`subfunctionResult (${JSON.stringify(subfunctionResult)})`);
         if (!subfunctionResult) {
-            return Response.json({ error: 'Public Crawl Error' }, { status: 500 });
-        }
-        else if (subfunctionResult.timeout) {
-            return Response.json({ error: 'Timeout' }, { status: 500 });
-        }
-        else if (subfunctionResult.tooManyRequests) {
-            return Response.json({ error: 'Too many link entries' }, { status: 500 });
+            // return Response.json({ error: 'Public Crawl Error' }, { status: 500 });
+            return { error: 'Public Crawl Error' };
         }
 
         if (subfunctionResult.warningDoubleSlashOccured) {
             warningDoubleSlashOccured = true;
+            yield* crawlDomainPublicLogger.log(`❗2: warning: double slash occured`);
         }
 
         if (subfunctionResult.timeout) {
@@ -134,7 +133,7 @@ export const crawlDomainPublic = async (url: string, depth: number, followLinks:
         }
 
         requestTime = new Date().getTime() - requestStartTime;
-        console.log(`request time (${targetURL}): ${requestTime}`);
+        yield* crawlDomainPublicLogger.log(`request time (${targetURL}): ${requestTime}`);
 
         // 2do: always update
         await prisma.anonymousCrawl.update({
@@ -153,12 +152,13 @@ export const crawlDomainPublic = async (url: string, depth: number, followLinks:
 
     } catch (error: AxiosError | TypeError | any) {
         // Handle any errors
-        console.log(error);
+        yield* crawlDomainPublicLogger.log(error);
         timePassed = (new Date().getTime() - crawlStartTime);
         errorUnknownOccured = true;
 
         if (error instanceof AxiosError) {
-            console.log('set axios update')
+            yield* crawlDomainPublicLogger.log('axios error on request')
+            crawlError = true;
 
             await prisma.anonymousCrawl.update({
                 where: { id: domainCrawl.id },
@@ -173,7 +173,8 @@ export const crawlDomainPublic = async (url: string, depth: number, followLinks:
             });
         }
         else if (error instanceof TypeError) {
-            console.log('set type update')
+            yield* crawlDomainPublicLogger.log('type error on request')
+            crawlError = true;
 
             await prisma.anonymousCrawl.update({
                 where: { id: domainCrawl.id },
@@ -188,7 +189,8 @@ export const crawlDomainPublic = async (url: string, depth: number, followLinks:
             });
         }
         else {
-            console.log('set unknown update')
+            yield* crawlDomainPublicLogger.log('unknown request error')
+            crawlError = true;
 
             await prisma.anonymousCrawl.update({
                 where: { id: domainCrawl.id },
@@ -202,7 +204,8 @@ export const crawlDomainPublic = async (url: string, depth: number, followLinks:
                 }
             });
         }
-        return Response.json({ error: 'Error fetching data' }, { status: 500 })
+        // return Response.json({ error: 'Error fetching data' }, { status: 500 })
+        return { error: 'Error fetching data' };
     }
     finally {
         timePassed = (new Date().getTime() - crawlStartTime);
@@ -210,17 +213,21 @@ export const crawlDomainPublic = async (url: string, depth: number, followLinks:
         const error = (
             error404Occured ||
             error503Occured ||
-            errorTooManyLinksOccured
+            crawlError
         )
+
+        const crawlWarning = (
+            errorTooManyLinksOccured
+        );
 
         const warning = (
             warningDoubleSlashOccured
         );
 
         // await CalculateScore(domain.id);
-        console.log('crawling done: ', timePassed);
-
-        return Response.json({ error, errorTooManyLinksOccured, error404Occured, error503Occured, warning, warningDoubleSlashOccured }, { status: 200 })
+        yield* crawlDomainPublicLogger.log('crawling done: ' + timePassed);
+        
+        return { error: error ? 'crawl errors' : undefined, errorTooManyLinksOccured, error404Occured, error503Occured, warning, crawlWarning, warningDoubleSlashOccured };
     }
 
 }

@@ -3,7 +3,11 @@ import axios, { AxiosError } from 'axios';
 import { crawlNotification, crawlNotificationType } from '@/app/api/seo/domains/[domainName]/crawl/crawlNotification';
 
 
-export const initialCrawl = async (targetURL: string, maxCrawlTime: number, crawlStartTime: number, sendNotification: boolean, user: any, analyzedUrl: any) => {
+export const initialCrawl = async (targetURL: string, maxCrawlTime: number, crawlStartTime: number, sendNotification: boolean, user: any, analyzedUrl: any): Promise<{
+    data: any,
+    finalURL: string,
+    finalURLObject: any
+}> => {
     let timePassed = (new Date().getTime() - crawlStartTime);
     let finalURL = targetURL;
     const urlObject = new URL(targetURL);

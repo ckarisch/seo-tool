@@ -1,42 +1,39 @@
-// components/StreamingLogViewer.tsx
-import { NextResponse } from "next/server"
 
 export interface StreamingLogViewerProps {
-    title?: string;
-    styles?: {
-        background?: string;
-        textColor?: string;
-        maxHeight?: string;
-        width?: string;
-    };
+  title?: string;
+  styles?: {
+    background?: string;
+    textColor?: string;
+    maxHeight?: string;
+    width?: string;
+  };
 }
 
 export interface LogEntry {
-    text: string;
-    level?: 'info' | 'warn' | 'error';
-    delay?: number;
+  text: string;
+  level?: 'info' | 'warn' | 'error';
+  delay?: number;
 }
 
 const DEFAULT_STYLES = {
-    background: '#1e1e1e',
-    textColor: '#fff',
-    maxHeight: '400px',
-    width: '800px',
+  background: '#1e1e1e',
+  textColor: '#fff',
+  maxHeight: '400px',
+  width: '800px',
 }
 
 export function generateStreamingLogViewer(props: StreamingLogViewerProps = {}) {
-    const {
-        title = 'Streaming Logs',
-        styles = {},
-    } = props
+  const {
+    title = 'Streaming Logs',
+    styles = {},
+  } = props
 
-    const finalStyles = { ...DEFAULT_STYLES, ...styles }
+  const finalStyles = { ...DEFAULT_STYLES, ...styles }
 
-    const html = `
-<!DOCTYPE html>
+  const html = `<!DOCTYPE html>
 <html>
   <head>
-    <title>${title}</title>
+    <title>Console with Conditional Auto-scroll</title>
     <meta charset="utf-8">
     <style>
       body { 
@@ -45,12 +42,12 @@ export function generateStreamingLogViewer(props: StreamingLogViewerProps = {}) 
         background: #f5f5f5;
       }
       .code-viewer {
-        max-width: ${finalStyles.width};
+        max-width: 800px;
         margin: 20px auto;
         font-family: system-ui, -apple-system, sans-serif;
       }
       .window {
-        background: ${finalStyles.background};
+        background: #1e1e1e;
         border-radius: 8px;
         box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         overflow: hidden;
@@ -60,6 +57,7 @@ export function generateStreamingLogViewer(props: StreamingLogViewerProps = {}) 
         padding: 8px 16px;
         display: flex;
         align-items: center;
+        justify-content: space-between;
       }
       .window-buttons {
         display: flex;
@@ -73,14 +71,20 @@ export function generateStreamingLogViewer(props: StreamingLogViewerProps = {}) 
       .button-red { background: #ff5f56; }
       .button-yellow { background: #ffbd2e; }
       .button-green { background: #27c93f; }
+      .time-info {
+        color: #fff;
+        font-size: 14px;
+        display: flex;
+        gap: 20px;
+      }
       .code-content {
         padding: 16px;
-        max-height: ${finalStyles.maxHeight};
+        max-height: 400px;
         overflow: auto;
       }
       pre {
         margin: 0;
-        color: ${finalStyles.textColor};
+        color: #ffffff;
         font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
         font-size: 14px;
         white-space: pre-wrap;
@@ -94,10 +98,16 @@ export function generateStreamingLogViewer(props: StreamingLogViewerProps = {}) 
       .log-entry.error { background-color: rgba(255, 0, 0, 0.2); }
       .log-entry.warn { background-color: rgba(255, 165, 0, 0.2); }
       .log-entry.info { background-color: rgba(0, 255, 255, 0.1); }
+      .auto-scroll-status {
+        color: #fff;
+        font-size: 12px;
+        margin-top: 5px;
+        padding: 1px;
+      }
     </style>
   </head>
   <body>
-    <h1>${title}</h1>
+    <h1>Console with Conditional Auto-scroll</h1>
     <div class="code-viewer">
       <div class="window">
         <div class="window-header">
@@ -106,45 +116,103 @@ export function generateStreamingLogViewer(props: StreamingLogViewerProps = {}) 
             <div class="window-button button-yellow"></div>
             <div class="window-button button-green"></div>
           </div>
+          <div class="time-info">
+            <div>Started: <span id="startTime"></span></div>
+            <div>Time passed: <span id="elapsedTime"></span></div>
+          </div>
         </div>
-        <div class="code-content">
+        <div class="code-content" id="codeContent">
           <pre id="logContent"></pre>
         </div>
+        <div class="auto-scroll-status" id="scrollStatus"></div>
       </div>
     </div>
     <script>
       const logContent = document.getElementById('logContent');
+      const codeContent = document.getElementById('codeContent');
+      const startTimeElement = document.getElementById('startTime');
+      const elapsedTimeElement = document.getElementById('elapsedTime');
+      const scrollStatusElement = document.getElementById('scrollStatus');
       
+      const startTime = new Date();
+      let autoScroll = true;
+
       function appendLog(text, level = 'info') {
         const line = document.createElement('div');
         line.textContent = text;
         line.className = \`log-entry \${level}\`;
         logContent.appendChild(line);
-        logContent.scrollTop = logContent.scrollHeight;
+        if (autoScroll) {
+          scrollToBottom();
+        }
       }
+
+      function scrollToBottom() {
+        codeContent.scrollTop = codeContent.scrollHeight;
+      }
+
+      function updateTimes() {
+        const now = new Date();
+        const elapsed = now - startTime;
+        const hours = Math.floor(elapsed / 3600000);
+        const minutes = Math.floor((elapsed % 3600000) / 60000);
+        const seconds = Math.floor((elapsed % 60000) / 1000);
+
+        startTimeElement.textContent = startTime.toLocaleTimeString();
+        elapsedTimeElement.textContent = 
+          \`\${hours.toString().padStart(2, '0')}:\${minutes.toString().padStart(2, '0')}:\${seconds.toString().padStart(2, '0')}\`;
+      }
+
+      function updateScrollStatus() {
+        scrollStatusElement.textContent = autoScroll ? 'Auto-scroll: ON' : 'Auto-scroll: OFF (Press Space to resume)';
+      }
+
+      // Update times every second
+      setInterval(updateTimes, 1000);
+
+      // Detect manual scroll
+      codeContent.addEventListener('scroll', () => {
+        if (codeContent.scrollTop + codeContent.clientHeight < codeContent.scrollHeight) {
+          autoScroll = false;
+          updateScrollStatus();
+        }
+      });
+
+      // Detect space key press
+      document.addEventListener('keydown', (event) => {
+        if (event.code === 'Space') {
+          autoScroll = true;
+          scrollToBottom();
+          updateScrollStatus();
+          event.preventDefault(); // Prevent page scroll
+        }
+      });
+
+      // Initial updates
+      updateTimes();
+      updateScrollStatus();
     </script>
   </body>
-</html>
-`
-    return html
+</html>`;
+  return html
 }
 
 export async function streamLogs(
-    controller: ReadableStreamDefaultController,
-    encoder: TextEncoder,
-    logGenerator: AsyncGenerator<LogEntry>
+  controller: ReadableStreamDefaultController,
+  encoder: TextEncoder,
+  logGenerator: AsyncGenerator<LogEntry>
 ) {
-    try {
-        for await (const log of logGenerator) {
-            const { text, level = 'info', delay = 100 } = log
-            const script = `<script>appendLog("${text}", "${level}");</script>`
-            controller.enqueue(encoder.encode(script))
-            await new Promise(resolve => setTimeout(resolve, delay))
-        }
-    } catch (error) {
-        console.error('Error streaming logs:', error)
-        controller.error(error)
+  try {
+    for await (const log of logGenerator) {
+      const { text, level = 'info', delay = 100 } = log
+      const script = `<script>appendLog("${text}", "${level}");</script>`
+      controller.enqueue(encoder.encode(script))
+      await new Promise(resolve => setTimeout(resolve, delay))
     }
+  } catch (error) {
+    console.error('Error streaming logs:', error)
+    controller.error(error)
+  }
 }
 
 /* example usage */
@@ -168,7 +236,7 @@ export async function GET(request: Request) {
           yield { text: 'Starting application...' }
           
           for (let i = 1; i <= 5; i++) {
-            yield { text: `Processing batch ${i}...`, delay: 1000 }
+            yield { text: \`Processing batch \${i}...\`, delay: 1000 }
             
             if (i === 2) {
               yield { text: 'Warning: High memory usage detected', level: 'warn', delay: 500 }
@@ -178,7 +246,7 @@ export async function GET(request: Request) {
               yield { text: 'Error: Failed to connect to database', level: 'error', delay: 500 }
             }
             
-            yield { text: `Batch ${i} completed`, delay: 500 }
+            yield { text: \`Batch \${i} completed\`, delay: 500 }
           }
           
           yield { text: 'Application shutdown complete' }

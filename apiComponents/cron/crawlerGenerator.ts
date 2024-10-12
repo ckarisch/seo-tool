@@ -1,7 +1,7 @@
 import { env } from "process";
 import { createLogger } from "../dev/logger";
 import { LogEntry } from "../dev/StreamingLogViewer";
-import { crawlDomain } from "@/app/api/seo/domains/[domainName]/crawl/crawlDomain";
+import { crawlDomain, crawlDomainResponse } from "@/app/api/seo/domains/[domainName]/crawl/crawlDomain";
 import { PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
 
@@ -72,7 +72,22 @@ export async function* crawlerGenerator(maxExecutionTime: number): AsyncGenerato
                 const followLinks = true;
                 // const logger = (text: string) => (yield log(text));
                 yield* mainLogger.log(`➝  domain ${domain.domainName}: start`);
-                yield* (await crawlDomain(domain.domainName, depth, followLinks, maxExecutionTime))(crawlLogger);
+
+                /* subfunction */
+                const subfunctionGenerator = crawlDomain(domain.domainName, depth, followLinks, maxExecutionTime);
+        
+                let result: IteratorResult<LogEntry, crawlDomainResponse>;
+                do {
+                    result = await subfunctionGenerator.next();
+                    if (!result.done) {
+                        yield result.value;
+                    }
+                } while (!result.done);
+        
+                let subfunctionResult: crawlDomainResponse | undefined = undefined;
+                subfunctionResult = result.value;
+                /* end subfunction */
+
                 // await crawlDomain(domain.domainName, depth, followLinks, maxExecutionTime);
                 domainsCrawled += 1;
 
