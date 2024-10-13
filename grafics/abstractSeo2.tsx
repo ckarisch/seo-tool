@@ -8,15 +8,15 @@ export const AbstractSeo2 = () => <svg xmlns="http://www.w3.org/2000/svg" width=
             <feDropShadow dx="0" dy="1" stdDeviation="1" floodOpacity="0.1" />
         </filter>
         {/* <!-- Symbol Definitions --> */}
-        <path id="searchSymbol" d="M-6,-6 L6,6 M-6,6 L6,-6" stroke="#D4AF37" stroke-width="2" fill="none" />
-        <path id="rankSymbol" d="M-6,6 L0,-6 L6,6" stroke="#D4AF37" stroke-width="2" fill="none" />
-        <path id="contentSymbol" d="M-6,-6 h12 v12 h-12 z" stroke="#D4AF37" stroke-width="2" fill="none" />
+        <path id="searchSymbol" d="M-6,-6 L6,6 M-6,6 L6,-6" stroke="#D4AF37" strokeWidth="2" fill="none" />
+        <path id="rankSymbol" d="M-6,6 L0,-6 L6,6" stroke="#D4AF37" strokeWidth="2" fill="none" />
+        <path id="contentSymbol" d="M-6,-6 h12 v12 h-12 z" stroke="#D4AF37" strokeWidth="2" fill="none" />
     </defs>
 
     {/* <!-- Enhanced screen frame --> */}
     <g filter="url(#frameDepth)">
-        <rect x="40" y="30" width="320" height="220" rx="4" fill="#fafafa" stroke="#2B2D42" stroke-width="1.5" />
-        <rect x="40" y="30" width="320" height="20" rx="4" fill="#f0f0f0" stroke="#2B2D42" stroke-width="1.5" />
+        <rect x="40" y="30" width="320" height="220" rx="4" fill="#fafafa" stroke="#2B2D42" strokeWidth="1.5" />
+        <rect x="40" y="30" width="320" height="20" rx="4" fill="#f0f0f0" stroke="#2B2D42" strokeWidth="1.5" />
         <circle cx="55" cy="40" r="3" fill="#D4AF37" opacity="0.5" />
         <circle cx="70" cy="40" r="3" fill="#2B2D42" opacity="0.3" />
         <text x="180" y="44" font-size="10" fill="#2B2D42" opacity="0.5" text-anchor="middle">SEO Analysis</text>
@@ -27,14 +27,14 @@ export const AbstractSeo2 = () => <svg xmlns="http://www.w3.org/2000/svg" width=
 
     {/* <!-- Subtle grid --> */}
     <path d="M60 80 H340 M60 110 H340 M60 140 H340 M60 170 H340 M60 200 H340"
-        stroke="#2B2D42" stroke-width="0.2" opacity="0.05" />
+        stroke="#2B2D42" strokeWidth="0.2" opacity="0.05" />
 
     {/* <!-- Primary analysis circles --> */}
     <g>
-        <circle cx="200" cy="140" r="70" fill="none" stroke="#D4AF37" stroke-width="1.5">
+        <circle cx="200" cy="140" r="70" fill="none" stroke="#D4AF37" strokeWidth="1.5">
             <animate attributeName="stroke-opacity" values="0.7;1;0.7" dur="10s" repeatCount="indefinite" />
         </circle>
-        <circle cx="200" cy="140" r="55" fill="none" stroke="#D4AF37" stroke-width="0.5" opacity="0.3" />
+        <circle cx="200" cy="140" r="55" fill="none" stroke="#D4AF37" strokeWidth="0.5" opacity="0.3" />
     </g>
 
     {/* <!-- Orbiting SEO elements --> */}
@@ -77,7 +77,7 @@ export const AbstractSeo2 = () => <svg xmlns="http://www.w3.org/2000/svg" width=
 
     {/* <!-- Central hub --> */}
     <g>
-        <circle cx="200" cy="140" r="15" fill="none" stroke="#D4AF37" stroke-width="1">
+        <circle cx="200" cy="140" r="15" fill="none" stroke="#D4AF37" strokeWidth="1">
             <animate attributeName="r" values="15;16;15" dur="6s" repeatCount="indefinite" />
         </circle>
         <circle cx="200" cy="140" r="8" fill="#D4AF37">
@@ -87,8 +87,8 @@ export const AbstractSeo2 = () => <svg xmlns="http://www.w3.org/2000/svg" width=
     </g>
 
     {/* <!-- Connection lines --> */}
-    <line x1="130" y1="140" x2="270" y2="140" stroke="#D4AF37" stroke-width="0.5" opacity="0.2" />
-    <line x1="200" y1="70" x2="200" y2="210" stroke="#D4AF37" stroke-width="0.5" opacity="0.2" />
+    <line x1="130" y1="140" x2="270" y2="140" stroke="#D4AF37" strokeWidth="0.5" opacity="0.2" />
+    <line x1="200" y1="70" x2="200" y2="210" stroke="#D4AF37" strokeWidth="0.5" opacity="0.2" />
 
     {/* <!-- Status indicators --> */}
     <circle cx="320" cy="40" r="3" fill="#D4AF37">

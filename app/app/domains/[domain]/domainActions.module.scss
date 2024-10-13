@@ -1,0 +1,38 @@
+ 
+  .actionItem {
+    border: 1px solid #e5e7eb;
+    border-radius: 0.375rem;
+    padding: 1rem;
+  }
+  
+  .actionTitle {
+    font-size: 1rem;
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+  }
+  
+  .actionDescription {
+    font-size: 0.875rem;
+    color: #6b7280;
+    margin-bottom: 1rem;
+  }
+  
+  .actionButton {
+    background-color: #3b82f6;
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 0.25rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    border: none;
+  }
+  
+  .actionButton:hover {
+    background-color: #2563eb;
+  }
+  
+  .actionButton:disabled {
+    background-color: #9ca3af;
+    cursor: not-allowed;
+  }

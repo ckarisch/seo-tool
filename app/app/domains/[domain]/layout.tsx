@@ -22,7 +22,7 @@ export default function RootLayout({
 
         <div className={layout.domain}>
           <div className={layout.domainData}>
-            {params.domain}
+            <h1 className={layout.domainName}>{params.domain}</h1>
           </div>
         </div>
         <nav id={layout.domainnav}>

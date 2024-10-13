@@ -1,5 +1,11 @@
 @import "@/app/variables";
 
+
+.linksList h2 {
+    font-size: 1.4rem;
+    margin-bottom: 20px;
+}
+
 .links {
     display: flex;
     flex-wrap: wrap;

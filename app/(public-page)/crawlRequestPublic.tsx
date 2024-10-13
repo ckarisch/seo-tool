@@ -195,7 +195,7 @@ export default function CrawlRequestPublic() {
                     {crawlResponse?.crawlWarning &&
                         <div className={styles.finding}>
                             <strong>Limited Analysis Completed</strong><br />
-                            We've performed a partial review of your website. Some tests were not executed. For a comprehensive analysis including all available tests, please register your domain with our service.
+                            We&apos;ve performed a partial review of your website. Some tests were not executed. For a comprehensive analysis including all available tests, please register your domain with our service.
                         </div>
                     }
                 </div>

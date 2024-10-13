@@ -7,6 +7,7 @@ import Section from "@/components/layout/section";
 import { defaultLinksState } from "@/interfaces/link";
 import { format } from "date-fns";
 import { visibleDateFormat } from "@/config/config";
+import MinimizableContainer from "@/components/layout/MinimizableContainer";
 
 const dummyLinks = [
     { path: 'Loading', lastCheck: 'loading', lastLoadTime: 'loading' }
@@ -78,10 +79,8 @@ export default function LinkList({ params, linksFetchTag, domainFetchTag }: { pa
     }
 
     return (
-        <div className={styles.linksList}>
-
-            <Section>
-                <h2>Links ({linksJson.links.length})</h2>
+        <>
+            <MinimizableContainer title={`Links (${linksJson.links.length})`}>
                 <div className={styles.links}>
                     {linksJson.links.map((link: any, index: number) => {
                         return <div key={index}>
@@ -114,9 +113,9 @@ export default function LinkList({ params, linksFetchTag, domainFetchTag }: { pa
                         </div>
                     })}
                 </div>
+            </MinimizableContainer >
 
-                <br />
-
+            <MinimizableContainer title={`External Links (${linksJson.externalLinks?.length})`}>
                 <h2>External Links ({linksJson.externalLinks?.length})</h2>
                 <div className={styles.externalLinks}>
                     {linksJson.externalLinks && linksJson.externalLinks.map((link: any, index: number) => {
@@ -127,7 +126,7 @@ export default function LinkList({ params, linksFetchTag, domainFetchTag }: { pa
                         </div>
                     })}
                 </div>
-            </Section >
-        </div >
+            </MinimizableContainer >
+        </>
     );
 }

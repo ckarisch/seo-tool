@@ -11,6 +11,10 @@
         font-weight: bold;
     }
 
+    .domainName {
+        font-size: 18px;
+    }
+
     @media (prefers-color-scheme: dark) {
         background-color: $background-light-dark;
     }
