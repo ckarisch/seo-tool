@@ -1,8 +1,9 @@
 import { getServerSession } from 'next-auth';
-import { crawlDomain } from './crawlDomain';
+import { crawlDomain, crawlDomainResponse } from './crawlDomain';
 import { authOptions } from '@/app/api/auth/[...nextauth]/authOptions';
 import { createLogger } from '@/apiComponents/dev/logger';
 import { LogEntry, streamLogs } from '@/apiComponents/dev/StreamingLogViewer';
+import { NextResponse } from 'next/server';
 
 export const maxDuration = 60; // in seconds
 
@@ -23,8 +24,8 @@ export async function POST(
   const followLinks = true;
   const maxExecutionTime = 180000; // in milliseconds
   const encoder = new TextEncoder();
-  let resolveFinalResponse: (value: Response | undefined) => void;
-  const generatorResponsePromise = new Promise<Response | undefined>(resolve => {
+  let resolveFinalResponse: (value: crawlDomainResponse | undefined) => void;
+  const generatorResponsePromise = new Promise<crawlDomainResponse | undefined>(resolve => {
     resolveFinalResponse = resolve;
   });
 
@@ -32,31 +33,37 @@ export async function POST(
     async start(controller) {
       async function* generateLogs(): AsyncGenerator<LogEntry, void, unknown> {
         const crawlRequestLogger = createLogger('Crawl Request');
-        const crawlGenerator = crawlDomain(
+        yield* crawlRequestLogger.log('crawl request');
+
+
+        /* subfunction */
+        const subfunctionGenerator = crawlDomain(
           params.domainName,
           depth,
           followLinks,
           maxExecutionTime
-        )(crawlRequestLogger);
+        );
 
-        let result: IteratorResult<LogEntry, Response>;
+        let result: IteratorResult<LogEntry, crawlDomainResponse>;
         do {
-          result = await crawlGenerator.next();
+          result = await subfunctionGenerator.next();
           if (!result.done) {
             yield result.value;
           }
         } while (!result.done);
 
-        // Resolve the promise with the final Response object
+        let subfunctionResult: crawlDomainResponse | undefined = undefined;
+        subfunctionResult = result.value;
         resolveFinalResponse(result.value);
-      }
+        /* end subfunction */
 
+        controller.close();
+      }
+      
       for await (const logEntry of generateLogs()) {
         const encodedChunk = encoder.encode(JSON.stringify(logEntry) + '\n');
         controller.enqueue(encodedChunk);
       }
-
-      controller.close();
     }
   });
 
@@ -73,18 +80,7 @@ export async function POST(
   const finalResponse = await generatorResponsePromise;
 
   if (finalResponse) {
-    // Combine the stream response headers with the finalResponse
-    const combinedHeaders = new Headers(streamResponse.headers);
-    for (const [key, value] of finalResponse.headers.entries()) {
-      combinedHeaders.set(key, value);
-    }
-
-    // Create a new response with the combined headers and the body of finalResponse
-    return new Response(finalResponse.body, {
-      status: finalResponse.status,
-      statusText: finalResponse.statusText,
-      headers: combinedHeaders,
-    });
+    return NextResponse.json(finalResponse);
   } else {
     // If for some reason finalResponse is not set, return an error
     return Response.json({ error: "Crawl did not complete successfully" }, { status: 500 });

@@ -2,7 +2,6 @@
     width: 100%;
     overflow: hidden;
     transition: max-height 0.3s ease-out;
-    max-height: 1000px; /* Adjust this value based on your content */
   }
   
   .minimized {

@@ -27,6 +27,7 @@ export default function DomainStatus({ params, domainFetchTag, linksFetchTag }: 
         },
     });
 
+    const [loading, setLoading] = useState(true);
     const [domainJson, setDomainJson] = useState(defaultDomainState);
     const [apiUser, setApiUser] = useState(defaultUserState);
     const [crawlStatus, setcrawlStatus] = useState('idle');
@@ -37,7 +38,7 @@ export default function DomainStatus({ params, domainFetchTag, linksFetchTag }: 
         console.log('status', status);
         if (status !== "loading") {
             fetchData('api/user/', 'api/user/', setApiUser, null);
-            fetchData('api/seo/domains/' + params.domain, domainFetchTag, setDomainJson, null);
+            fetchData('api/seo/domains/' + params.domain, domainFetchTag, setDomainJson, () => setLoading(false));
         }
     }, [status]);
 
@@ -102,7 +103,12 @@ export default function DomainStatus({ params, domainFetchTag, linksFetchTag }: 
     };
 
     const icons = () => {
-        if (noCrawling && noLoading && domainJson.error) {
+        if (loading) {
+            return <div title={'crawling'}>
+                <Loading />
+            </div>
+        }
+        else if (noCrawling && noLoading && domainJson.error) {
             return <div title={'crawl error'}>
                 <Cross />
             </div>
@@ -117,12 +123,12 @@ export default function DomainStatus({ params, domainFetchTag, linksFetchTag }: 
         else if (noCrawling && noLoading && !domainJson.error && !domainJson.warning &&
             domainJson.crawlStatus == 'idle') {
 
-            <div title={'status ok'}>
+            return <div title={'status ok'}>
                 <Check />
             </div>
         }
         else if (!domainJson.error && !domainJson.warning && !noCrawling && noLoading) {
-            <div title={'crawling'}>
+            return <div title={'crawling'}>
                 <Loading />
             </div>
         }

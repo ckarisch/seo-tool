@@ -78,36 +78,42 @@ export default function LinkList({ params, linksFetchTag, domainFetchTag }: { pa
         }
     }
 
+    const handleExternalLinkClick = ($e: React.MouseEvent<HTMLDivElement>, index: number): void => {
+        if (linksJson.externalLinks) {
+            const tempLinks = linksJson.externalLinks;
+            tempLinks[index].descriptionVisible = !tempLinks[index].descriptionVisible;
+            setLinksJson({ ...linksJson, externalLinks: tempLinks })
+        }
+    }
+
     return (
         <>
             <MinimizableContainer title={`Links (${linksJson.links.length})`}>
                 <div className={styles.links}>
                     {linksJson.links.map((link: any, index: number) => {
-                        return <div key={index}>
-                            <div className={[styles.linkInner, link.warningDoubleSlash ? styles.warning : null, link.errorCode ? styles.error : null].join(' ')}>
-                                <div className={[styles.linkHeading].join(' ')} onClick={($e) => handleLinkClick($e, index)}>
-                                    <div>
-                                        {link.path}
-                                    </div>
-                                    <div>
-                                        {format(new Date(link.lastCheck), visibleDateFormat)}
-                                    </div>
-                                    <div>
-                                        {link.lastLoadTime > 0 ? link.lastLoadTime + 'ms' : 'no data'}
-                                    </div>
+                        return <div key={index} className={[styles.linkInner, link.warningDoubleSlash ? styles.warning : null, link.errorCode ? styles.error : null].join(' ')}>
+                            <div className={[styles.linkHeading].join(' ')} onClick={($e) => handleLinkClick($e, index)}>
+                                <div>
+                                    {link.path}
                                 </div>
-                                <div className={[styles.linkDetails, link.descriptionVisible ? styles.visible : styles.hidden].join(' ')}>
+                                <div>
+                                    {format(new Date(link.lastCheck), visibleDateFormat)}
+                                </div>
+                                <div>
+                                    {link.lastLoadTime > 0 ? link.lastLoadTime + 'ms' : 'no data'}
+                                </div>
+                            </div>
+                            <div className={[styles.linkDetails, link.descriptionVisible ? styles.visible : styles.hidden].join(' ')}>
+                                <div>
+                                    <strong>Type:</strong> {link.type}
+                                </div>
+                                {link.errorCode &&
                                     <div>
-                                        <strong>Type:</strong> {link.type}
+                                        <strong>Error:</strong> {link.errorCode}
                                     </div>
-                                    {link.errorCode &&
-                                        <div>
-                                            <strong>Error:</strong> {link.errorCode}
-                                        </div>
-                                    }
-                                    <div>
-                                        <strong>Found on:</strong> {link.foundOnPath}
-                                    </div>
+                                }
+                                <div>
+                                    <strong>Found on:</strong> {link.foundOnPath}
                                 </div>
                             </div>
                         </div>
@@ -116,12 +122,24 @@ export default function LinkList({ params, linksFetchTag, domainFetchTag }: { pa
             </MinimizableContainer >
 
             <MinimizableContainer title={`External Links (${linksJson.externalLinks?.length})`}>
-                <h2>External Links ({linksJson.externalLinks?.length})</h2>
-                <div className={styles.externalLinks}>
+                <div className={styles.links}>
                     {linksJson.externalLinks && linksJson.externalLinks.map((link: any, index: number) => {
-                        return <div key={index}>
-                            <div className={styles.externalLinkInner}>
-                                {link.url}, {link.lastCheck}, found on: {link.foundOnPath}
+                        return <div key={index} className={[styles.linkInner, link.warningDoubleSlash ? styles.warning : null, link.errorCode ? styles.error : null].join(' ')}>
+                            <div className={[styles.linkHeading].join(' ')} onClick={($e) => handleExternalLinkClick($e, index)}>
+                                <div>
+                                    {link.url}
+                                </div>
+                                <div>
+                                    {format(new Date(link.lastCheck), visibleDateFormat)}
+                                </div>
+                            </div>
+                            <div className={[styles.linkDetails, link.descriptionVisible ? styles.visible : styles.hidden].join(' ')}>
+                                <div>
+                                    <strong>Type:</strong> external
+                                </div>
+                                <div>
+                                    <strong>Found on:</strong> {link.foundOnPath}
+                                </div>
                             </div>
                         </div>
                     })}
