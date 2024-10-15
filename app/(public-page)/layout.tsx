@@ -34,7 +34,7 @@ export default async function RootLayout({
             </li>
             <li className={[layout.globalheaderLi, layout.desktop].join(' ')}>
               <Link href={'/'} className={layout.globalheaderLink}>
-                Produkte
+                Products
               </Link>
             </li>
             <li className={[layout.globalheaderLi, layout.desktop].join(' ')}>
@@ -44,7 +44,7 @@ export default async function RootLayout({
             </li>
             <li className={[layout.globalheaderLi, layout.desktop].join(' ')}>
               <Link href={'/'} className={layout.globalheaderLink}>
-                Preise
+                Prices
               </Link>
             </li>
             <li className={layout.globalheaderLi}>

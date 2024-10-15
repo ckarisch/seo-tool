@@ -49,7 +49,7 @@ export default async function RootLayout({
               <ul className={layout.globalfooterList}>
                 <li className={layout.globalfooterLi}>
                   <Link href={'/'} className={[layout.globalfooterLink, layout.logoLink].join(' ')}>
-                    <Image className={layout.logo} src={'/next.svg'} alt="logo" width={150} height={30.5}></Image> <br />
+                    <Image className={layout.logo} src={'/logo.svg'} alt="logo" width={150} height={30.5}></Image> <br />
                     Form und Zeichen Austria<br />
                   </Link>
                 </li>
