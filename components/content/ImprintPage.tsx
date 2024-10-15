@@ -24,7 +24,7 @@ interface CompanyInfo {
     phone: string;
     email: string;
   };
-  legal: {
+  legal?: {
     director: string;
     email: string;
   }[];
@@ -47,16 +47,16 @@ const defaultCompanyInfo: CompanyInfo = {
     country: "Austria"
   },
   contact: {
-    phone: "+43 660 91 81 660",
+    phone: "+43 681 8111 9035",
     email: "seo-tool@formundzeichen.at"
   },
-  legal: [{
-    director: "Roman Pendl, MA",
-    email: "roman@formundzeichen.at",
-  }, {
-    director: "Bernhard Karisch, MA",
-    email: "bernhard@formundzeichen.at"
-  }],
+  // legal: [{
+  //   director: "Roman Pendl, MA",
+  //   email: "roman@formundzeichen.at",
+  // }, {
+  //   director: "Bernhard Karisch, MA",
+  //   email: "bernhard@formundzeichen.at"
+  // }],
   regulatory: {
     name: "Bezirkshauptmannschaft Graz"
   },
@@ -120,7 +120,7 @@ export default function ImprintPage({
         <section className={styles.section}>
           <h2>Legal Representatives</h2>
           <div className={styles.grid}>
-            {companyInfo.legal.map(entry => (
+            {companyInfo.legal && companyInfo.legal.map(entry => (
               <><ContactItem title="Managing Director">
                 {entry.director}
               </ContactItem>
