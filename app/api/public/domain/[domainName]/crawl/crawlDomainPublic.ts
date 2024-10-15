@@ -46,6 +46,9 @@ export const crawlDomainPublic = async (url: string, depth: number, followLinks:
             return Response.json({ error: 'domain currently crawling' }, { status: 500 })
         }
     }
+    else {
+        return Response.json({ error: 'domain not found' }, { status: 500 });
+    }
 
     const domainCrawl = await prisma.anonymousCrawl.create({
         data: {
@@ -67,7 +70,7 @@ export const crawlDomainPublic = async (url: string, depth: number, followLinks:
 
         requestStartTime = new Date().getTime();
         let data;
-        data = await initialCrawl(targetURL, maxCrawlTime, crawlStartTime, true, null, analyzedUrl);
+        data = await initialCrawl(domain, targetURL, maxCrawlTime, crawlStartTime, true, null, analyzedUrl);
 
 
         links.push(...extractLinks(data, url, targetURL));

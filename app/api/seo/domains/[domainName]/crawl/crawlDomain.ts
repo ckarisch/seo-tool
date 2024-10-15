@@ -144,7 +144,7 @@ export async function* crawlDomain(
             data,
             finalURL,
             finalURLObject
-        } = await initialCrawl(targetURL, maxCrawlTime, crawlStartTime, true, user, analyzedUrl);
+        } = await initialCrawl(domain, targetURL, maxCrawlTime, crawlStartTime, true, user, analyzedUrl);
 
         requestTime = new Date().getTime() - requestStartTime;
         yield* logger.log(`request time (${targetURL}): ${requestTime}`);

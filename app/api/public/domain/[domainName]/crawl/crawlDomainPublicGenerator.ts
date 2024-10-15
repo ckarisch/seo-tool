@@ -57,6 +57,9 @@ export async function* crawlDomainPublicGenerator(url: string, depth: number, fo
             return { error: 'domain currently crawling' };
         }
     }
+    else {
+        return { error: 'domain not found' };
+    }
 
     const domainCrawl = await prisma.anonymousCrawl.create({
         data: {
@@ -80,7 +83,7 @@ export async function* crawlDomainPublicGenerator(url: string, depth: number, fo
 
         requestStartTime = new Date().getTime();
         let data;
-        data = (await initialCrawl(targetURL, maxCrawlTime, crawlStartTime, true, null, analyzedUrl)).data;
+        data = (await initialCrawl(domain, targetURL, maxCrawlTime, crawlStartTime, true, null, analyzedUrl)).data;
 
         links.push(...extractLinks(data, url, targetURL));
 

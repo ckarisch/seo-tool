@@ -1,9 +1,10 @@
 
 import axios, { AxiosError } from 'axios';
 import { crawlNotification, crawlNotificationType } from '@/app/api/seo/domains/[domainName]/crawl/crawlNotification';
+import { Domain } from '@prisma/client';
 
 
-export const initialCrawl = async (targetURL: string, maxCrawlTime: number, crawlStartTime: number, sendNotification: boolean, user: any, analyzedUrl: any): Promise<{
+export const initialCrawl = async (domain: Domain, targetURL: string, maxCrawlTime: number, crawlStartTime: number, sendNotification: boolean, user: any, analyzedUrl: any): Promise<{
     data: any,
     finalURL: string,
     finalURLObject: any
@@ -58,9 +59,12 @@ export const initialCrawl = async (targetURL: string, maxCrawlTime: number, craw
                 if (error.response?.status == 404 && sendNotification && user) {
                     crawlNotification(
                         user,
+                        domain,
                         crawlNotificationType.Error404,
-                        analyzedUrl.normalizedLink,
-                        [analyzedUrl.normalizedLink]
+                        true,
+                        domain.domainName,
+                        [analyzedUrl.normalizedLink],
+                        domain.score ? domain.score : 0
                     );
                 }
                 console.log('error: 404', finalURL);
@@ -69,9 +73,12 @@ export const initialCrawl = async (targetURL: string, maxCrawlTime: number, craw
                 if (error.response?.status == 503 && sendNotification && user) {
                     crawlNotification(
                         user,
+                        domain,
                         crawlNotificationType.Error503,
-                        analyzedUrl.normalizedLink,
-                        [analyzedUrl.normalizedLink]
+                        true,
+                        domain.domainName,
+                        [analyzedUrl.normalizedLink],
+                        domain.score ? domain.score : 0
                     );
                 }
                 console.log('error: 503', finalURL);
