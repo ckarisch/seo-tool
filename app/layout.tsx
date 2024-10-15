@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Bricolage_Grotesque, Inter } from "next/font/google";
 import "./globals.css";
 import layout from "./layout.module.scss";
 import Providers from "./providers";
@@ -10,7 +10,19 @@ import Section from "@/components/layout/section";
 import Link from "next/link";
 import Image from "next/image";
 
-const inter = Inter({ subsets: ["latin"] });
+const inter = Inter({
+  subsets: ['latin'],
+  display: 'swap',
+  weight: ['400', '500', '700'],
+  variable: '--font-inter',
+})
+
+const bricolage = Bricolage_Grotesque({
+  subsets: ['latin'],
+  display: 'swap',
+  weight: ['400', '700'],
+  variable: '--font-bricolage',
+})
 
 export const metadata: Metadata = {
   title: "Create Next App",
@@ -27,7 +39,7 @@ export default async function RootLayout({
   const session = await getServerSession(authOptions)
   return (
     <html lang="en">
-      <body className={inter.className}>
+      <body className={[inter.className, bricolage.variable, inter.variable, layout.body].join(' ')}>
         <Providers session={session}>
           {children}
         </Providers>

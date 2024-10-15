@@ -168,9 +168,9 @@ export const AbstractSeo3 = () => <svg xmlns="http://www.w3.org/2000/svg" width=
     
     <g transform="translate(70, 190)">
         
-        <text x="0" y="10" font-size="6" fill="#2B2D42" opacity="0.7">SEO</text>
-        <text x="40" y="10" font-size="6" fill="#2B2D42" opacity="0.7">Speed</text>
-        <text x="80" y="10" font-size="6" fill="#2B2D42" opacity="0.7">Mobile</text>
+        <text x="0" y="10" fontSize="6" fill="#2B2D42" opacity="0.7">SEO</text>
+        <text x="40" y="10" fontSize="6" fill="#2B2D42" opacity="0.7">Speed</text>
+        <text x="80" y="10" fontSize="6" fill="#2B2D42" opacity="0.7">Mobile</text>
 
         
         <g transform="translate(0, 15)">

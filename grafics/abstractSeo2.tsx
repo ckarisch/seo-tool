@@ -19,7 +19,7 @@ export const AbstractSeo2 = () => <svg xmlns="http://www.w3.org/2000/svg" width=
         <rect x="40" y="30" width="320" height="20" rx="4" fill="#f0f0f0" stroke="#2B2D42" strokeWidth="1.5" />
         <circle cx="55" cy="40" r="3" fill="#D4AF37" opacity="0.5" />
         <circle cx="70" cy="40" r="3" fill="#2B2D42" opacity="0.3" />
-        <text x="180" y="44" font-size="10" fill="#2B2D42" opacity="0.5" text-anchor="middle">SEO Analysis</text>
+        <text x="180" y="44" fontSize="10" fill="#2B2D42" opacity="0.5" text-anchor="middle">SEO Analysis</text>
     </g>
 
     {/* <!-- Screen content area --> */}
@@ -47,7 +47,7 @@ export const AbstractSeo2 = () => <svg xmlns="http://www.w3.org/2000/svg" width=
                 repeatCount="indefinite">
             </animateMotion>
             <use href="#searchSymbol" />
-            <text x="15" y="0" font-size="8" fill="#D4AF37">SEARCH</text>
+            <text x="15" y="0" fontSize="8" fill="#D4AF37">SEARCH</text>
         </g>
 
         {/* <!-- Ranking Element --> */}
@@ -59,7 +59,7 @@ export const AbstractSeo2 = () => <svg xmlns="http://www.w3.org/2000/svg" width=
                 repeatCount="indefinite">
             </animateMotion>
             <use href="#rankSymbol" />
-            <text x="15" y="0" font-size="8" fill="#D4AF37">RANK</text>
+            <text x="15" y="0" fontSize="8" fill="#D4AF37">RANK</text>
         </g>
 
         {/* <!-- Content Element --> */}
@@ -71,7 +71,7 @@ export const AbstractSeo2 = () => <svg xmlns="http://www.w3.org/2000/svg" width=
                 repeatCount="indefinite">
             </animateMotion>
             <use href="#contentSymbol" />
-            <text x="15" y="0" font-size="8" fill="#D4AF37">CONTENT</text>
+            <text x="15" y="0" fontSize="8" fill="#D4AF37">CONTENT</text>
         </g>
     </g>
 
@@ -83,7 +83,7 @@ export const AbstractSeo2 = () => <svg xmlns="http://www.w3.org/2000/svg" width=
         <circle cx="200" cy="140" r="8" fill="#D4AF37">
             <animate attributeName="r" values="8;8.5;8" dur="6s" repeatCount="indefinite" />
         </circle>
-        <text x="200" y="142" font-size="6" fill="#fafafa" text-anchor="middle">SEO</text>
+        <text x="200" y="142" fontSize="6" fill="#fafafa" text-anchor="middle">SEO</text>
     </g>
 
     {/* <!-- Connection lines --> */}
@@ -97,7 +97,7 @@ export const AbstractSeo2 = () => <svg xmlns="http://www.w3.org/2000/svg" width=
 
     {/* <!-- Data metrics --> */}
     <g opacity="0.5">
-        <text x="60" y="70" font-size="8" fill="#2B2D42">Metrics</text>
-        <text x="320" y="70" font-size="8" fill="#2B2D42" text-anchor="end">Analytics</text>
+        <text x="60" y="70" fontSize="8" fill="#2B2D42">Metrics</text>
+        <text x="320" y="70" fontSize="8" fill="#2B2D42" text-anchor="end">Analytics</text>
     </g>
 </svg>
