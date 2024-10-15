@@ -132,6 +132,11 @@ export default function DomainStatus({ params, domainFetchTag, linksFetchTag }: 
                 <Loading />
             </div>
         }
+        else if (crawlStatus === 'crawling') {
+            return <div title={'crawling'}>
+                <Loading />
+            </div>
+        }
     }
 
     if (apiUser.role !== 'admin' && !domainJson.domainVerified && !['loading', 'authenticated'].includes(status)) {

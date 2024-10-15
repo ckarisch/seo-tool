@@ -1,3 +1,4 @@
+@import "@/app/variables";
  
   .actionItem {
     border: 1px solid #e5e7eb;
@@ -18,7 +19,7 @@
   }
   
   .actionButton {
-    background-color: #3b82f6;
+    background-color: $main;
     color: white;
     padding: 0.5rem 1rem;
     border-radius: 0.25rem;
@@ -29,7 +30,7 @@
   }
   
   .actionButton:hover {
-    background-color: #2563eb;
+    background-color: $main-light;
   }
   
   .actionButton:disabled {

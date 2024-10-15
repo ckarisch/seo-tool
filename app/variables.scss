@@ -17,3 +17,5 @@ $good: $warning;
 $bad: $error;
 
 $main: rgb(231, 208, 124);
+$main-light: lighten($main, 10%);
+$text-secondary: $color;

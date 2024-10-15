@@ -8,9 +8,8 @@ const prisma = new PrismaClient();
 const resetCrawlTime = 3600000; // 1h
 const maxDomainCrawls = 2; // 1h
 
-export async function* crawlerGenerator(maxExecutionTime: number): AsyncGenerator<LogEntry> {
+export async function* crawlerGenerator(maxExecutionTime: number, host: string): AsyncGenerator<LogEntry> {
     const mainLogger = createLogger('CRAWL_START');
-    const crawlLogger = createLogger('CRAWL');
 
     let domainsCrawled = 0;
 
@@ -75,7 +74,7 @@ export async function* crawlerGenerator(maxExecutionTime: number): AsyncGenerato
 
                 /* subfunction */
                 const subfunctionGenerator = crawlDomain(domain.domainName, depth, followLinks, maxExecutionTime);
-        
+
                 let result: IteratorResult<LogEntry, crawlDomainResponse>;
                 do {
                     result = await subfunctionGenerator.next();
@@ -83,13 +82,22 @@ export async function* crawlerGenerator(maxExecutionTime: number): AsyncGenerato
                         yield result.value;
                     }
                 } while (!result.done);
-        
+
                 let subfunctionResult: crawlDomainResponse | undefined = undefined;
                 subfunctionResult = result.value;
                 /* end subfunction */
 
                 // await crawlDomain(domain.domainName, depth, followLinks, maxExecutionTime);
                 domainsCrawled += 1;
+
+                await prisma.adminLog.create({
+                    data: {
+                        createdAt: new Date(),
+                        message: `domain ${domain.domainName} crawled (score: ${(domain.score ? domain.score : 0) * 100}), host: ${host}`,
+                        domainId: domain.id,
+                        userId: domain.userId
+                    }
+                });
 
                 yield* mainLogger.log(`➝  domain ${domain.domainName}: end (crawled = ${domainsCrawled})`);
                 continue;

@@ -37,5 +37,5 @@ yarn-error.log*
 next-env.d.ts
 
 # local files
-app/admin
-app/api/admin
+app/local
+app/api/local

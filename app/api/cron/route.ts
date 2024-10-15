@@ -13,6 +13,8 @@ const prisma = new PrismaClient();
 
 
 export async function GET(request: Request) {
+  const host = request.headers.get('host') || 'Unknown host'
+
   // maxExecutionTime ist 20 seconds lower than maxDuration to prevent hard timeouts
   const maxExecutionTime = 180000; // in milliseconds
 
@@ -55,7 +57,7 @@ export async function GET(request: Request) {
                 // convert ms to minutes, interval in minutes
                 if (cron.type === 'crawl') {
                   yield* cronLogger.log(`${cron.name}: starting crawl`);
-                  await streamLogs(controller, encoder, crawlerGenerator(maxExecutionTime));
+                  await streamLogs(controller, encoder, crawlerGenerator(maxExecutionTime, host));
                 }
                 await prisma.cronJobs.update({ where: { id: cron.id }, data: { status: 'idle', lastEnd: new Date() } });
                 yield* cronLogger.log(`${cron.name}: status idle`);

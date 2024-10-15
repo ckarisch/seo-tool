@@ -349,15 +349,22 @@ export async function* crawlDomain(
             }
         });
 
-        await CalculateScore(domain.id);
+        const score = await CalculateScore(domain.id);
 
         if (!domain.disableNotifications && !errorUnknownOccured) {
-            // only send 1 error notification
-            if (error503Occured) {
-                await crawlNotification(user, crawlNotificationType.Error503, analyzedUrl.normalizedLink, error404Links);
+            if (domain.error503 !== error503Occured) {
+                // error 503 status change
+                await crawlNotification(user, domain, crawlNotificationType.Error503, error503Occured, domain.domainName, [analyzedUrl.normalizedLink], score);
             }
-            else if (error404Occured) {
-                await crawlNotification(user, crawlNotificationType.Error404, analyzedUrl.normalizedLink, error404Links);
+
+            if (domain.error404 !== error404Occured) {
+                // error 503 status change
+                await crawlNotification(user, domain, crawlNotificationType.Error404, error503Occured, domain.domainName, error404Links.length ? error404Links : [analyzedUrl.normalizedLink], score);
+            }
+
+            if (domain.score !== score) {
+                // score change
+                await crawlNotification(user, domain, crawlNotificationType.Score, error, domain.domainName, [analyzedUrl.normalizedLink], score);
             }
         }
 
