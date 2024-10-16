@@ -10,6 +10,8 @@ interface AdminLogs {
     adminLogs: AdminLog[]
 }
 
+export const revalidate = 300; // 5minutes cache
+
 const Logs = () => {
     const [logs, setLogs] = useState<AdminLogs>({ adminLogs: [] });
 
