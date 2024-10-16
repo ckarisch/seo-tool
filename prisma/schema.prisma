@@ -77,6 +77,8 @@ model Domain {
   performanceScore                  Float?
   lastLighthouseAnalysis            DateTime?
   lastQuickAnalysis                 DateTime?
+  robotsIndex                       Boolean?
+  robotsFollow                      Boolean?
 
   @@map("domain")
 }

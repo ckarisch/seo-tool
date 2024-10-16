@@ -24,7 +24,9 @@ export interface Domain {
     score: number,
     disableNotifications: boolean,
     image: string,
-    performanceScore: number
+    performanceScore: number | null,
+    robotsIndex: boolean | null,
+    robotsFollow: boolean | null
 }
 
 export const defaultDomainState: Partial<Domain> = {
@@ -42,5 +44,7 @@ export const defaultDomainState: Partial<Domain> = {
     lastCrawlTime: 0,
     disableNotifications: false,
     image: undefined,
-    performanceScore: 0
+    performanceScore: null,
+    robotsFollow: null,
+    robotsIndex: null
 };

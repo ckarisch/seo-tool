@@ -1,4 +1,4 @@
-import { Domain } from "@prisma/client";
+import { Domain, DomainCrawl } from "@prisma/client";
 import * as nodemailer from "nodemailer";
 import { MailOptions } from "nodemailer/lib/json-transport";
 
@@ -51,10 +51,11 @@ export enum crawlNotificationType {
     Error404,
     WarningDoubleSlash,
     ErrorUnknown,
-    Score
+    Score,
+    Robots
 }
 
-export const crawlNotification = async (userWithNotificationContacts: any, oldDomainDatabaseEntry: Domain, type: crawlNotificationType, errorPresent: boolean, domain: string, urls: string[], score: number) => {
+export const crawlNotification = async (userWithNotificationContacts: any, oldDomainDatabaseEntry: Domain, type: crawlNotificationType, errorPresent: boolean, domain: string, urls: string[], score: number, updatedDomain?: Domain | null) => {
     const user = userWithNotificationContacts;
     const notificationContacts = user.notificationContacts.length ? user.notificationContacts : [user];
     let title = '';
@@ -92,6 +93,27 @@ export const crawlNotification = async (userWithNotificationContacts: any, oldDo
                 }
                 else {
                     await sendNotification(contact.email, contact.name, '✅' + title, title, `✅There are no errors on ${domain}.`, domain, urls);
+                }
+                break;
+            case crawlNotificationType.Robots:
+                if(!updatedDomain){
+                    console.log('Robots message error: no updatedDomain present');
+                    break;
+                }
+                const indexStringOld = oldDomainDatabaseEntry.robotsIndex ? 'index' : 'noindex';
+                const followStringOld = oldDomainDatabaseEntry.robotsFollow ? 'follow' : 'nofollow';
+                
+                const indexString = updatedDomain.robotsIndex ? 'index' : 'noindex';
+                const followString = updatedDomain.robotsFollow ? 'follow' : 'nofollow';
+
+                console.log('prepare robots notification');
+                const shortTitle = `Robots ${indexString}, ${followString} (${domain})`;
+                title = `Robots changed from  ${indexStringOld}, ${followStringOld} to  ${indexString}, ${followString} (${domain})`;
+                if (errorPresent) {
+                    await sendNotification(contact.email, contact.name, '❗' + shortTitle, title, `❗There are errors on ${domain}. Look at the dashboard for more details.`, domain, urls);
+                }
+                else {
+                    await sendNotification(contact.email, contact.name, '✅' + shortTitle, title, `✅Robots index and follow tags are set on ${domain}.`, domain, urls);
                 }
                 break;
         }

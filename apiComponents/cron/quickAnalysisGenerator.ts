@@ -4,14 +4,15 @@ import { LogEntry } from "../dev/StreamingLogViewer";
 import { crawlDomain, crawlDomainResponse } from "@/app/api/seo/domains/[domainName]/crawl/crawlDomain";
 import { CronJob, PrismaClient } from "@prisma/client";
 import { domainIntervalGenerator, domainIntervalResponse } from "./domainInterval";
+import { quickAnalysis } from "@/app/api/seo/domains/[domainName]/crawl/quickAnalysis";
 const prisma = new PrismaClient();
 
 const resetCrawlTime = 3600000; // 1h
-const maxDomainCrawls = 2;
+const maxDomainCrawls = 5;
 const fallbackInterval = 1420; // nearly a day
 
-export async function* crawlerGenerator(maxExecutionTime: number, host: string, cron: CronJob): AsyncGenerator<LogEntry> {
-    const mainLogger = createLogger('CRAWL_START');
+export async function* quickAnalysisGenerator(maxExecutionTime: number, host: string, cron: CronJob): AsyncGenerator<LogEntry> {
+    const mainLogger = createLogger('Quick_START');
 
     let domainsCrawled = 0;
 
@@ -34,7 +35,7 @@ export async function* crawlerGenerator(maxExecutionTime: number, host: string, 
         }
 
         if (!domain.crawlEnabled) {
-            yield* mainLogger.log('➥  crawling disabled');
+            yield* mainLogger.log(`➥  crawling disabled: domain ${domain.domainName}`);
             continue;
         }
 
@@ -56,12 +57,12 @@ export async function* crawlerGenerator(maxExecutionTime: number, host: string, 
 
         let diffMinutes = 0;
         if (domainInterval > 0) {
-            let lastCrawl = domain.lastCrawl;
-            if (!lastCrawl) {
-                lastCrawl = new Date('01-01-1970');
+            let lastQuickAnalysis = domain.lastQuickAnalysis;
+            if (!lastQuickAnalysis) {
+                lastQuickAnalysis = new Date('01-01-1970');
             }
             const now = new Date();
-            const diff = now.getTime() - lastCrawl.getTime();
+            const diff = now.getTime() - lastQuickAnalysis.getTime();
             diffMinutes = Math.floor(diff / 60000);
         }
         else {
@@ -80,18 +81,7 @@ export async function* crawlerGenerator(maxExecutionTime: number, host: string, 
         }
         yield* mainLogger.log(`✅ domain ${domain.domainName}: verified (${diffMinutes} / ${domainInterval} m)`);
 
-        if (domain.crawlStatus === 'crawling') {
-            if (domain.lastCrawl && Date.now() - domain.lastCrawl.getTime() > resetCrawlTime) {
-                // reset domain crawl status, when it was remains in that status for a long time
-                // this can happen on route timeouts while crawling
-                console.error(`➝  crawling status of domain ${domain.name} (${domain.domainName}) reset`);
-                await prisma.domain.update({ where: { id: domain.id }, data: { crawlStatus: 'idle' } });
-            }
-            yield* mainLogger.log('➝  auto crawl: ' + domain.domainName + ' is already crawling');
-            continue;
-        }
         if (domain.crawlEnabled) {
-
             yield* mainLogger.log(`➝  domain ${domain.domainName}: crawl enabled`);
 
             if (diffMinutes >= domainInterval) {
@@ -103,7 +93,7 @@ export async function* crawlerGenerator(maxExecutionTime: number, host: string, 
                 yield* mainLogger.log(`➝  domain ${domain.domainName}: start`);
 
                 /* subfunction */
-                const subfunctionGenerator = crawlDomain(domain.domainName, depth, followLinks, maxExecutionTime, true);
+                const subfunctionGenerator = quickAnalysis(domain.domainName, depth, followLinks, maxExecutionTime, true);
 
                 let result: IteratorResult<LogEntry, crawlDomainResponse>;
                 do {
@@ -122,7 +112,7 @@ export async function* crawlerGenerator(maxExecutionTime: number, host: string, 
                 await prisma.adminLog.create({
                     data: {
                         createdAt: new Date(),
-                        message: `domain ${domain.domainName} crawled (score: ${(domain.score ? domain.score : 0) * 100}), host: ${host}`,
+                        message: `domain ${domain.domainName} quick analysis (score: ${(domain.score ? domain.score : 0) * 100}), host: ${host}`,
                         domainId: domain.id,
                         userId: domain.userId
                     }

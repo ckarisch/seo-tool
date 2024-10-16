@@ -192,11 +192,33 @@ export default function DomainStatus({ params, domainFetchTag, linksFetchTag }: 
                                 </span>
                             </div>
                         }
+                        {typeof domainJson.robotsIndex !== undefined && domainJson.robotsIndex !== null &&
+                            <div className={styles.infoItem}>
+                                <span className={styles.label}>Robots Index:</span>
+                                <span className={domainJson.robotsIndex ? styles.enabled : styles.disabled}>
+                                    <Load loading={loading}>
+                                        {domainJson.robotsIndex ? 'index' : 'noindex'}
+                                    </Load>
+                                </span>
+                            </div>
+                        }
+                        {typeof domainJson.robotsFollow !== undefined && domainJson.robotsFollow !== null &&
+                            <div className={styles.infoItem}>
+                                <span className={styles.label}>Robots Follow:</span>
+                                <span className={domainJson.robotsFollow ? styles.enabled : styles.disabled}>
+                                    <Load loading={loading}>
+                                        {domainJson.robotsFollow ? 'follow' : 'nofollow'}
+                                    </Load>
+                                </span>
+                            </div>
+                        }
                         <div className={styles.infoItem}>
                             <span className={styles.label}>Last Crawl Time:</span>
-                            <span><Load loading={loading}>
-                                {domainJson.lastCrawlTime}ms
-                            </Load></span>
+                            <span>
+                                <Load loading={loading}>
+                                    {domainJson.lastCrawlTime}ms
+                                </Load>
+                            </span>
                         </div>
                     </div>
                     {domainJson.error503 && (

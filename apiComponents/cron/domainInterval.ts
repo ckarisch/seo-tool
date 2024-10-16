@@ -9,7 +9,7 @@ export interface domainIntervalResponse {
 export async function* domainIntervalGenerator(userRole: string, domain: Domain, cron: CronJob, fallbackInterval = 1420): AsyncGenerator<LogEntry, domainIntervalResponse>{
     let domainInterval = fallbackInterval;
     let intervalFound = false;
-    const logger = createLogger('Lighthouse_interval');
+    const logger = createLogger('interval');
 
     switch (userRole) {
         case 'standard':

@@ -8,6 +8,7 @@ import { generateStreamingLogViewer, LogEntry, streamLogs } from '@/apiComponent
 import { createLogger } from '@/apiComponents/dev/logger';
 import { crawlerGenerator } from '@/apiComponents/cron/crawlerGenerator';
 import { lighthouseGenerator } from '@/apiComponents/cron/lighthouseGenerator';
+import { quickAnalysisGenerator } from '@/apiComponents/cron/quickAnalysisGenerator';
 const prisma = new PrismaClient();
 
 
@@ -61,6 +62,10 @@ export async function GET(request: Request) {
                 if (cron.type === 'lighthouse') {
                   yield* cronLogger.log(`${cron.name}: starting lighthouse`);
                   await streamLogs(controller, encoder, lighthouseGenerator(maxExecutionTime, host, cron));
+                }
+                if (cron.type === 'quick') {
+                  yield* cronLogger.log(`${cron.name}: starting quick analysis`);
+                  await streamLogs(controller, encoder, quickAnalysisGenerator(maxExecutionTime, host, cron));
                 }
                 await prisma.cronJob.update({ where: { id: cron.id }, data: { status: 'idle', lastEnd: new Date() } });
                 yield* cronLogger.log(`${cron.name}: status idle`);
