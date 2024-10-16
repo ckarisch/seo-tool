@@ -2,7 +2,10 @@ import { NextResponse } from "next/server";
 
 async function getPageSpeedInsights(url: string) {
     const apiKey = process.env.PAGE_SPEED_INSIGHTS_API_KEY;
-    const response = await fetch(`https://www.googleapis.com/pagespeedonline/v5/runPagespeed?url=${encodeURIComponent(url)}&key=${apiKey}`);
+    if (!apiKey) {
+        throw new Error('api key undefined');
+    }
+    const response = await fetch(`https://www.googleapis.com/pagespeedonline/v5/runPagespeed?url=${encodeURIComponent('https://' + url)}&key=${encodeURIComponent(apiKey)}`);
 
     if (!response.ok) {
         throw new Error('Failed to fetch PageSpeed Insights');

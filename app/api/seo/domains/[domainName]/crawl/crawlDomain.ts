@@ -28,7 +28,8 @@ export async function* crawlDomain(
     url: string,
     depth: number,
     followLinks: boolean,
-    maxDuration: number
+    maxDuration: number,
+    adminMode?: boolean
 ): AsyncGenerator<LogEntry, crawlDomainResponse> {
 
     const crawlStartTime = new Date().getTime();
@@ -55,17 +56,6 @@ export async function* crawlDomain(
     let error404Links: string[] = [];
 
 
-    const session = await getServerSession(authOptions);
-    yield* logger.log('test: start crawl');
-    // return Response.json({ error: 'Not authenticated', domains: [] }, { status: 401 });
-
-    if (!session || !session!.user) {
-        yield* logger.log('error: no session');
-        return { error: 'Not authenticated', domains: [] };
-    }
-
-    const sessionUser = await prisma.user.findFirst({ where: { email: session.user.email! } })
-
     const domain = await prisma.domain.findFirst({ where: { domainName: extractedDomain } });
     const user = await prisma.user.findFirst({ where: { id: domain?.userId }, include: { notificationContacts: true } });
 
@@ -73,25 +63,37 @@ export async function* crawlDomain(
         yield* logger.log('error: domain not found');
         return { error: 'domain not found' };
     }
-    if (!sessionUser) {
-        yield* logger.log('error: session user not found');
-        return { error: 'user not fould' };
+
+
+    const session = await getServerSession(authOptions);
+    if (!session || !session!.user) {
+        yield* logger.log('error: no session');
+        return { error: 'Not authenticated', domains: [] };
     }
 
-    if (sessionUser.role !== 'admin') {
-        // admins are allowed to crawl unverified domains
-        if (!domain.domainVerified) {
-            yield* logger.log('error: domain not verified');
-            return { error: 'Domain not verified', domains: [] };
+    if (!adminMode) {
+        const sessionUser = await prisma.user.findFirst({ where: { email: session.user.email! } })
+
+        if (!sessionUser) {
+            yield* logger.log('error: session user not found');
+            return { error: 'user not fould' };
         }
 
-        if (!user) {
-            return { error: 'domain has no user' };
-        }
+        if (sessionUser.role !== 'admin') {
+            // admins are allowed to crawl unverified domains
+            if (!domain.domainVerified) {
+                yield* logger.log('error: domain not verified');
+                return { error: 'Domain not verified', domains: [] };
+            }
 
-        if (domain.userId !== user.id) {
-            yield* logger.log('error: not allowed');
-            return { error: 'not allowed', domains: [] };
+            if (!user) {
+                return { error: 'domain has no user' };
+            }
+
+            if (domain.userId !== user.id) {
+                yield* logger.log('error: not allowed');
+                return { error: 'not allowed', domains: [] };
+            }
         }
     }
 

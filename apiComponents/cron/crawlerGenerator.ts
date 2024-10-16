@@ -73,7 +73,7 @@ export async function* crawlerGenerator(maxExecutionTime: number, host: string):
                 yield* mainLogger.log(`➝  domain ${domain.domainName}: start`);
 
                 /* subfunction */
-                const subfunctionGenerator = crawlDomain(domain.domainName, depth, followLinks, maxExecutionTime);
+                const subfunctionGenerator = crawlDomain(domain.domainName, depth, followLinks, maxExecutionTime, true);
 
                 let result: IteratorResult<LogEntry, crawlDomainResponse>;
                 do {
