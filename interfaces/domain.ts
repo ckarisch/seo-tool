@@ -22,7 +22,9 @@ export interface Domain {
     lastErrorTime: Date,
     lastErrorMessage: string,
     score: number,
-    disableNotifications: boolean
+    disableNotifications: boolean,
+    image: string,
+    performanceScore: number
 }
 
 export const defaultDomainState: Partial<Domain> = {
@@ -38,5 +40,7 @@ export const defaultDomainState: Partial<Domain> = {
     crawlEnabled: false,
     crawlStatus: 'idle',
     lastCrawlTime: 0,
-    disableNotifications: false
+    disableNotifications: false,
+    image: undefined,
+    performanceScore: 0
 };

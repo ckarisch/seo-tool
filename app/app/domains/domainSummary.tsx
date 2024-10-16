@@ -7,8 +7,9 @@ import { Warning } from "@/icons/warning";
 import Link from "next/link";
 import DomainStatusContent from "./domainStatusContent";
 import Card from "@/components/layout/card";
+import Image from "next/image";
 
-export default function DomainSummary(params: { domain: Partial<Domain> , dummyText: boolean}) {
+export default function DomainSummary(params: { domain: Partial<Domain>, dummyText: boolean }) {
     const { domain, dummyText } = params;
 
     return (
@@ -17,7 +18,11 @@ export default function DomainSummary(params: { domain: Partial<Domain> , dummyT
                 <Card>
                     <div className={domainSummary.header}>
                         <div className={domainSummary.image}>
-                            img
+                            {domain.image ? <Image src={domain.image} alt="domain image"
+                                width={100}
+                                height={60}
+                                style={{ objectFit: 'cover', objectPosition: 'top' }} /> :
+                                <div className={domainSummary.placeholder}>'image'</div>}
                         </div>
                         <div className={domainSummary.info}>
                             <div className={[domainSummary.name, dummyText ? 'dummyText' : null].join(' ')}>{domain.name}</div>

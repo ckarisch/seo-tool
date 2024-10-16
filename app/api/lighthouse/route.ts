@@ -12,7 +12,7 @@ async function getPageSpeedInsights(url: string) {
     }
 
     const data = await response.json();
-    console.log(data); // Verarbeiten Sie die Daten wie benötigt
+    // console.log(data); // Verarbeiten Sie die Daten wie benötigt
     return data;
 }
 

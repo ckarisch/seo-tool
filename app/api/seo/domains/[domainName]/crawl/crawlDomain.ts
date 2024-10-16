@@ -14,6 +14,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/authOptions";
 import { CrawlResponseYieldType, createLogger, isLogEntry, Logger, LoggerFunctionWithReturn } from "@/apiComponents/dev/logger";
 import { LogEntry } from "@/apiComponents/dev/StreamingLogViewer";
+import { lighthouseAnalysis, lighthouseAnalysisResponse } from "@/crawler/lighthouseAnalysis";
 
 const prisma = new PrismaClient();
 // export type LoggerFunction = (logger: Logger, url: string, depth: number, followLinks: boolean, maxDuration: number) => AsyncGenerator<boolean | Generator<LogEntry, any, any>, Response, unknown>;
@@ -148,6 +149,26 @@ export async function* crawlDomain(
             finalURLObject
         } = await initialCrawl(domain, targetURL, maxCrawlTime, crawlStartTime, true, user, analyzedUrl);
 
+
+        // /* subfunction */
+        // const lighthouseGenerator = lighthouseAnalysis(
+        //     prisma,
+        //     domain,
+        //     logger
+        // );
+
+        // let lighthouseIteratorResult: IteratorResult<LogEntry, lighthouseAnalysisResponse>;
+        // do {
+        //     lighthouseIteratorResult = await lighthouseGenerator.next();
+        //     if (!lighthouseIteratorResult.done) {
+        //         yield lighthouseIteratorResult.value;
+        //     }
+        // } while (!lighthouseIteratorResult.done);
+
+        // let lighthouseResult: lighthouseAnalysisResponse | undefined = undefined;
+        // lighthouseResult = lighthouseIteratorResult.value;
+        // /* end subfunction */
+
         requestTime = new Date().getTime() - requestStartTime;
         yield* logger.log(`request time (${targetURL}): ${requestTime}`);
 
@@ -186,8 +207,6 @@ export async function* crawlDomain(
         // const addSlash = targetURL.endsWith('/') ? '' : '/';
 
         yield* logger.log('start recursive crawl');
-        // const recursiveCrawlResponse = await 
-
 
         /* subfunction */
         const subfunctionGenerator = recursiveCrawl(prisma,

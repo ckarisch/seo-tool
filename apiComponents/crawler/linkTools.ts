@@ -56,6 +56,11 @@ export function analyzeLink(link: string, currentDomain: string) {
 
     const warningDoubleSlash = normalizedLink.includes('//');
 
+    let normalizedHttpsLink = null;
+    if (!isPageLink) {
+        normalizedHttpsLink = 'https://' + normalizedLink;
+    }
+
     // Logging results for demonstration
     // console.log(`Link: ${link}`);
     // console.log(`Normalized Link: ${normalizedLink}`);
@@ -63,5 +68,5 @@ export function analyzeLink(link: string, currentDomain: string) {
     // console.log(`Link Domain: ${linkDomain}`);
     // console.log(`Is Anchor: ${isAnchor}`);
     // console.log(`Is External: ${isExternal}`);
-    return { isExternal, subdomain, linkDomain, normalizedLink, isAnchor, isMailto, isTel, isInternal, isInternalPage, isExternalPage, warningDoubleSlash, isFile }
+    return { isExternal, subdomain, linkDomain, normalizedLink, normalizedHttpsLink, isAnchor, isMailto, isTel, isInternal, isInternalPage, isExternalPage, warningDoubleSlash, isFile }
 }

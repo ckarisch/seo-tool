@@ -73,6 +73,10 @@ model Domain {
   error503NotificationDisabledUntil DateTime?
   score                             Float?
   adminLogs                         AdminLog[]
+  image                             String? //@db.VarChar(2000) for sql
+  performanceScore                  Float?
+  lastLighthouseAnalysis            DateTime?
+  lastQuickAnalysis                 DateTime?
 
   @@map("domain")
 }
@@ -165,16 +169,19 @@ model AdminLog {
   @@map("adminlog")
 }
 
-model CronJobs {
-  id        String   @id @default(auto()) @map("_id") @db.ObjectId
-  name      String
-  type      String
-  createdAt DateTime
-  lastStart DateTime
-  lastEnd   DateTime
-  interval  Int // in minutes
-  acitve    Boolean
-  status    String
+model CronJob {
+  id               String   @id @default(auto()) @map("_id") @db.ObjectId
+  name             String
+  type             String
+  createdAt        DateTime
+  lastStart        DateTime
+  lastEnd          DateTime
+  interval         Int // in minutes
+  acitve           Boolean
+  status           String
+  standardInterval Int?
+  premiumInterval  Int?
+  adminInterval    Int?
 
   @@map("cronjobs")
 }

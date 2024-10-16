@@ -18,6 +18,7 @@ import { formatDate } from "date-fns";
 import { Alert, AlertDescription } from "@/components/layout/alert/Alert";
 import { AlertCircle } from "lucide-react";
 import DomainActions from "./domainActions";
+import { Load } from "@/components/layout/load";
 
 export default function DomainStatus({ params, domainFetchTag, linksFetchTag }: { params: { domain: string }, domainFetchTag: string, linksFetchTag: string }) {
     const { data: session, status } = useSession({
@@ -176,12 +177,26 @@ export default function DomainStatus({ params, domainFetchTag, linksFetchTag }: 
                         <div className={styles.infoItem}>
                             <span className={styles.label}>Crawl enabled:</span>
                             <span className={domainJson.crawlEnabled ? styles.enabled : styles.disabled}>
-                                {domainJson.crawlEnabled ? 'Yes' : 'No'}
+                                <Load loading={loading}>
+                                    {domainJson.crawlEnabled ? 'Yes' : 'No'}
+                                </Load>
                             </span>
                         </div>
+                        {(domainJson.performanceScore === 0 || domainJson.performanceScore) &&
+                            <div className={styles.infoItem}>
+                                <span className={styles.label}>Performance Score:</span>
+                                <span className={domainJson.performanceScore > .5 ? styles.enabled : styles.disabled}>
+                                    <Load loading={loading}>
+                                        {Math.floor(domainJson.performanceScore * 100)}
+                                    </Load>
+                                </span>
+                            </div>
+                        }
                         <div className={styles.infoItem}>
                             <span className={styles.label}>Last Crawl Time:</span>
-                            <span>{domainJson.lastCrawlTime}ms</span>
+                            <span><Load loading={loading}>
+                                {domainJson.lastCrawlTime}ms
+                            </Load></span>
                         </div>
                     </div>
                     {domainJson.error503 && (

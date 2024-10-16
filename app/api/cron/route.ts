@@ -1,6 +1,5 @@
 
 import { PrismaClient } from '@prisma/client';
-import { crawlDomain } from '../seo/domains/[domainName]/crawl/crawlDomain';
 import { env } from 'process';
 
 export const maxDuration = 60; // in seconds
@@ -8,8 +7,8 @@ import { NextResponse } from 'next/server'
 import { generateStreamingLogViewer, LogEntry, streamLogs } from '@/apiComponents/dev/StreamingLogViewer';
 import { createLogger } from '@/apiComponents/dev/logger';
 import { crawlerGenerator } from '@/apiComponents/cron/crawlerGenerator';
+import { lighthouseGenerator } from '@/apiComponents/cron/lighthouseGenerator';
 const prisma = new PrismaClient();
-
 
 
 export async function GET(request: Request) {
@@ -18,7 +17,7 @@ export async function GET(request: Request) {
   // maxExecutionTime ist 20 seconds lower than maxDuration to prevent hard timeouts
   const maxExecutionTime = 180000; // in milliseconds
 
-  const cronJobs = await prisma.cronJobs.findMany();
+  const cronJobs = await prisma.cronJob.findMany();
 
   const encoder = new TextEncoder();
   const stream = new ReadableStream({
@@ -42,7 +41,7 @@ export async function GET(request: Request) {
         if (!cronJobs.length) {
           yield* cronLogger.log(`no cron jobs available`);
         }
-        for (let cron of cronJobs) {
+        for (const cron of cronJobs) {
           if (cron.acitve) {
             yield* cronLogger.log(`${cron.name}: active`);
             if (cron.status === 'running') {
@@ -51,15 +50,19 @@ export async function GET(request: Request) {
             else {
               const timePassed = Math.floor((Date.now() - cron.lastEnd.getTime()) / 1000 / 60);
               yield* cronLogger.log(`${cron.name}: time passed ${timePassed}m / ${cron.interval}m`);
-              if (timePassed > cron.interval) {
+              if (timePassed >= cron.interval) {
                 yield* cronLogger.log(`${cron.name}: starting (interval ${cron.interval})`);
-                await prisma.cronJobs.update({ where: { id: cron.id }, data: { status: 'running' } });
+                await prisma.cronJob.update({ where: { id: cron.id }, data: { status: 'running' } });
                 // convert ms to minutes, interval in minutes
                 if (cron.type === 'crawl') {
                   yield* cronLogger.log(`${cron.name}: starting crawl`);
-                  await streamLogs(controller, encoder, crawlerGenerator(maxExecutionTime, host));
+                  await streamLogs(controller, encoder, crawlerGenerator(maxExecutionTime, host, cron));
                 }
-                await prisma.cronJobs.update({ where: { id: cron.id }, data: { status: 'idle', lastEnd: new Date() } });
+                if (cron.type === 'lighthouse') {
+                  yield* cronLogger.log(`${cron.name}: starting lighthouse`);
+                  await streamLogs(controller, encoder, lighthouseGenerator(maxExecutionTime, host, cron));
+                }
+                await prisma.cronJob.update({ where: { id: cron.id }, data: { status: 'idle', lastEnd: new Date() } });
                 yield* cronLogger.log(`${cron.name}: status idle`);
               }
             }

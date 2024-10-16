@@ -61,7 +61,9 @@ export async function GET(
     error404NotificationDisabledUntil: domain.error404NotificationDisabledUntil,
     error503: domain.error503,
     error503NotificationDisabled: domain.error503NotificationDisabled,
-    error503NotificationDisabledUntil: domain.error503NotificationDisabledUntil
+    error503NotificationDisabledUntil: domain.error503NotificationDisabledUntil,
+    performanceScore: domain.performanceScore,
+    image: domain.image
   }
 
   return Response.json(domainResponse, { status: 200 })

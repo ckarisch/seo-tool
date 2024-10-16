@@ -29,7 +29,9 @@
 
   .image {
     background-color: $accent;
-    padding: 20px;
+    .placeholder {
+      padding: 20px;
+    }
   }
   .info {
     display: flex;
