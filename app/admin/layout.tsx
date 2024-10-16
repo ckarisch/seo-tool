@@ -10,6 +10,8 @@ import Image from 'next/image';
 import Signin from '@/components/user/signin';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import AdminDashboard from '@/components/admin/dashboard/adminDashboard';
+import { PublicHeader } from '@/components/layout/header/publicHeader';
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -37,7 +39,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           <ul className={layout.globalheaderList}>
             <li className={layout.globalheaderLi}>
               <Link href={'/'} className={[layout.globalheaderLink, layout.logoLink].join(' ')}>
-                <Image className={layout.logo} src={'/next.svg'} alt="logo" width={150} height={30.5}></Image>
+                <Image className={layout.logo} src={'/logo.svg'} alt="logo" width={150} height={30.5}></Image>
               </Link>
             </li>
             <li className={layout.globalheaderLi}>
@@ -58,28 +60,12 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
   return (
     <>
-      <div id={layout.globalheader} className={layout.globalheader}>
-        <nav id={layout.globalnav}>
-          <ul className={layout.globalheaderList}>
-            <li className={layout.globalheaderLi}>
-              <Link href={'/'} className={[layout.globalheaderLink, layout.logoLink].join(' ')}>
-                <Image className={layout.logo} src={'/next.svg'} alt="logo" width={150} height={30.5}></Image>
-              </Link>
-            </li>
-            <li className={layout.globalheaderLi}>
-              <Link href={'/admin/logs'} className={layout.globalheaderLink}>
-                Logs
-              </Link>
-            </li>
-            <li className={layout.globalheaderLi}>
-              <Signin />
-            </li>
-          </ul>
-        </nav>
-      </div>
-      <div className={adminStyles.adminContainer}>
-        {children}
-      </div>
+      <PublicHeader />
+      <main className={adminStyles.adminContainer}>
+        <AdminDashboard >
+          {children}
+        </AdminDashboard>
+      </main>
     </>
   );
 }

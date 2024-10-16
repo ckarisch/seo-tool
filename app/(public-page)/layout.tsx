@@ -4,6 +4,7 @@ import layout from "./layout.module.scss";
 import Link from "next/link";
 import Image from "next/image";
 import Section from "@/components/layout/section";
+import { PublicHeader } from "@/components/layout/header/publicHeader";
 
 export const metadata: Metadata = {
   title: "SEO Tool",
@@ -19,40 +20,7 @@ export default async function RootLayout({
 
   return (
     <div className={layout.layout}>
-      <div id={layout.globalheader} className={layout.globalheader}>
-        <nav id={layout.globalnav}>
-          <ul className={layout.globalheaderList}>
-            <li className={layout.globalheaderLi}>
-              <Link href={'/'} className={[layout.globalheaderLink, layout.logoLink].join(' ')}>
-                <Image className={layout.logo} src={'/logo.svg'} alt="logo" width={150} height={30.5}></Image>
-              </Link>
-            </li>
-            <li className={layout.globalheaderLi}>
-              <Link href={'/app'} className={layout.globalheaderLink}>
-                SEO App
-              </Link>
-            </li>
-            <li className={[layout.globalheaderLi, layout.desktop].join(' ')}>
-              <Link href={'/'} className={layout.globalheaderLink}>
-                Products
-              </Link>
-            </li>
-            <li className={[layout.globalheaderLi, layout.desktop].join(' ')}>
-              <Link href={'/'} className={layout.globalheaderLink}>
-                Tools
-              </Link>
-            </li>
-            <li className={[layout.globalheaderLi, layout.desktop].join(' ')}>
-              <Link href={'/'} className={layout.globalheaderLink}>
-                Prices
-              </Link>
-            </li>
-            <li className={layout.globalheaderLi}>
-              <Signin />
-            </li>
-          </ul>
-        </nav>
-      </div>
+      <PublicHeader />
       {children}
     </div>
   );

@@ -1,0 +1,54 @@
+@import "@/app/variables";
+
+#globalheader {
+    background-color: $background-light;
+
+    @media (prefers-color-scheme: dark) {
+        background-color: $background-light-dark;
+    }
+
+    .logo {
+        display: block;
+    }
+
+    .globalheaderList {
+        max-width: 1024px;
+        margin: 0 auto;
+        padding: 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .globalheaderLi {
+        list-style: none;
+    }
+    .desktop {
+        display: none;
+        @media all and (min-width: 687px) {
+            display: block;
+        }
+    }
+
+    .globalheaderLink {
+        display: block;
+        padding: 5px 20px;
+        border-radius: $border-radius;
+        color: $color;
+        @media (prefers-color-scheme: dark) {
+            color: $color-dark;
+        }
+    }
+
+    .globalheaderLink:hover {
+        background-color: $accent;
+
+        @media (prefers-color-scheme: dark) {
+            background-color: $accent-dark;
+        }
+    }
+
+    .logoLink {
+        padding: 0;
+    }
+}

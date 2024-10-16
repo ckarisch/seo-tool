@@ -16,7 +16,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <div>
+    <>
       <div id={layout.globalheader} className={layout.globalheader}>
         <nav id={layout.globalnav}>
           <ul className={layout.globalheaderList}>
@@ -37,9 +37,9 @@ export default function RootLayout({
         </nav>
       </div>
 
-      <div className={layout.main}>
+      <main className={layout.main}>
         {children}
-      </div>
-    </ div>
+      </main>
+    </>
   );
 }
