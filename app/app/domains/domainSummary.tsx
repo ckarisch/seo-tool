@@ -22,7 +22,7 @@ export default function DomainSummary(params: { domain: Partial<Domain>, dummyTe
                                 width={100}
                                 height={60}
                                 style={{ objectFit: 'cover', objectPosition: 'top' }} /> :
-                                <div className={domainSummary.placeholder}>'image'</div>}
+                                <div className={domainSummary.placeholder}>image</div>}
                         </div>
                         <div className={domainSummary.info}>
                             <div className={[domainSummary.name, dummyText ? 'dummyText' : null].join(' ')}>{domain.name}</div>
