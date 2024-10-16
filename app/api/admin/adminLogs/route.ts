@@ -4,6 +4,8 @@ import { adminOnly } from '@/apiComponents/security/adminOnly';
 
 const prisma = new PrismaClient();
 
+export const revalidate = 60;
+
 export async function GET() {
   if (!adminOnly()){
     return Response.json({ error: 'not allowed' }, { status: 503 });
