@@ -58,12 +58,12 @@ export async function* quickAnalysis(
 
 
     const session = await getServerSession(authOptions);
-    if (!session || !session!.user) {
-        yield* logger.log('error: no session');
-        return { error: 'Not authenticated', domains: [] };
-    }
 
     if (!adminMode) {
+        if (!session || !session!.user) {
+            yield* logger.log('error: no session');
+            return { error: 'Not authenticated', domains: [] };
+        }
         const sessionUser = await prisma.user.findFirst({ where: { email: session.user.email! } })
 
         if (!sessionUser) {
