@@ -2,7 +2,7 @@
 import { PrismaClient } from '@prisma/client';
 import { env } from 'process';
 
-export const maxDuration = 60; // in seconds
+export const maxDuration = 200; // in seconds
 import { NextResponse } from 'next/server'
 import { generateStreamingLogViewer, LogEntry, streamLogs } from '@/apiComponents/dev/StreamingLogViewer';
 import { createLogger } from '@/apiComponents/dev/logger';

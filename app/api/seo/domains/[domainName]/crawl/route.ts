@@ -5,7 +5,7 @@ import { createLogger } from '@/apiComponents/dev/logger';
 import { LogEntry, streamLogs } from '@/apiComponents/dev/StreamingLogViewer';
 import { NextResponse } from 'next/server';
 
-export const maxDuration = 60; // in seconds
+export const maxDuration = 200; // in seconds
 
 export async function POST(
   request: Request,
