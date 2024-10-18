@@ -19,6 +19,8 @@ import { Alert, AlertDescription } from "@/components/layout/alert/Alert";
 import { AlertCircle } from "lucide-react";
 import DomainActions from "./domainActions";
 import { Load } from "@/components/layout/load";
+import Image from "next/image";
+import RetinaScrollableImage from "@/components/layout/RetinaScrollableImage";
 
 export default function DomainStatus({ params, domainFetchTag, linksFetchTag }: { params: { domain: string }, domainFetchTag: string, linksFetchTag: string }) {
     const { data: session, status } = useSession({
@@ -29,11 +31,11 @@ export default function DomainStatus({ params, domainFetchTag, linksFetchTag }: 
     });
 
     const [loading, setLoading] = useState(true);
-    const [domainJson, setDomainJson] = useState(defaultDomainState);
+    const [domain, setDomainJson] = useState(defaultDomainState);
     const [apiUser, setApiUser] = useState(defaultUserState);
     const [crawlStatus, setcrawlStatus] = useState('idle');
-    const noCrawling = domainJson.crawlStatus !== 'crawling' && crawlStatus !== 'crawling';
-    const noLoading = status !== 'loading' && domainJson.id && domainJson.id !== '-1';
+    const noCrawling = domain.crawlStatus !== 'crawling' && crawlStatus !== 'crawling';
+    const noLoading = status !== 'loading' && domain.id && domain.id !== '-1';
 
     useEffect(() => {
         console.log('status', status);
@@ -44,8 +46,8 @@ export default function DomainStatus({ params, domainFetchTag, linksFetchTag }: 
     }, [status]);
 
     useEffect(() => {
-        console.log('domainJson.crawlStatus', domainJson.crawlStatus);
-    }, [domainJson.crawlStatus]);
+        console.log('domainJson.crawlStatus', domain.crawlStatus);
+    }, [domain.crawlStatus]);
 
 
     const handleCrawl = async (event: any) => {
@@ -109,26 +111,26 @@ export default function DomainStatus({ params, domainFetchTag, linksFetchTag }: 
                 <Loading />
             </div>
         }
-        else if (noCrawling && noLoading && domainJson.error) {
+        else if (noCrawling && noLoading && domain.error) {
             return <div title={'crawl error'}>
                 <Cross />
             </div>
         }
-        else if (noCrawling && noLoading && domainJson.warning) {
+        else if (noCrawling && noLoading && domain.warning) {
             return <div title={'crawl error'}>
                 <Warning />
             </div>
         }
 
 
-        else if (noCrawling && noLoading && !domainJson.error && !domainJson.warning &&
-            domainJson.crawlStatus == 'idle') {
+        else if (noCrawling && noLoading && !domain.error && !domain.warning &&
+            domain.crawlStatus == 'idle') {
 
             return <div title={'status ok'}>
                 <Check />
             </div>
         }
-        else if (!domainJson.error && !domainJson.warning && !noCrawling && noLoading) {
+        else if (!domain.error && !domain.warning && !noCrawling && noLoading) {
             return <div title={'crawling'}>
                 <Loading />
             </div>
@@ -140,7 +142,7 @@ export default function DomainStatus({ params, domainFetchTag, linksFetchTag }: 
         }
     }
 
-    if (apiUser.role !== 'admin' && !domainJson.domainVerified && !['loading', 'authenticated'].includes(status)) {
+    if (apiUser.role !== 'admin' && !domain.domainVerified && !['loading', 'authenticated'].includes(status)) {
         return (
             <div>
                 <Card>
@@ -152,7 +154,7 @@ export default function DomainStatus({ params, domainFetchTag, linksFetchTag }: 
         )
     }
 
-    if (!domainJson || !domainJson.id) {
+    if (!domain || !domain.id) {
         return (
             <div>
                 <Card>
@@ -171,43 +173,49 @@ export default function DomainStatus({ params, domainFetchTag, linksFetchTag }: 
                     {icons()}
                 </div>
 
+                <RetinaScrollableImage src={domain.image} width={150} height={100}/>
+                {/* {domain.image ? <Image src={domain.image} alt="domain image"
+                    width={100}
+                    height={60}
+                    style={{ objectFit: 'cover', objectPosition: 'top' }} /> : null} */}
+
                 <div className={styles.domainStatus}>
                     <h2 className={styles.title}>Domain Status</h2>
                     <div className={styles.infoContainer}>
                         <div className={styles.infoItem}>
                             <span className={styles.label}>Crawl enabled:</span>
-                            <span className={domainJson.crawlEnabled ? styles.enabled : styles.disabled}>
+                            <span className={domain.crawlEnabled ? styles.enabled : styles.disabled}>
                                 <Load loading={loading}>
-                                    {domainJson.crawlEnabled ? 'Yes' : 'No'}
+                                    {domain.crawlEnabled ? 'Yes' : 'No'}
                                 </Load>
                             </span>
                         </div>
-                        {(domainJson.performanceScore === 0 || domainJson.performanceScore) &&
+                        {(domain.performanceScore === 0 || domain.performanceScore) &&
                             <div className={styles.infoItem}>
                                 <span className={styles.label}>Performance Score:</span>
-                                <span className={domainJson.performanceScore > .5 ? styles.enabled : styles.disabled}>
+                                <span className={domain.performanceScore > .5 ? styles.enabled : styles.disabled}>
                                     <Load loading={loading}>
-                                        {Math.floor(domainJson.performanceScore * 100)}
+                                        {Math.floor(domain.performanceScore * 100)}
                                     </Load>
                                 </span>
                             </div>
                         }
-                        {typeof domainJson.robotsIndex !== undefined && domainJson.robotsIndex !== null &&
+                        {typeof domain.robotsIndex !== undefined && domain.robotsIndex !== null &&
                             <div className={styles.infoItem}>
                                 <span className={styles.label}>Robots Index:</span>
-                                <span className={domainJson.robotsIndex ? styles.enabled : styles.disabled}>
+                                <span className={domain.robotsIndex ? styles.enabled : styles.disabled}>
                                     <Load loading={loading}>
-                                        {domainJson.robotsIndex ? 'index' : 'noindex'}
+                                        {domain.robotsIndex ? 'index' : 'noindex'}
                                     </Load>
                                 </span>
                             </div>
                         }
-                        {typeof domainJson.robotsFollow !== undefined && domainJson.robotsFollow !== null &&
+                        {typeof domain.robotsFollow !== undefined && domain.robotsFollow !== null &&
                             <div className={styles.infoItem}>
                                 <span className={styles.label}>Robots Follow:</span>
-                                <span className={domainJson.robotsFollow ? styles.enabled : styles.disabled}>
+                                <span className={domain.robotsFollow ? styles.enabled : styles.disabled}>
                                     <Load loading={loading}>
-                                        {domainJson.robotsFollow ? 'follow' : 'nofollow'}
+                                        {domain.robotsFollow ? 'follow' : 'nofollow'}
                                     </Load>
                                 </span>
                             </div>
@@ -216,18 +224,18 @@ export default function DomainStatus({ params, domainFetchTag, linksFetchTag }: 
                             <span className={styles.label}>Last Crawl Time:</span>
                             <span>
                                 <Load loading={loading}>
-                                    {domainJson.lastCrawlTime}ms
+                                    {domain.lastCrawlTime}ms
                                 </Load>
                             </span>
                         </div>
                     </div>
-                    {domainJson.error503 && (
+                    {domain.error503 && (
                         <Alert variant="destructive" className={styles.alert}>
                             <AlertCircle className={styles.alertIcon} />
                             <AlertDescription>503 errors detected</AlertDescription>
                         </Alert>
                     )}
-                    {domainJson.error404 && (
+                    {domain.error404 && (
                         <Alert variant="destructive" className={styles.alert}>
                             <AlertCircle className={styles.alertIcon} />
                             <AlertDescription>404 errors detected</AlertDescription>
@@ -236,7 +244,7 @@ export default function DomainStatus({ params, domainFetchTag, linksFetchTag }: 
                 </div>
             </Card>
 
-            <DomainActions crawlStatus={crawlStatus} domainJson={domainJson} handleCrawl={handleCrawl} handleResetLinks={handleResetLinks} />
+            <DomainActions crawlStatus={crawlStatus} domainJson={domain} handleCrawl={handleCrawl} handleResetLinks={handleResetLinks} />
 
         </div>
     );
