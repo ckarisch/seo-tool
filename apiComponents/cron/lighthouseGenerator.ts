@@ -59,8 +59,14 @@ export async function* lighthouseGenerator(maxExecutionTime: number, host: strin
             diffMinutes = Math.floor(diff / 60000);
         }
         if (!domain.domainVerified) {
-            yield* mainLogger.log(`❌ not verified: domain ${domain.domainName} (${diffMinutes} / ${domainInterval} m)`);
-            continue;
+            if (domain.user.role === 'admin') {
+                yield* mainLogger.log(`❗✅ admin mode (not verified): domain ${domain.domainName}`);
+
+            }
+            else {
+                yield* mainLogger.log(`❌ not verified: domain ${domain.domainName} (${diffMinutes} / ${domainInterval} m)`);
+                continue;
+            }
         }
         yield* mainLogger.log(`✅ domain ${domain.domainName}: verified (${diffMinutes} / ${domainInterval} m)`);
 
