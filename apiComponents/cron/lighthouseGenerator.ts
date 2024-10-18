@@ -20,7 +20,7 @@ export async function* lighthouseGenerator(maxExecutionTime: number, host: strin
     }
 
     yield* mainLogger.log('start auto crawl');
-    const domains = await prisma.domain.findMany({ orderBy: { lastCrawl: 'asc' }, include: { user: { select: { role: true } } } });
+    const domains = await prisma.domain.findMany({ orderBy: { lastLighthouseAnalysis: 'asc' }, include: { user: { select: { role: true } } } });
 
     if (!domains || domains.length === 0) {
         yield* mainLogger.log('no auto crawls found');
