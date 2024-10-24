@@ -41,6 +41,11 @@ export default function RootLayout({
               </Link>
             </li>
             <li className={layout.globalheaderLi}>
+              <Link href={'/app/invoices'} className={layout.globalheaderLink}>
+                Invoices
+              </Link>
+            </li>
+            <li className={layout.globalheaderLi}>
               <Signin />
             </li>
           </ul>
