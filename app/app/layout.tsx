@@ -31,6 +31,16 @@ export default function RootLayout({
               </Link>
             </li>
             <li className={layout.globalheaderLi}>
+              <Link href={'/app/get-premium'} className={layout.globalheaderLink}>
+                Get Premium
+              </Link>
+            </li>
+            <li className={layout.globalheaderLi}>
+              <Link href={'/app/subscriptions'} className={layout.globalheaderLink}>
+                Subscriptions
+              </Link>
+            </li>
+            <li className={layout.globalheaderLi}>
               <Signin />
             </li>
           </ul>

@@ -1,0 +1,29 @@
+.container {
+    max-width: 48rem;
+    margin: 2rem auto;
+    padding: 2rem;
+    text-align: center;
+  }
+  
+  .success {
+    background-color: #f0fdf4;
+    border: 1px solid #86efac;
+    border-radius: 0.5rem;
+    padding: 2rem;
+  }
+  
+  .message {
+    color: #166534;
+    line-height: 1.6;
+    margin: 0;
+  }
+  
+  .link {
+    color: #059669;
+    text-decoration: underline;
+    transition: color 0.2s;
+  }
+  
+  .link:hover {
+    color: #047857;
+  }

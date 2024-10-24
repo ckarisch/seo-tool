@@ -23,6 +23,7 @@ model User {
   domains              Domain[]
   notificationContacts NotificationContact[]
   AdminLogs            AdminLog[]
+  stripeCustomers      String[]
 
   @@map("user")
 }
