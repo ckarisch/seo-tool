@@ -24,8 +24,8 @@ export default function AddDomainForm() {
         }
 
         const data = {
-            name: url,
-            domainName: event.target.domainName.value,
+            name: event.target.name.value,
+            domainName: url,
         }
 
         const JSONdata = JSON.stringify(data);
@@ -55,7 +55,7 @@ export default function AddDomainForm() {
         alert(`gespeichert`);
 
         event.target.name.value = '';
-        event.target.domainName.value = '';
+        event.target.url.value = '';
 
         router.refresh();
     }
@@ -69,7 +69,7 @@ export default function AddDomainForm() {
             <form onSubmit={handleSubmit}>
                 <div className={styles.inputGroup}>
                     <h3>Website Name</h3>
-                    <input type="text" id="domainName" name="domainName" placeholder='Name der Website' required />
+                    <input type="text" id="name" name="name" placeholder='Name der Website' required />
                 </div>
 
                 <div className={styles.inputGroup}>
@@ -80,6 +80,7 @@ export default function AddDomainForm() {
                         onChange={handleInputChange}
                         onValidation={setIsUrlValid}
                         value={url}
+                        name='url'
                     />
                 </div>
 
