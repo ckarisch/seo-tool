@@ -173,7 +173,7 @@ export default function DomainStatus({ params, domainFetchTag, linksFetchTag }: 
                     {icons()}
                 </div>
 
-                <RetinaScrollableImage src={domain.image} width={150} height={100}/>
+                <RetinaScrollableImage src={domain.image} width={150} height={100} />
                 {/* {domain.image ? <Image src={domain.image} alt="domain image"
                     width={100}
                     height={60}
@@ -216,6 +216,26 @@ export default function DomainStatus({ params, domainFetchTag, linksFetchTag }: 
                                 <span className={domain.robotsFollow ? styles.enabled : styles.disabled}>
                                     <Load loading={loading}>
                                         {domain.robotsFollow ? 'follow' : 'nofollow'}
+                                    </Load>
+                                </span>
+                            </div>
+                        }
+                        {(domain.timeoutPercentage === 0 || domain.timeoutPercentage) &&
+                            <div className={styles.infoItem}>
+                                <span className={styles.label}>Timeout Errors:</span>
+                                <span className={domain.timeoutPercentage > .05 ? styles.disabled : styles.enabled}>
+                                    <Load loading={loading}>
+                                        {domain.timeoutPercentage}%
+                                    </Load>
+                                </span>
+                            </div>
+                        }
+                        {(domain.badRequestPercentage === 0 || domain.badRequestPercentage) &&
+                            <div className={styles.infoItem}>
+                                <span className={styles.label}>Timeout Errors:</span>
+                                <span className={domain.badRequestPercentage > .05 ? styles.disabled : styles.enabled}>
+                                    <Load loading={loading}>
+                                        {domain.badRequestPercentage}%
                                     </Load>
                                 </span>
                             </div>

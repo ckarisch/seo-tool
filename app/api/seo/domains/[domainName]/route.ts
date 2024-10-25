@@ -65,7 +65,10 @@ export async function GET(
     performanceScore: domain.performanceScore,
     image: domain.image,
     robotsIndex: domain.robotsIndex,
-    robotsFollow: domain.robotsFollow
+    robotsFollow: domain.robotsFollow,
+    timeoutPercentage: domain.timeoutPercentage,
+    badRequestPercentage: domain.badRequestPercentage,
+    typeErrorPercentage: domain.typeErrorPercentage,
   }
 
   return Response.json(domainResponse, { status: 200 })

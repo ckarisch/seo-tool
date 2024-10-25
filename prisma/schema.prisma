@@ -80,6 +80,9 @@ model Domain {
   lastQuickAnalysis                 DateTime?
   robotsIndex                       Boolean?
   robotsFollow                      Boolean?
+  timeoutPercentage                 Float?
+  badRequestPercentage              Float?
+  typeErrorPercentage               Float?
 
   @@map("domain")
 }

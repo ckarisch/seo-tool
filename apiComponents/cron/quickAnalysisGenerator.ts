@@ -75,18 +75,18 @@ export async function* quickAnalysisGenerator(
       fallbackInterval
     );
 
-    let lighthouseIteratorResult: IteratorResult<
+    let intervalIteratorResult: IteratorResult<
       LogEntry,
       domainIntervalResponse
     >;
     do {
-      lighthouseIteratorResult = await generateInterval.next();
-      if (!lighthouseIteratorResult.done) {
-        yield lighthouseIteratorResult.value;
+      intervalIteratorResult = await generateInterval.next();
+      if (!intervalIteratorResult.done) {
+        yield intervalIteratorResult.value;
       }
-    } while (!lighthouseIteratorResult.done);
+    } while (!intervalIteratorResult.done);
 
-    domainInterval = lighthouseIteratorResult.value.domainInterval;
+    domainInterval = intervalIteratorResult.value.domainInterval;
     /* end subfunction */
 
     let diffMinutes = 0;

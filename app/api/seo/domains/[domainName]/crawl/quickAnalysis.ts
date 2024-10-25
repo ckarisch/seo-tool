@@ -16,6 +16,7 @@ import { CrawlResponseYieldType, createLogger, isLogEntry, Logger, LoggerFunctio
 import { LogEntry } from "@/apiComponents/dev/StreamingLogViewer";
 import { lighthouseAnalysis, lighthouseAnalysisResponse } from "@/crawler/lighthouseAnalysis";
 import { extractMetatags } from "@/crawler/extractMetatags";
+import { calculateDomainHealth } from "./calculateDomainHealth";
 
 const prisma = new PrismaClient();
 // export type LoggerFunction = (logger: Logger, url: string, depth: number, followLinks: boolean, maxDuration: number) => AsyncGenerator<boolean | Generator<LogEntry, any, any>, Response, unknown>;
@@ -135,11 +136,17 @@ export async function* quickAnalysis(
         const followString = metatagsInfo.robots.follow ? 'follow' : 'nofollow'
         yield* logger.log(`updating robots: ${indexString}, ${followString}`);
 
+        const domainHealth = await calculateDomainHealth(domain);
+        yield* logger.log(`domain health: ${JSON.stringify(domainHealth)}`);
+
         await prisma.domain.update({
             where: { id: domain.id },
             data: {
                 robotsIndex: metatagsInfo.robots.index,
-                robotsFollow: metatagsInfo.robots.follow
+                robotsFollow: metatagsInfo.robots.follow,
+                timeoutPercentage: domainHealth.timeoutPercentage,
+                badRequestPercentage: domainHealth.badRequestPercentage,
+                typeErrorPercentage: domainHealth.typeErrorPercentage,
             }
         });
 

@@ -19,6 +19,7 @@ export async function GET(request: Request) {
   const host = request.headers.get("host") || "Unknown host";
 
   // maxExecutionTime ist 20 seconds lower than maxDuration to prevent hard timeouts
+  const maxDurationInMilliseconds = maxDuration * 1000;
   const maxExecutionTime = 180000; // in milliseconds
   const cronStartTime = new Date().getTime();
   let timePassed = new Date().getTime() - cronStartTime;
@@ -56,7 +57,7 @@ export async function GET(request: Request) {
           timePassed = new Date().getTime() - cronStartTime;
           timeLeft = maxExecutionTime - timePassed;
           yield* cronLogger.log(`${cron.name}: time left: ${timeLeft}`);
-          if(checkTimeout(timePassed, maxDuration)){
+          if(checkTimeout(timePassed, maxDurationInMilliseconds)){
             await prisma.cronJob.update({
               where: { id: cron.id },
               data: { status: "idle", lastEnd: new Date() },
