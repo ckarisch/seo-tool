@@ -2,7 +2,10 @@
 
 import { useEffect, useState } from 'react'
 import type Stripe from 'stripe'
-import styles from './page.module.css'
+import styles from './page.module.scss'
+import Section from "@/components/layout/section"
+import Background from "@/components/layout/background"
+import { ExternalLink } from 'lucide-react'
 
 interface InvoiceData {
     invoices: Stripe.Invoice[]
@@ -25,7 +28,6 @@ export default function InvoicesPage() {
     const [invoices, setInvoices] = useState<InvoiceData | null>(null)
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
-    const [page, setPage] = useState<number>(1)
 
     const fetchInvoices = async () => {
         try {
@@ -101,64 +103,84 @@ export default function InvoicesPage() {
     }
 
     return (
-        <div className={styles.container}>
-            <h2 className={styles.title}>Your Invoices</h2>
-            <div className={styles.invoicesList}>
-                {invoices.invoices.map((invoice) => {
-                    const status = getPaymentStatus(invoice)
+        <main>
+            <Background backgroundImage="" backgroundStyle={'mainColor'}>
+                <Section>
+                    <div className={styles.heroContainer}>
+                        <h1 className={styles.title}>
+                            Your Invoices
+                        </h1>
+                        <p className={styles.description}>
+                            View and download your billing history
+                        </p>
+                    </div>
+                </Section>
+            </Background>
 
-                    return (
-                        <div key={invoice.id} className={styles.invoiceCard}>
-                            <div className={styles.cardHeader}>
-                                <div>
-                                    <h3 className={styles.invoiceNumber}>
-                                        Invoice #{invoice.number}
-                                    </h3>
-                                    <div className={styles.detail}>
-                                        {formatDate(invoice.created)}
+            <Section>
+                <div className={styles.invoicesList}>
+                    {invoices.invoices.map((invoice) => {
+                        const status = getPaymentStatus(invoice)
+
+                        return (
+                            <div key={invoice.id} className={styles.invoiceCard}>
+                                <div className={styles.cardHeader}>
+                                    <div className={styles.cardMain}>
+                                        <div className={styles.cardTitleRow}>
+                                            <h3 className={styles.invoiceNumber}>
+                                                Invoice #{invoice.number}
+                                            </h3>
+                                            <span className={status.className}>
+                                                {status.text}
+                                            </span>
+                                        </div>
+                                        <div className={styles.priceContainer}>
+                                            <span className={styles.price}>
+                                                {formatAmount(invoice.total, invoice.currency)}
+                                            </span>
+                                            <span className={styles.date}>
+                                                {formatDate(invoice.created)}
+                                            </span>
+                                        </div>
                                     </div>
                                 </div>
-                                <span className={status.className}>
-                                    {status.text}
-                                </span>
-                            </div>
 
-                            <div className={styles.priceContainer}>
-                                <span className={styles.price}>
-                                    {formatAmount(invoice.total, invoice.currency)}
-                                </span>
-                            </div>
+                                <div className={styles.divider} />
 
-                            <div className={styles.detailsList}>
-                                {invoice.subscription && isStripeSubscription(invoice.subscription) && (
-                                    <p className={styles.detail}>
-                                        Subscription: {invoice.subscription.id}
-                                    </p>
-                                )}
-                                <p className={styles.detail}>
-                                    Period: {formatDate(invoice.period_start)} - {formatDate(invoice.period_end)}
-                                </p>
-                                {invoice.payment_intent && isStripePaymentIntent(invoice.payment_intent) && (
-                                    <p className={styles.detail}>
-                                        Payment ID: {invoice.payment_intent.id}
-                                    </p>
-                                )}
-                            </div>
+                                <div className={styles.cardContent}>
+                                    <div className={styles.detailsList}>
+                                        {invoice.subscription && isStripeSubscription(invoice.subscription) && (
+                                            <p className={styles.detail}>
+                                                Subscription: {invoice.subscription.id}
+                                            </p>
+                                        )}
+                                        <p className={styles.detail}>
+                                            Period: {formatDate(invoice.period_start)} - {formatDate(invoice.period_end)}
+                                        </p>
+                                        {invoice.payment_intent && isStripePaymentIntent(invoice.payment_intent) && (
+                                            <p className={styles.detail}>
+                                                Payment ID: {invoice.payment_intent.id}
+                                            </p>
+                                        )}
+                                    </div>
 
-                            {invoice.hosted_invoice_url && (
-                                <a
-                                    href={invoice.hosted_invoice_url}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className={styles.downloadButton}
-                                >
-                                    View Invoice
-                                </a>
-                            )}
-                        </div>
-                    )
-                })}
-            </div>
-        </div>
+                                    {invoice.hosted_invoice_url && (
+                                        <a
+                                            href={invoice.hosted_invoice_url}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className={styles.viewButton}
+                                        >
+                                            View Invoice
+                                            <ExternalLink size={16} />
+                                        </a>
+                                    )}
+                                </div>
+                            </div>
+                        )
+                    })}
+                </div>
+            </Section>
+        </main>
     )
 }

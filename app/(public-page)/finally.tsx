@@ -2,10 +2,7 @@
 import Section from "@/components/layout/section";
 import styles from "./finally.module.scss";
 import Background from "@/components/layout/background";
-import Image from "next/image";
-import { AbstractSeo } from "@/grafics/abstractSeo";
-import { AbstractSeo2 } from "@/grafics/abstractSeo2";
-import { AbstractSeo3 } from "@/grafics/abstractSeo3";
+import { Graphs } from "@/grafics/Graphs";
 
 export default function Finally() {
   return (
@@ -24,7 +21,7 @@ export default function Finally() {
           </div>
 
           <div className={styles.imageContainer}>
-          <AbstractSeo3 />
+          <Graphs />
           </div>
         </div>
       </Section>

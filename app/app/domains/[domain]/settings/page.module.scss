@@ -1,5 +1,102 @@
+@import "@/app/variables";
+
 .settings {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.settingItem {
+  width: 100%;
+}
+
+.settingContent {
+  padding: 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 24px;
+}
+
+.settingInfo {
+  flex: 1;
+}
+
+.settingTitle {
+  font-size: 1.1rem;
+  font-weight: 500;
+  color: $color;
+  margin-bottom: 8px;
+}
+
+.settingDescription {
+  color: $text-secondary;
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: $border-radius;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  border: none;
+  cursor: pointer;
+  min-width: 140px;
+  justify-content: center;
+  
+  &:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+
+  &:active:not(:disabled) {
+    transform: translateY(0);
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.7;
+  }
+
+  &.crawlEnabled {
+    background-color: $error;
+    color: white;
+  }
+
+  &.crawlDisabled {
+    background-color: $veryGood;
+    color: white;
+  }
+
+  &.loading {
+    position: relative;
+    cursor: wait;
+    &:after {
+      content: '';
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      top: 0;
+      left: 0;
+      background: inherit;
+      border-radius: inherit;
+      animation: pulse 1.5s infinite;
+    }
+  }
+}
+
+@keyframes pulse {
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+  100% {
+    opacity: 1;
+  }
 }

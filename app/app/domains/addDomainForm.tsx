@@ -1,11 +1,15 @@
 "use client";
 
 import { useRouter } from 'next/navigation';
-import styles from './addDomainForm.module.scss'
+import styles from './addDomainForm.module.scss';
 import URLInput from '@/components/layout/input/URLinput';
 import { useState } from 'react';
 
-export default function AddDomainForm() {
+interface AddDomainFormProps {
+    onClose?: () => void;
+}
+
+export default function AddDomainForm({ onClose }: AddDomainFormProps) {
     const router = useRouter();
     const [url, setUrl] = useState('');
     const [isUrlValid, setIsUrlValid] = useState(false);
@@ -16,7 +20,6 @@ export default function AddDomainForm() {
         if (!isUrlValid) {
             setIsError(true);
 
-            // Remove the shake effect after the animation is done (0.5s)
             setTimeout(() => {
                 setIsError(false);
             }, 500);
@@ -45,17 +48,21 @@ export default function AddDomainForm() {
         switch (result.error) {
             case undefined: break;
             case 'domain_already_exists':
-                alert('Diese Domain existiert bereits.');
+                alert('This domain already exists.');
                 return;
             default:
-                alert('unbekannter Fehler');
+                alert('Unknown error');
                 return;
         }
 
-        alert(`gespeichert`);
+        alert('Saved');
 
         event.target.name.value = '';
         event.target.url.value = '';
+
+        if (onClose) {
+            onClose();
+        }
 
         router.refresh();
     }
@@ -69,7 +76,7 @@ export default function AddDomainForm() {
             <form onSubmit={handleSubmit}>
                 <div className={styles.inputGroup}>
                     <h3>Website Name</h3>
-                    <input type="text" id="name" name="name" placeholder='Name der Website' required />
+                    <input type="text" id="name" name="name" placeholder="Name of the website" required />
                 </div>
 
                 <div className={styles.inputGroup}>
@@ -80,11 +87,11 @@ export default function AddDomainForm() {
                         onChange={handleInputChange}
                         onValidation={setIsUrlValid}
                         value={url}
-                        name='url'
+                        name="url"
                     />
                 </div>
 
-                <button type="submit">Hinzufügen</button>
+                <button type="submit">Add</button>
             </form>
         </div>
     )

@@ -6,49 +6,75 @@ import Section from "@/components/layout/section";
 export const metadata: Metadata = {
   title: "SEO App",
   description: "The best app for SEO analysis.",
-  robots: "noindex, nofollow" // app path should not be indexed
+  robots: "noindex, nofollow"
+};
+
+// Let's use the URL path to determine the active state
+const getActiveState = (currentPath: string, linkPath: string) => {
+  return currentPath === linkPath;
 };
 
 export default function RootLayout({
   children,
-  params
+  params,
 }: Readonly<{
   children: React.ReactNode;
   params: { domain: string };
 }>) {
+  // Using server-side pathname comparison
+  const basePath = `/app/domains/${params.domain}`;
+  const pathMap = {
+    overview: basePath,
+    crawls: `${basePath}/crawls`,
+    settings: `${basePath}/settings`
+  };
+
   return (
     <div>
-      <Section id={layout.domainheader} className={layout.domainheader}>
-
-        <div className={layout.domain}>
-          <div className={layout.domainData}>
-            <h1 className={layout.domainName}>{params.domain}</h1>
+      <div className={layout.domainheader}>
+        <Section>
+          <div className={layout.domainheaderContent}>
+            <div className={layout.domain}>
+              <h1 className={layout.domainName}>{params.domain}</h1>
+            </div>
+            
+            <nav className={layout.domainnav}>
+              <ul className={layout.domainheaderList}>
+                <li className={layout.domainheaderLi}>
+                  <Link 
+                    href={pathMap.overview}
+                    className={layout.domainheaderLink}
+                  >
+                    Overview
+                  </Link>
+                </li>
+                <li className={layout.domainheaderLi}>
+                  <Link 
+                    href={pathMap.crawls}
+                    className={layout.domainheaderLink}
+                  >
+                    Crawls
+                  </Link>
+                </li>
+                <li className={layout.domainheaderLi}>
+                  <Link 
+                    href={pathMap.settings}
+                    className={layout.domainheaderLink}
+                  >
+                    Settings
+                  </Link>
+                </li>
+              </ul>
+            </nav>
           </div>
-        </div>
-        <nav id={layout.domainnav}>
-          <ul className={layout.domainheaderList}>
-            <li className={layout.domainheaderLi}>
-              <Link href={'/app/domains/' + params.domain} className={layout.domainheaderLink}>
-                Übersicht
-              </Link>
-            </li>
-            <li className={layout.domainheaderLi}>
-              <Link href={'/app/domains/' + params.domain + '/crawls'} className={layout.domainheaderLink}>
-                Crawls
-              </Link>
-            </li>
-            <li className={layout.domainheaderLi}>
-              <Link href={'/app/domains/' + params.domain + '/settings'} className={layout.domainheaderLink}>
-                Einstellungen
-              </Link>
-            </li>
-          </ul>
-        </nav>
-      </Section>
-
-      <div className={layout.main}>
-        {children}
+        </Section>
       </div>
-    </ div>
+
+      <main className={layout.main}>
+        <Section>
+          {children}
+        </Section>
+      </main>
+    </div>
   );
 }

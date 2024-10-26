@@ -1,15 +1,13 @@
 @import "@/app/variables";
 
+.settingsHeader {
+  padding: 40px 0;
+  border-bottom: 1px solid $background-light;
+  margin-bottom: 40px;
 
-#settingsHeader {
-    border-bottom: 1px solid $background-light;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 20px;
-    padding: 20px 0px;
-
-    @media (prefers-color-scheme: dark) {
-        background-color: $background-light-dark;
-    }
+  h2 {
+    font-size: 2rem;
+    font-weight: 500;
+    color: $color;
+  }
 }

@@ -3,7 +3,6 @@
 import styles from "./linkList.module.scss";
 import { useSession } from "next-auth/react";
 import { useEffect, useState } from "react";
-import Section from "@/components/layout/section";
 import { defaultLinksState } from "@/interfaces/link";
 import { format } from "date-fns";
 import { visibleDateFormat } from "@/config/config";
@@ -11,13 +10,17 @@ import MinimizableContainer from "@/components/layout/MinimizableContainer";
 
 const dummyLinks = [
     { path: 'Loading', lastCheck: 'loading', lastLoadTime: 'loading' }
-]
+];
 
 const dummyExternalLinks = [
     { url: 'Loading', lastCheck: 'loading', lastLoadTime: 'loading' }
-]
+];
 
-export default function LinkList({ params, linksFetchTag, domainFetchTag }: { params: { domain: string }, linksFetchTag: string, domainFetchTag: string }) {
+export default function LinkList({ params, linksFetchTag, domainFetchTag }: { 
+    params: { domain: string }, 
+    linksFetchTag: string, 
+    domainFetchTag: string 
+}) {
     const { data: session, status } = useSession({
         required: true,
         onUnauthenticated() {
@@ -36,63 +39,69 @@ export default function LinkList({ params, linksFetchTag, domainFetchTag }: { pa
         }
     }, [status]);
 
-
     if (status === "loading" || !linksJson || !linksJson.loaded || !linksJson.links) {
         return (
-            <div className={styles.linksList}>
-                <Section>
-                    <h2>Links</h2>
+            <div className={styles.sectionContainer}>
+                <MinimizableContainer title="Links">
                     <div className={styles.links}>
-                        {dummyLinks.map((link: any, index: number) => {
-                            return <div key={index}>
+                        {dummyLinks.map((link: any, index: number) => (
+                            <div key={index}>
                                 <div className={styles.linkInner}>
                                     {link.path}, {link.lastCheck}, {link.lastLoadTime}
                                 </div>
                             </div>
-                        })}
+                        ))}
                     </div>
+                </MinimizableContainer>
 
-                    <br />
-
-                    <h2>External Links</h2>
-                    <div className={styles.externalLinks}>
-                        {dummyExternalLinks.map((link: any, index: number) => {
-                            return <div key={index}>
-
-                                <div className={styles.externalLinkInner}>
+                <MinimizableContainer title="External Links">
+                    <div className={styles.links}>
+                        {dummyExternalLinks.map((link: any, index: number) => (
+                            <div key={index}>
+                                <div className={styles.linkInner}>
                                     {link.url}, {link.lastCheck}, {link.lastLoadTime}
                                 </div>
                             </div>
-                        })}
+                        ))}
                     </div>
-                </Section>
+                </MinimizableContainer>
             </div>
-        )
+        );
     }
 
     const handleLinkClick = ($e: React.MouseEvent<HTMLDivElement>, index: number): void => {
         if (linksJson.links) {
             const tempLinks = linksJson.links;
             tempLinks[index].descriptionVisible = !tempLinks[index].descriptionVisible;
-            setLinksJson({ ...linksJson, links: tempLinks })
+            setLinksJson({ ...linksJson, links: tempLinks });
         }
-    }
+    };
 
     const handleExternalLinkClick = ($e: React.MouseEvent<HTMLDivElement>, index: number): void => {
         if (linksJson.externalLinks) {
             const tempLinks = linksJson.externalLinks;
             tempLinks[index].descriptionVisible = !tempLinks[index].descriptionVisible;
-            setLinksJson({ ...linksJson, externalLinks: tempLinks })
+            setLinksJson({ ...linksJson, externalLinks: tempLinks });
         }
-    }
+    };
 
     return (
-        <>
+        <div className={styles.sectionContainer}>
             <MinimizableContainer title={`Links (${linksJson.links.length})`}>
                 <div className={styles.links}>
-                    {linksJson.links.map((link: any, index: number) => {
-                        return <div key={index} className={[styles.linkInner, link.warningDoubleSlash ? styles.warning : null, link.errorCode ? styles.error : null].join(' ')}>
-                            <div className={[styles.linkHeading].join(' ')} onClick={($e) => handleLinkClick($e, index)}>
+                    {linksJson.links.map((link: any, index: number) => (
+                        <div 
+                            key={index} 
+                            className={[
+                                styles.linkInner,
+                                link.warningDoubleSlash ? styles.warning : '',
+                                link.errorCode ? styles.error : ''
+                            ].join(' ')}
+                        >
+                            <div 
+                                className={styles.linkHeading}
+                                onClick={($e) => handleLinkClick($e, index)}
+                            >
                                 <div>
                                     {link.path}
                                 </div>
@@ -103,29 +112,44 @@ export default function LinkList({ params, linksFetchTag, domainFetchTag }: { pa
                                     {link.lastLoadTime > 0 ? link.lastLoadTime + 'ms' : 'no data'}
                                 </div>
                             </div>
-                            <div className={[styles.linkDetails, link.descriptionVisible ? styles.visible : styles.hidden].join(' ')}>
+                            <div 
+                                className={[
+                                    styles.linkDetails,
+                                    link.descriptionVisible ? styles.visible : styles.hidden
+                                ].join(' ')}
+                            >
                                 <div>
                                     <strong>Type:</strong> {link.type}
                                 </div>
-                                {link.errorCode &&
+                                {link.errorCode && (
                                     <div>
                                         <strong>Error:</strong> {link.errorCode}
                                     </div>
-                                }
+                                )}
                                 <div>
                                     <strong>Found on:</strong> {link.foundOnPath}
                                 </div>
                             </div>
                         </div>
-                    })}
+                    ))}
                 </div>
-            </MinimizableContainer >
+            </MinimizableContainer>
 
             <MinimizableContainer title={`External Links (${linksJson.externalLinks?.length})`}>
                 <div className={styles.links}>
-                    {linksJson.externalLinks && linksJson.externalLinks.map((link: any, index: number) => {
-                        return <div key={index} className={[styles.linkInner, link.warningDoubleSlash ? styles.warning : null, link.errorCode ? styles.error : null].join(' ')}>
-                            <div className={[styles.linkHeading].join(' ')} onClick={($e) => handleExternalLinkClick($e, index)}>
+                    {linksJson.externalLinks && linksJson.externalLinks.map((link: any, index: number) => (
+                        <div 
+                            key={index} 
+                            className={[
+                                styles.linkInner,
+                                link.warningDoubleSlash ? styles.warning : '',
+                                link.errorCode ? styles.error : ''
+                            ].join(' ')}
+                        >
+                            <div 
+                                className={styles.linkHeading}
+                                onClick={($e) => handleExternalLinkClick($e, index)}
+                            >
                                 <div>
                                     {link.url}
                                 </div>
@@ -133,7 +157,12 @@ export default function LinkList({ params, linksFetchTag, domainFetchTag }: { pa
                                     {format(new Date(link.lastCheck), visibleDateFormat)}
                                 </div>
                             </div>
-                            <div className={[styles.linkDetails, link.descriptionVisible ? styles.visible : styles.hidden].join(' ')}>
+                            <div 
+                                className={[
+                                    styles.linkDetails,
+                                    link.descriptionVisible ? styles.visible : styles.hidden
+                                ].join(' ')}
+                            >
                                 <div>
                                     <strong>Type:</strong> external
                                 </div>
@@ -142,9 +171,9 @@ export default function LinkList({ params, linksFetchTag, domainFetchTag }: { pa
                                 </div>
                             </div>
                         </div>
-                    })}
+                    ))}
                 </div>
-            </MinimizableContainer >
-        </>
+            </MinimizableContainer>
+        </div>
     );
 }

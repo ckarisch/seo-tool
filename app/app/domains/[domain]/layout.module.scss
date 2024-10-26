@@ -1,56 +1,72 @@
 @import "@/app/variables";
 
-#domainheader {
-    border-bottom: 1px solid $background-light;
+.domainheader {
+  position: sticky;
+  top: 0;
+  background: white;
+  z-index: 10;
+  border-bottom: 1px solid $background-light;
+
+  .domain {
     display: flex;
-    justify-content: space-between;
     align-items: center;
-    margin-bottom: 20px;
+    gap: 16px;
+  }
 
-    .domain {
-        font-weight: bold;
-    }
+  .domainName {
+    font-size: 1.5rem;
+    font-weight: 500;
+    color: $color;
+    margin: 0;
+  }
+}
 
-    .domainName {
-        font-size: 18px;
-    }
+.domainheaderContent {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 0;
+}
 
-    @media (prefers-color-scheme: dark) {
-        background-color: $background-light-dark;
-    }
+.domainnav {
+  flex: 1;
+}
 
-    .logo {
-        display: block;
-    }
+.domainheaderList {
+  display: flex;
+  gap: 8px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  justify-content: flex-end;
+}
 
-    .domainheaderList {
-        max-width: 1024px;
-        margin: 0 auto;
-        padding: 20px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
+.domainheaderLi {
+  margin: 0;
+}
 
-    .domainheaderLi {
-        list-style: none;
-    }
+.domainheaderLink {
+  display: inline-flex;
+  padding: 8px 16px;
+  border-radius: $border-radius;
+  color: $text-secondary;
+  font-weight: 500;
+  font-size: 0.95rem;
+  transition: all 0.2s ease;
+  text-decoration: none;
 
-    .domainheaderLink {
-        display: block;
-        padding: 5px 20px;
-        border-radius: $border-radius;
-        color: $color;
-        @media (prefers-color-scheme: dark) {
-            color: $color-dark;
-        }
-    }
+  &:hover {
+    background-color: $background-light;
+    color: $color;
+  }
 
-    .domainheaderLink:hover {
-        background-color: $accent;
+  &[aria-current="page"] {
+    background-color: $main;
+    color: $color;
+  }
+}
 
-        @media (prefers-color-scheme: dark) {
-            background-color: $accent-dark;
-        }
-    }
+.main {
+  min-height: calc(100vh - 200px);
+  padding-top: 32px;
 }

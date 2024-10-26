@@ -1,4 +1,105 @@
-.toggle{
+@import "@/app/variables";
+
+.toggleContainer {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.toggle {
+  position: relative;
+  display: inline-block;
+  width: 52px;
+  height: 28px;
+}
+
+.input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+
+  &:checked + .slider {
+    background-color: $veryGood;
+  }
+
+  &:checked + .slider:before {
+    transform: translateX(24px);
+  }
+
+  &:focus + .slider {
+    box-shadow: 0 0 1px $veryGood;
+  }
+
+  &:disabled + .slider {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: $background-light;
+  transition: 0.2s;
+  border-radius: 34px;
+  border: 2px solid $background-light;
+
+  &:before {
+    position: absolute;
+    content: "";
+    height: 20px;
+    width: 20px;
+    left: 2px;
+    bottom: 2px;
+    background-color: white;
+    transition: 0.2s;
+    border-radius: 50%;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+
+  &:hover:not([disabled]) {
+    background-color: darken($background-light, 5%);
+  }
+}
+
+.label {
+  font-size: 0.95rem;
+  color: $text-secondary;
+  user-select: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  .icon {
     display: flex;
-    gap: 5px;
+    align-items: center;
+    justify-content: center;
+    color: $text-secondary;
+  }
+}
+
+.loading {
+  .slider {
+    cursor: wait;
+    &:before {
+      animation: pulse 1.5s infinite;
+    }
+  }
+}
+
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba($veryGood, 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 6px rgba($veryGood, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba($veryGood, 0);
+  }
 }

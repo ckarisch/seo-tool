@@ -1,39 +1,52 @@
 @import "@/app/variables";
- 
-  .actionItem {
-    border: 1px solid #e5e7eb;
-    border-radius: 0.375rem;
-    padding: 1rem;
+
+.actionItem {
+  padding: 24px;
+  border-bottom: 1px solid $background-light;
+
+  &:last-child {
+    border-bottom: none;
   }
-  
-  .actionTitle {
-    font-size: 1rem;
-    font-weight: 500;
-    margin-bottom: 0.5rem;
+}
+
+.actionTitle {
+  font-size: 1.1rem;
+  font-weight: 500;
+  color: $color;
+  margin-bottom: 8px;
+}
+
+.actionDescription {
+  font-size: 0.95rem;
+  color: $text-secondary;
+  margin-bottom: 16px;
+  line-height: 1.5;
+}
+
+.actionButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background-color: $color;
+  color: white;
+  border-radius: $border-radius;
+  font-weight: 500;
+  transition: all 0.2s ease;
+
+  svg {
+    width: 16px;
+    height: 16px;
   }
-  
-  .actionDescription {
-    font-size: 0.875rem;
-    color: #6b7280;
-    margin-bottom: 1rem;
+
+  &:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   }
-  
-  .actionButton {
-    background-color: $main;
-    color: white;
-    padding: 0.5rem 1rem;
-    border-radius: 0.25rem;
-    font-weight: 500;
-    cursor: pointer;
-    transition: background-color 0.2s;
-    border: none;
-  }
-  
-  .actionButton:hover {
-    background-color: $main-light;
-  }
-  
-  .actionButton:disabled {
-    background-color: #9ca3af;
+
+  &:disabled {
+    background-color: $background-light;
+    color: $text-secondary;
     cursor: not-allowed;
   }
+}

@@ -1,12 +1,10 @@
-import React, { useState } from 'react';
-import { ChevronDown, ChevronUp } from 'lucide-react';
+import React from 'react';
 import styles from './domainActions.module.scss';
-import Card from '@/components/layout/card';
 import MinimizableContainer from '@/components/layout/MinimizableContainer';
+import { Play, RotateCcw } from 'lucide-react';
 
 interface Domain {
     crawlStatus?: string;
-    // Add other properties of Domain as needed
 }
 
 interface DomainActionsProps {
@@ -16,12 +14,13 @@ interface DomainActionsProps {
     handleResetLinks: (event: React.FormEvent<HTMLFormElement>) => void;
 }
 
-const DomainActions: React.FC<DomainActionsProps> = ({ domainJson, crawlStatus, handleCrawl, handleResetLinks }) => {
-    const [isMinimized, setIsMinimized] = useState(false);
-
-    const toggleMinimize = () => {
-        setIsMinimized(!isMinimized);
-    };
+const DomainActions: React.FC<DomainActionsProps> = ({ 
+    domainJson, 
+    crawlStatus, 
+    handleCrawl, 
+    handleResetLinks 
+}) => {
+    const isCrawling = domainJson.crawlStatus === 'crawling' || crawlStatus === 'crawling';
 
     return (
         <MinimizableContainer title="Domain Actions">
@@ -34,12 +33,14 @@ const DomainActions: React.FC<DomainActionsProps> = ({ domainJson, crawlStatus, 
                     <button
                         className={styles.actionButton}
                         type="submit"
-                        disabled={domainJson.crawlStatus === 'crawling' || crawlStatus === 'crawling'}
+                        disabled={isCrawling}
                     >
-                        Request Crawl
+                        <Play size={16} />
+                        Start Crawl
                     </button>
                 </form>
             </div>
+
             <div className={styles.actionItem}>
                 <h3 className={styles.actionTitle}>Reset Links</h3>
                 <p className={styles.actionDescription}>
@@ -49,8 +50,9 @@ const DomainActions: React.FC<DomainActionsProps> = ({ domainJson, crawlStatus, 
                     <button
                         className={styles.actionButton}
                         type="submit"
-                        disabled={domainJson.crawlStatus === 'crawling' || crawlStatus === 'crawling'}
+                        disabled={isCrawling}
                     >
+                        <RotateCcw size={16} />
                         Reset Links
                     </button>
                 </form>

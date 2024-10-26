@@ -1,0 +1,64 @@
+@import "@/app/variables";
+
+.heroContainer {
+  padding: 40px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.title {
+  font-size: 2.5rem;
+  font-weight: 500;
+  line-height: 1.2;
+}
+
+.description {
+  font-size: 1.1rem;
+  color: $text-secondary;
+  max-width: 640px;
+  line-height: 1.5;
+}
+
+.domainsContent {
+  padding: 40px 0;
+}
+
+.domainsHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 32px;
+}
+
+.domainsTitle {
+  font-size: 2rem;
+  font-weight: 500;
+}
+
+.addButton {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background-color: #000;
+  color: #fff;
+  border-radius: $border-radius;
+  font-weight: 500;
+}
+
+.formSection {
+  padding: 40px 0;
+  animation: slideIn 0.3s ease-out forwards;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

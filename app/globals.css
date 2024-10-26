@@ -108,7 +108,8 @@ svg {
   border-radius: 0.5em;
 }
 
-body, html {
+body,
+html {
   margin: 0;
   padding: 0;
   height: 100%;
@@ -124,10 +125,30 @@ main {
   flex: 1;
 }
 
-h1, h2, h3, h4, h5, h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
   font-family: var(--font-bricolage);
 }
 
 button {
   font-family: var(--font-bricolage);
+  color: #000;
+  background-color: #fff;
+  border-width: 0;
+  box-shadow: 2px 2px 0 rgba(0, 0, 0, .9);
+  transition: all 0.2s ease;
+
+  &:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+
+  &:active {
+    transform: translateY(0);
+    box-shadow: 2px 2px 0 rgba(0, 0, 0, .9);
+  }
 }
