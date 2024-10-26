@@ -134,6 +134,10 @@ h6 {
   font-family: var(--font-bricolage);
 }
 
+h1 {
+  font-weight: 500;
+}
+
 button {
   cursor: pointer;
   font-family: var(--font-bricolage);
