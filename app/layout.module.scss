@@ -6,6 +6,7 @@
 
 #globalfooter {
     background-color: $background-light;
+    padding: 20px;
     min-height: 100px;
     margin-top: auto;
 
@@ -20,7 +21,6 @@
     .globalfooterList {
         max-width: $max-width;
         margin: 0 auto;
-        padding: 20px;
         display: flex;
         justify-content: space-between;
         align-items: center;

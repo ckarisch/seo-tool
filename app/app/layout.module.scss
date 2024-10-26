@@ -9,6 +9,7 @@
 
 #globalheader {
     background-color: $background-light;
+    padding: 20px;
 
     @media (prefers-color-scheme: dark) {
         background-color: $background-light-dark;
@@ -19,9 +20,8 @@
     }
 
     .globalheaderList {
-        max-width: 1024px;
+        max-width: $max-width;
         margin: 0 auto;
-        padding: 20px;
         display: flex;
         justify-content: space-between;
         align-items: center;
