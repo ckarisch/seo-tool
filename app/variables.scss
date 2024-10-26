@@ -1,4 +1,17 @@
-$background-light: #eee;
+$max-width: 1200px;
+$main: #2563eb;
+$main-dark: #0A2540;
+$color: #000000;
+$background-light: #f3f4f6;
+$text-secondary: #64748b;
+$error: #ef4444;
+$warning: #f59e0b;
+$veryGood: #22c55e;
+$good: #84cc16;
+$bad: #ef4444;
+// $border-radius: 8px;
+
+$background-light: #f3f4f6;
 $accent: #ddd;
 $color: #000;
 
@@ -6,17 +19,18 @@ $background-light-dark: #222;
 $accent-dark: #666;
 $color-dark: #fff;
 
-$warning: rgb(205, 157, 0);
-$error: #a33;
+// $warning: rgb(205, 157, 0);
+// $error: #a33;
 
 $border-radius: 5px;
 
 
-$veryGood: #1c1;
-$good: $warning;
-$bad: $error;
+// $veryGood: #1c1;
+// $good: $warning;
+// $bad: $error;
 
 $main: #E1FAFE;
-$main-dark: #0A2540;
+// $main-dark: #0A2540;
+$main-dark: #2563eb;
 $main-light: lighten($main, 10%);
-$text-secondary: $color;
+$text-secondary: #64748b;

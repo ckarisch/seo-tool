@@ -3,50 +3,67 @@
 
 import { useState } from 'react';
 import { signIn } from 'next-auth/react';
-import { useSearchParams } from 'next/navigation';
-import styles from './page.module.scss';
+import { useSearchParams, useRouter } from 'next/navigation';
+import styles from '../signin/page.module.scss';
 import Section from "@/components/layout/section";
 import Background from "@/components/layout/background";
 import Card from "@/components/layout/card";
-import { Github, Mail, ArrowRight } from 'lucide-react';
+import { Loader, Lock, User } from 'lucide-react';
 import Link from 'next/link';
 
 export default function SignUpPage() {
+  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const searchParams = useSearchParams();
+  const router = useRouter();
+
   const plan = searchParams.get('plan');
 
-  const handleEmailSignUp = async (e: React.FormEvent) => {
+  const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
     setIsSubmitting(true);
 
     try {
-      const result = await signIn('email', {
+      // Register user
+      const res = await fetch('/api/auth/signup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name,
+          email,
+          password,
+          role: 'user', // Default role
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || 'Registration failed');
+      }
+
+      // Sign in after successful registration
+      const result = await signIn('credentials', {
         email,
-        callbackUrl: plan ? `/onboarding?plan=${plan}` : '/onboarding',
+        password,
         redirect: false,
       });
 
       if (result?.error) {
-        setError('An error occurred. Please try again.');
-      } else {
-        // Show success state - verification email sent
-        setEmail('');
+        throw new Error('Failed to sign in after registration');
       }
-    } catch (err) {
-      setError('An unexpected error occurred.');
+
+      // Redirect to onboarding with plan if specified
+      router.push(plan ? `/onboarding?plan=${plan}` : '/onboarding');
+    } catch (err: any) {
+      setError(err.message || 'An unexpected error occurred');
     } finally {
       setIsSubmitting(false);
     }
-  };
-
-  const handleProviderSignIn = (provider: string) => {
-    signIn(provider, {
-      callbackUrl: plan ? `/onboarding?plan=${plan}` : '/onboarding',
-    });
   };
 
   return (
@@ -56,9 +73,9 @@ export default function SignUpPage() {
           <div className={styles.heroContainer}>
             <h1 className={styles.title}>Create your account</h1>
             <p className={styles.description}>
-              {plan ? 
-                `Get started with your ${plan} plan today` : 
-                'Start optimizing your website performance'}
+              {plan ?
+                `Get started with your ${plan} plan` :
+                'Start monitoring your domains today'}
             </p>
           </div>
         </Section>
@@ -68,50 +85,78 @@ export default function SignUpPage() {
         <div className={styles.formContainer}>
           <Card>
             <div className={styles.cardContent}>
-              <div className={styles.providerButtons}>
-                <button
-                  onClick={() => handleProviderSignIn('github')}
-                  className={styles.providerButton}
-                >
-                  <Github size={20} />
-                  <span>Continue with GitHub</span>
-                </button>
-
-                <div className={styles.divider}>
-                  <span>or</span>
+              {error && (
+                <div className={styles.error}>
+                  {error}
                 </div>
+              )}
 
-                <form onSubmit={handleEmailSignUp} className={styles.emailForm}>
-                  <div className={styles.inputGroup}>
-                    <label htmlFor="email">Email address</label>
+              <form onSubmit={handleSignUp} className={styles.form}>
+                <div className={styles.inputGroup}>
+                  <label htmlFor="name">Full name</label>
+                  <div className={styles.inputWrapper}>
+                    <User className={styles.inputIcon} size={18} />
                     <input
-                      type="email"
-                      id="email"
-                      name="email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      placeholder="you@example.com"
+                      className={styles.input}
+                      type="text"
+                      id="name"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      placeholder="John Doe"
                       required
+                      minLength={2}
                     />
                   </div>
+                </div>
 
-                  {error && (
-                    <div className={styles.error}>
-                      {error}
-                    </div>
+                <div className={styles.inputGroup}>
+                  <label htmlFor="email">Email address</label>
+                  <input
+                    className={styles.input}
+                    type="email"
+                    id="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="you@example.com"
+                    required
+                  />
+                </div>
+
+                <div className={styles.inputGroup}>
+                  <label htmlFor="password">Password</label>
+                  <div className={styles.passwordWrapper}>
+                    <Lock className={styles.inputIcon} size={18} />
+                    <input
+                     className={styles.input}
+                      type="password"
+                      id="password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      placeholder="Create a secure password"
+                      required
+                      minLength={8}
+                    />
+                  </div>
+                  <span className={styles.passwordHint}>
+                    Must be at least 8 characters
+                  </span>
+                </div>
+
+                <button
+                  type="submit"
+                  className={styles.submitButton}
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? (
+                    <>
+                      <Loader className={styles.spinner} size={20} />
+                      <span>Creating account...</span>
+                    </>
+                  ) : (
+                    <span>Create account</span>
                   )}
-
-                  <button
-                    type="submit"
-                    className={styles.submitButton}
-                    disabled={isSubmitting}
-                  >
-                    <Mail size={20} />
-                    <span>{isSubmitting ? 'Sending...' : 'Continue with Email'}</span>
-                    <ArrowRight size={16} className={styles.arrow} />
-                  </button>
-                </form>
-              </div>
+                </button>
+              </form>
 
               <div className={styles.footer}>
                 <p>

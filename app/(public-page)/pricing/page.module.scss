@@ -159,6 +159,7 @@
 
 .featureGroups {
   flex-grow: 1;
+  width: 100%;
   display: flex;
   flex-direction: column;
   gap: 24px;
@@ -205,6 +206,7 @@
 .featuresList {
   list-style: none;
   padding: 0;
+  padding-left: 20px;
   margin: 0;
 }
 

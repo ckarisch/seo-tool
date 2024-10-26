@@ -18,7 +18,7 @@
     }
 
     .globalfooterList {
-        max-width: 1024px;
+        max-width: $max-width;
         margin: 0 auto;
         padding: 20px;
         display: flex;
@@ -49,6 +49,8 @@
     }
 
     .logoLink {
+        display: flex;
+        gap: 5px;
         padding: 0;
     }
 }

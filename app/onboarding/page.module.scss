@@ -1,4 +1,4 @@
-// app/auth/[signin|signup]/page.module.scss
+// app/onboarding/page.module.scss
 @import "@/app/variables";
 
 .heroContainer {
@@ -24,11 +24,98 @@
   margin: 0 auto;
 }
 
-.formContainer {
+.onboardingContainer {
   padding: 40px 0 80px;
-  max-width: 480px;
+  max-width: 800px;
   margin: 0 auto;
   width: 100%;
+}
+
+.stepsIndicator {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 40px;
+  position: relative;
+  
+  &:before {
+    content: '';
+    position: absolute;
+    top: 24px;
+    left: 40px;
+    right: 40px;
+    height: 2px;
+    background-color: $background-light;
+    z-index: 0;
+  }
+}
+
+.step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  position: relative;
+  flex: 1;
+  z-index: 1;
+  
+  &.active {
+    .stepNumber {
+      background-color: $main-dark;
+      color: white;
+    }
+    
+    .stepText {
+      h3 {
+        color: $main-dark;
+      }
+    }
+  }
+  
+  &.completed {
+    .stepNumber {
+      background-color: $veryGood;
+      color: white;
+    }
+  }
+}
+
+.stepNumber {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background-color: $background-light;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  color: $text-secondary;
+  transition: all 0.3s ease;
+}
+
+.stepText {
+  text-align: center;
+  max-width: 160px;
+  
+  h3 {
+    font-size: 1rem;
+    font-weight: 500;
+    margin: 0 0 4px 0;
+    color: $color;
+  }
+  
+  p {
+    font-size: 0.9rem;
+    color: $text-secondary;
+    margin: 0;
+    line-height: 1.4;
+  }
+}
+
+.formCard {
+  background: white;
+  border-radius: $border-radius;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
 }
 
 .cardContent {
@@ -47,7 +134,7 @@
   gap: 8px;
 }
 
-.form {
+.stepContent {
   display: flex;
   flex-direction: column;
   gap: 24px;
@@ -65,8 +152,7 @@
   }
 }
 
-.inputWrapper,
-.passwordWrapper {
+.inputWrapper {
   position: relative;
   display: flex;
   align-items: center;
@@ -77,7 +163,7 @@
     color: $text-secondary;
   }
 
-  .input {
+  input {
     padding-left: 40px;
     width: 100%;
   }
@@ -100,27 +186,13 @@
   &::placeholder {
     color: lighten($text-secondary, 20%);
   }
-
-  &.inputError {
-    border-color: $error;
-    
-    &:focus {
-      box-shadow: 0 0 0 4px rgba($error, 0.1);
-    }
-  }
 }
 
-.passwordHint {
-  font-size: 0.8rem;
-  color: $text-secondary;
-  margin-top: 4px;
-}
-
-.submitButton {
+.button {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 12px;
+  gap: 8px;
   padding: 12px 24px;
   background-color: $main-dark;
   border: none;
@@ -129,8 +201,8 @@
   font-weight: 500;
   transition: all 0.2s ease;
   cursor: pointer;
-  height: 48px;
   font-size: 1rem;
+  min-height: 48px;
 
   &:hover:not(:disabled) {
     transform: translateY(-1px);
@@ -159,95 +231,16 @@
   }
 }
 
-.providerButton {
+.loading {
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 12px;
-  padding: 12px 24px;
-  background-color: $background-light;
-  border: 2px solid transparent;
-  border-radius: $border-radius;
-  color: $color;
-  font-weight: 500;
-  transition: all 0.2s ease;
-  cursor: pointer;
-  width: 100%;
-  font-size: 1rem;
-
-  &:hover {
-    background-color: darken($background-light, 5%);
-    border-color: $main-dark;
-    transform: translateY(-1px);
-  }
-
-  &:active {
-    transform: translateY(0);
-  }
-
-  svg {
-    flex-shrink: 0;
-  }
-}
-
-.divider {
-  position: relative;
-  text-align: center;
-  margin: 24px 0;
-
-  &:before,
-  &:after {
-    content: '';
-    position: absolute;
-    top: 50%;
-    width: calc(50% - 20px);
-    height: 1px;
-    background-color: $background-light;
-  }
-
-  &:before {
-    left: 0;
-  }
-
-  &:after {
-    right: 0;
-  }
-
-  span {
-    background-color: white;
-    padding: 0 12px;
-    color: $text-secondary;
-    font-size: 0.9rem;
-  }
-}
-
-.footer {
-  margin-top: 32px;
-  text-align: center;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-
-  p {
-    color: $text-secondary;
-    font-size: 0.9rem;
-    margin: 0;
-
-    a {
-      color: $main-dark;
-      text-decoration: none;
-      font-weight: 500;
-      transition: color 0.2s ease;
-
-      &:hover {
-        color: lighten($main-dark, 10%);
-        text-decoration: underline;
-      }
-    }
-  }
-
-  .terms {
-    font-size: 0.8rem;
+  height: 100vh;
+  color: $text-secondary;
+  
+  .spinner {
+    animation: spin 1s linear infinite;
   }
 }
 
@@ -257,35 +250,55 @@
 }
 
 // Responsive adjustments
-@media (max-width: 640px) {
-  .formContainer {
+@media (max-width: 768px) {
+  .stepsIndicator {
+    flex-direction: column;
+    gap: 24px;
+    align-items: flex-start;
+    padding: 0 20px;
+    
+    &:before {
+      display: none;
+    }
+  }
+  
+  .step {
+    flex-direction: row;
+    width: 100%;
+    
+    .stepText {
+      text-align: left;
+      max-width: none;
+    }
+  }
+  
+  .onboardingContainer {
     padding: 20px;
   }
-
+  
   .cardContent {
     padding: 24px;
   }
-
+  
   .title {
     font-size: 2rem;
   }
 
-  .heroContainer {
-    padding: 40px 20px;
+  .button {
+    width: 100%;
   }
 }
 
 @media (max-width: 480px) {
+  .heroContainer {
+    padding: 40px 20px;
+  }
+
   .title {
     font-size: 1.75rem;
   }
 
   .description {
     font-size: 1rem;
-  }
-
-  .providerButton,
-  .submitButton {
-    width: 100%;
   }
 }

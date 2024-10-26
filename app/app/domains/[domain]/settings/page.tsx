@@ -120,7 +120,7 @@ export default function Settings({ params }: { params: { domain: string } }) {
               </div>
               <Toggle
                 loading={notificationsLoading}
-                checked={!!domainJson.disableNotifications}
+                checked={!domainJson.disableNotifications}
                 onChange={handleSendNotificationChange}
                 label="Enable notifications"
               />

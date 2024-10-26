@@ -9,6 +9,7 @@ import { authOptions } from "./api/auth/[...nextauth]/authOptions";
 import Section from "@/components/layout/section";
 import Link from "next/link";
 import Image from "next/image";
+import { LogoIcon } from "@/icons/logoIcon";
 
 const inter = Inter({
   subsets: ['latin'],
@@ -48,9 +49,8 @@ export default async function RootLayout({
             <nav id={layout.globalnav}>
               <ul className={layout.globalfooterList}>
                 <li className={layout.globalfooterLi}>
-                  <Link href={'/'} className={[layout.globalfooterLink, layout.logoLink].join(' ')}>
-                    <Image className={layout.logo} src={'/logo.svg'} alt="logo" width={150} height={30.5}></Image> <br />
-                    Form und Zeichen Austria<br />
+                  <Link href={'https://formundzeichen.at'} className={[layout.globalfooterLink, layout.logoLink].join(' ')}>
+                    <LogoIcon /> Made by Form und Zeichen
                   </Link>
                 </li>
                 <li className={layout.globalfooterLi}>

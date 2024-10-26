@@ -1,9 +1,4 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
+// prisma/schema.prisma
 generator client {
   provider = "prisma-client-js"
 }
@@ -13,17 +8,63 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model Account {
+  id                String  @id @default(auto()) @map("_id") @db.ObjectId
+  userId            String  @db.ObjectId
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+model Session {
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  sessionToken String   @unique
+  userId       String   @db.ObjectId
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+model VerificationToken {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@map("verificationtokens")
+}
+
 model User {
   id                   String                @id @default(auto()) @map("_id") @db.ObjectId
   email                String                @unique
-  name                 String
-  password             String
-  salt                 String
-  role                 String
+  name                 String?
+  password             String?               // For credentials login
+  salt                 String?               // For password hashing
+  role                 String                // Existing role field
   domains              Domain[]
   notificationContacts NotificationContact[]
   AdminLogs            AdminLog[]
   stripeCustomers      String[]
+  
+  emailVerified      DateTime?
+  image              String?
+  accounts           Account[]
+  sessions           Session[]
+  createdAt          DateTime?               @default(now())
+  updatedAt          DateTime?               @updatedAt
 
   @@map("user")
 }
@@ -55,34 +96,32 @@ model Domain {
   lastErrorType                     String?
   lastErrorMessage                  String?
   crawlStatus                       String?
-  crawlInterval                     Int? // in minutes
+  crawlInterval                     Int?
   crawlEnabled                      Boolean?
   crawlDepth                        Int?
   errorStatus                       String?
   lastCrawlTime                     Int?
   disableNotifications              Boolean?
-  // warning
   warning                           Boolean?
-  // error states
-  error                             Boolean?
-  errorUnknown                      Boolean?
-  error404                          Boolean?
-  error404NotificationDisabled      Boolean?
+  error                            Boolean?
+  errorUnknown                     Boolean?
+  error404                         Boolean?
+  error404NotificationDisabled     Boolean?
   error404NotificationDisabledUntil DateTime?
-  error503                          Boolean?
-  error503NotificationDisabled      Boolean?
+  error503                         Boolean?
+  error503NotificationDisabled     Boolean?
   error503NotificationDisabledUntil DateTime?
-  score                             Float?
-  adminLogs                         AdminLog[]
-  image                             String? //@db.VarChar(2000) for sql
-  performanceScore                  Float?
-  lastLighthouseAnalysis            DateTime?
-  lastQuickAnalysis                 DateTime?
-  robotsIndex                       Boolean?
-  robotsFollow                      Boolean?
-  timeoutPercentage                 Float?
-  badRequestPercentage              Float?
-  typeErrorPercentage               Float?
+  score                            Float?
+  adminLogs                        AdminLog[]
+  image                            String?
+  performanceScore                 Float?
+  lastLighthouseAnalysis          DateTime?
+  lastQuickAnalysis               DateTime?
+  robotsIndex                     Boolean?
+  robotsFollow                    Boolean?
+  timeoutPercentage               Float?
+  badRequestPercentage            Float?
+  typeErrorPercentage             Float?
 
   @@map("domain")
 }
@@ -91,7 +130,7 @@ model DomainCrawl {
   id                 String    @id @default(auto()) @map("_id") @db.ObjectId
   domain             Domain    @relation(fields: [domainId], references: [id])
   domainId           String    @db.ObjectId
-  crawlType          String? // 2do: make not nullable
+  crawlType          String?
   startTime          DateTime
   endTime            DateTime?
   crawlTime          Int?
@@ -108,7 +147,7 @@ model DomainCrawl {
 model AnonymousCrawl {
   id                 String    @id @default(auto()) @map("_id") @db.ObjectId
   domainName         String
-  crawlType          String? // 2do: make not nullable
+  crawlType          String?
   startTime          DateTime
   endTime            DateTime?
   crawlTime          Int?
@@ -182,7 +221,7 @@ model CronJob {
   createdAt        DateTime
   lastStart        DateTime
   lastEnd          DateTime
-  interval         Int // in minutes
+  interval         Int
   acitve           Boolean
   status           String
   standardInterval Int?
