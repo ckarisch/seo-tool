@@ -1,124 +1,113 @@
-/* AnimatedSecureMailto.module.css */
+@import "@/app/variables";
+
 .link {
-    position: relative;
-    text-decoration: none;
-    color: #2563eb;
-    transition: color 0.3s ease;
-    cursor: pointer;
+  color: $main;
+  text-decoration: none !important; // Force override any inherited styles
+  position: relative;
+  transition: all 0.2s ease;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+
+  &:hover {
+    opacity: 0.8;
   }
-  
-  /* Underline Animation */
-  .underline {
-    padding-bottom: 2px;
-  }
-  
-  .underline::after {
+}
+
+// Variants
+.underline {
+  &:after {
     content: '';
     position: absolute;
-    width: 0;
+    width: 100%;
     height: 2px;
-    bottom: 0;
+    bottom: -2px;
     left: 0;
     background-color: currentColor;
-    transition: width 0.3s ease;
-  }
-  
-  .underline:hover::after {
-    width: 100%;
-  }
-  
-  /* Background Highlight */
-  .highlight {
-    padding: 2px 4px;
-    transition: color 0.3s ease, background-position 0.3s ease;
-    background: linear-gradient(to right, #3b82f6 50%, transparent 50%);
-    background-size: 200% 100%;
-    background-position: 100% 0;
-  }
-  
-  .highlight:hover {
-    color: white;
-    background-position: 0 0;
-  }
-  
-  /* Slide Effect */
-  .slide {
-    padding: 2px 8px;
-    overflow: hidden;
-  }
-  
-  .slide::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: #3b82f6;
-    transform: translateX(-100%);
+    transform: scaleX(0);
+    transform-origin: right;
     transition: transform 0.3s ease;
-    z-index: -1;
+    opacity: 0.5;
   }
-  
-  .slide:hover {
-    color: white;
+
+  &:hover:after {
+    transform: scaleX(1);
+    transform-origin: left;
   }
-  
-  .slide:hover::before {
+}
+
+.highlight {
+  padding: 2px 4px;
+  margin: -2px -4px;
+  border-radius: 4px;
+  background: linear-gradient(to right, rgba($main, 0) 50%, rgba($main, 0.1) 50%);
+  background-size: 200% 100%;
+  background-position: left bottom;
+  transition: all 0.3s ease;
+
+  &:hover {
+    background-position: right bottom;
+  }
+}
+
+.slide {
+  padding-right: 24px;
+
+  &:after {
+    content: '→';
+    position: absolute;
+    right: 0;
+    opacity: 0;
+    transform: translateX(-8px);
+    transition: all 0.2s ease;
+  }
+
+  &:hover:after {
+    opacity: 1;
     transform: translateX(0);
   }
-  
-  /* Glow Effect */
-  .glow {
-    padding: 2px 8px;
-    transition: all 0.3s ease;
+}
+
+.glow {
+  &:hover {
+    text-shadow: 0 0 8px rgba($main, 0.5);
   }
-  
-  .glow:hover {
-    color: #3b82f6;
-    text-shadow: 0 0 8px rgba(59, 130, 246, 0.5);
-    transform: translateY(-1px);
-  }
-  
-  /* Brackets Effect */
+}
+
+.brackets {
   .bracketContent {
     position: relative;
-    padding: 0 10px;
-    display: inline-block;
+    padding: 0 4px;
+    
+    &:before,
+    &:after {
+      content: '';
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      width: 2px;
+      background-color: currentColor;
+      opacity: 0;
+      transition: all 0.2s ease;
+    }
+
+    &:before {
+      left: 0;
+      transform: translateX(4px);
+    }
+
+    &:after {
+      right: 0;
+      transform: translateX(-4px);
+    }
   }
-  
-  .bracketContent::before,
-  .bracketContent::after {
-    content: '';
-    position: absolute;
-    width: 8px;
-    height: 8px;
-    transition: all 0.3s ease;
-    opacity: 0;
+
+  &:hover .bracketContent {
+    &:before,
+    &:after {
+      opacity: 0.5;
+      transform: translateX(0);
+    }
   }
-  
-  .bracketContent::before {
-    border-left: 2px solid currentColor;
-    border-top: 2px solid currentColor;
-    left: 0;
-    top: 0;
-  }
-  
-  .bracketContent::after {
-    border-right: 2px solid currentColor;
-    border-bottom: 2px solid currentColor;
-    right: 0;
-    bottom: 0;
-  }
-  
-  .brackets:hover .bracketContent::before,
-  .brackets:hover .bracketContent::after {
-    width: 20px;
-    height: 20px;
-    opacity: 1;
-  }
-  
-  /* Active state */
-  .link:active {
-    transform: scale(0.98);
-  }
+}

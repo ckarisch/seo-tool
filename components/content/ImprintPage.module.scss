@@ -1,95 +1,96 @@
-/* ImprintPage.module.css */
-.container {
-    min-height: 100vh;
-    background-color: #f8f9fa;
-    padding: 3rem 1rem;
+@import "@/app/variables";
+
+.heroContainer {
+  padding: 60px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.title {
+  font-size: 2.5rem;
+  font-weight: 500;
+  line-height: 1.2;
+  color: $color;
+}
+
+.description {
+  font-size: 1.1rem;
+  color: $text-secondary;
+  max-width: 640px;
+  line-height: 1.5;
+}
+
+.content {
+  padding: 40px 0 60px 0;
+}
+
+.contentInner {
+  padding: 40px;
+}
+
+.section {
+  &:first-child {
+    padding-top: 0;
   }
+}
+
+.sectionTitle {
+  font-size: 1.25rem;
+  font-weight: 500;
+  color: $color;
+  margin-bottom: 24px;
+}
+
+.divider {
+  height: 1px;
+  background-color: $background-light;
+  margin: 40px 0;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 24px;
   
-  .content {
-    max-width: 48rem;
-    margin: 0 auto;
+  @media (min-width: 768px) {
+    grid-template-columns: repeat(2, 1fr);
   }
-  
-  .header {
-    text-align: center;
-    margin-bottom: 4rem;
-  }
-  
-  .logoWrapper {
-    display: inline-block;
-    color: #4a5568;
-    margin-bottom: 1.5rem;
-  }
-  
-  .logo {
-    width: 5rem;
-    height: 5rem;
-  }
-  
-  .header h1 {
-    font-size: 2.5rem;
-    font-weight: 700;
-    color: #1a202c;
-    margin: 0;
-  }
-  
-  .section {
-    background: white;
-    border-radius: 0.75rem;
-    padding: 1.5rem;
-    margin-bottom: 2rem;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  }
-  
-  .section h2 {
-    font-size: 1.25rem;
-    font-weight: 600;
-    color: #2d3748;
-    padding-bottom: 1rem;
-    margin-bottom: 1.5rem;
-    border-bottom: 1px solid #edf2f7;
-  }
-  
-  .grid {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 1.5rem;
-  }
-  
-  @media (min-width: 640px) {
-    .container {
-      padding: 3rem 1.5rem;
-    }
+}
+
+.contactItem {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.contactTitle {
+  font-size: 0.9rem;
+  color: $text-secondary;
+  font-weight: 500;
+}
+
+.contactContent {
+  font-size: 1rem;
+  color: $color;
+  line-height: 1.5;
+
+  a {
+    color: inherit;
+    text-decoration: none;
     
-    .section {
-      padding: 2rem;
-    }
-  
-    .grid {
-      grid-template-columns: repeat(2, 1fr);
+    &:hover {
+      text-decoration: underline;
     }
   }
-  
-  .contactItem {
-    margin-bottom: 1rem;
-  }
-  
-  .contactTitle {
-    font-size: 0.875rem;
-    color: #718096;
-    margin-bottom: 0.25rem;
-    font-weight: 500;
-  }
-  
-  .contactContent {
-    font-size: 1.125rem;
-    color: #2d3748;
-    line-height: 1.5;
-  }
-  
-  .footer {
-    text-align: center;
-    margin-top: 3rem;
-    font-size: 0.875rem;
-    color: #718096;
-  }
+}
+
+.footer {
+  text-align: center;
+  color: $text-secondary;
+  font-size: 0.9rem;
+  padding: 16px 24px;
+  background-color: $background-light;
+  border-bottom-left-radius: inherit;
+  border-bottom-right-radius: inherit;
+}

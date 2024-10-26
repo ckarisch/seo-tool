@@ -1,0 +1,301 @@
+// app/prices/page.module.scss
+@import "@/app/variables";
+
+.heroContainer {
+  padding: 60px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  text-align: center;
+}
+
+.title {
+  font-size: 2.5rem;
+  font-weight: 500;
+  line-height: 1.2;
+  color: $color;
+}
+
+.description {
+  font-size: 1.1rem;
+  color: $text-secondary;
+  max-width: 640px;
+  line-height: 1.5;
+  margin: 0 auto;
+}
+
+.pricingContainer {
+  padding: 40px 0 80px;
+}
+
+.pricingGrid {
+  display: grid;
+  grid-template-columns: repeat(1, 1fr);
+  gap: 24px;
+  max-width: 1200px;
+  margin: 0 auto;
+  
+  @media (min-width: 768px) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  @media (min-width: 1024px) {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.pricingCard {
+  display: flex;
+  flex-direction: column;
+  padding: 32px;
+  height: 100%;
+  transition: all 0.2s ease;
+  position: relative;
+  overflow: hidden;
+  background-color: white;
+  
+  &.highlighted {
+    background-color: $main-dark;
+    color: white;
+    transform: scale(1.02);
+    
+    &:hover {
+      transform: scale(1.03);
+    }
+
+    // Override dark text colors for highlighted card
+    .tierName,
+    .price,
+    .currency,
+    .amount,
+    .description,
+    .feature {
+      color: white;
+    }
+
+    .period,
+    .featureIcon {
+      color: rgba(white, 0.8);
+    }
+
+    .tierIcon {
+      color: white;
+    }
+
+    &:before {
+      content: 'Recommended';
+      position: absolute;
+      top: 32px;
+      right: -32px;
+      background: white;
+      color: $main-dark;
+      padding: 4px 40px;
+      transform: rotate(45deg);
+      font-size: 0.75rem;
+      font-weight: 500;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .comingSoon {
+      background-color: rgba(white, 0.2);
+      color: white;
+    }
+  }
+  
+  &:hover {
+    transform: scale(1.01);
+  }
+}
+
+.tierHeader {
+  text-align: center;
+  margin-bottom: 32px;
+  position: relative;
+}
+
+.tierIcon {
+  width: 48px;
+  height: 48px;
+  color: $main-dark;
+  margin-bottom: 16px;
+}
+
+.tierName {
+  font-size: 1.5rem;
+  font-weight: 500;
+  margin-bottom: 16px;
+  color: $color;
+}
+
+.price {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 4px;
+  margin-bottom: 16px;
+  color: $color;
+}
+
+.currency {
+  font-size: 1.5rem;
+  font-weight: 500;
+}
+
+.amount {
+  font-size: 3rem;
+  font-weight: 600;
+  line-height: 1;
+}
+
+.period {
+  color: $text-secondary;
+}
+
+.description {
+  color: $text-secondary;
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+.featureGroups {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  margin-bottom: 32px;
+}
+
+.featureGroup {
+  .groupHeader {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+    background-color: rgba($main-dark, 0.1);
+    padding: 8px 12px;
+    border-radius: $border-radius;
+    color: $color;
+
+    h4 {
+      font-size: 0.9rem;
+      font-weight: 600;
+      margin: 0;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    svg {
+      color: $main-dark;
+    }
+  }
+}
+
+// Special styling for Premium tier group headers
+.highlighted .featureGroup {
+  .groupHeader {
+    background-color: rgba(white, 0.2);
+    color: white;
+
+    svg {
+      color: white;
+    }
+  }
+}
+
+.featuresList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.feature {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 0;
+  color: $color;
+  font-size: 0.95rem;
+  
+  &.excluded {
+    color: $text-secondary;
+    text-decoration: line-through;
+  }
+
+  .featureIcon {
+    color: $main-dark;
+    opacity: 0.8;
+    display: flex;
+    align-items: center;
+  }
+
+  .featureText {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+}
+
+.comingSoon {
+  display: inline-block;
+  padding: 2px 8px;
+  background-color: rgba($main-dark, 0.1);
+  border-radius: 12px;
+  font-size: 0.75rem;
+  color: $main-dark;
+  font-weight: 500;
+}
+
+.button {
+  display: block;
+  text-align: center;
+  padding: 12px 24px;
+  background-color: $background-light;
+  color: $color;
+  border-radius: $border-radius;
+  text-decoration: none;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  border: 2px solid transparent;
+  margin-top: auto;
+  
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    border-color: $main-dark;
+  }
+  
+  &.highlighted {
+    background-color: white;
+    color: $main-dark;
+    
+    &:hover {
+      border-color: white;
+      background-color: transparent;
+      color: white;
+    }
+  }
+}
+
+// Responsive adjustments
+@media (max-width: 768px) {
+  .pricingCard {
+    padding: 24px;
+    
+    &.highlighted {
+      transform: scale(1);
+      
+      &:hover {
+        transform: scale(1.01);
+      }
+    }
+  }
+
+  .amount {
+    font-size: 2.5rem;
+  }
+
+  .tierName {
+    font-size: 1.25rem;
+  }
+}

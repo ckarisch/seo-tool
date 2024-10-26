@@ -1,7 +1,7 @@
 "use client";
 // components/AnimatedSecurePhone.tsx
 import React, { useState, useEffect } from 'react';
-import styles from './AnimatedSecurePhone.module.scss';
+import styles from './AnimatedSecure.module.scss';
 
 interface AnimatedSecurePhoneProps {
   phoneNumber: string;

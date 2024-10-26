@@ -1,113 +1,100 @@
-/* SecurePhoneReveal.module.scss */
+@import "@/app/variables";
+
 .container {
-  overflow: hidden;
-  position: relative;
-  font-family: system-ui, -apple-system, sans-serif;
+  display: inline-flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
 .toggleButton {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 8px 16px;
-  color: #2563eb;
+  color: $color;
   font-weight: 500;
-  border: 1px solid #93c5fd;
-  border-radius: 8px;
-  background: transparent;
+  background: none;
+  border: none;
+  padding: 8px 16px;
+  border-radius: $border-radius;
   cursor: pointer;
   transition: all 0.2s ease;
+  font-size: 0.95rem;
 
   &:hover {
-    color: #1d4ed8;
-    border-color: #60a5fa;
+    background-color: $background-light;
+    transform: translateY(-1px);
   }
 
-  &:active {
-    background-color: #eff6ff;
-  }
-}
-
-.arrow {
-  transition: transform 0.3s ease;
-  
-  &.rotated {
-    transform: rotate(180deg);
+  .arrow {
+    transition: transform 0.2s ease;
+    
+    &.rotated {
+      transform: rotate(180deg);
+    }
   }
 }
 
 .revealContainer {
-  position: relative;
-  margin-top: 8px;
+  overflow: hidden;
 }
 
 .content {
   max-height: 0;
   opacity: 0;
-  transition: all .3s ease;
-
+  transition: all 0.3s ease;
+  
   &.revealed {
-    max-height: 80px;
+    max-height: 100px;
     opacity: 1;
-  }
-
-  &.animating {
-    animation: fadeIn 0.3s ease forwards;
   }
 }
 
 .phoneContainer {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 12px;
-  background-color: #f9fafb;
-  border-radius: 8px;
+  gap: 12px;
+  padding: 8px 16px;
 }
 
 .phoneNumber {
-  font-size: 1.125rem;
-  font-weight: 500;
-  color: #111827;
+  color: $color;
   text-decoration: none;
-  transition: color 0.2s ease;
-
+  font-weight: 500;
+  
   &:hover {
-    color: #2563eb;
+    text-decoration: underline;
   }
 }
 
 .copyWrapper {
   position: relative;
-  display: flex;
-  align-items: center;
 }
 
 .copyButton {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 6px;
-  color: #6b7280;
-  background: transparent;
+  width: 32px;
+  height: 32px;
   border: none;
-  border-radius: 6px;
+  background-color: $background-light;
+  border-radius: $border-radius;
   cursor: pointer;
   transition: all 0.2s ease;
-  
-  &:not(:disabled):hover {
-    color: #2563eb;
-    background-color: #eff6ff;
+  color: $text-secondary;
+
+  &:hover {
+    background-color: darken($background-light, 5%);
+    transform: translateY(-1px);
   }
 
   &.copying {
-    color: #2563eb;
-    background-color: #eff6ff;
-    pointer-events: none;
+    cursor: wait;
   }
 
-  &:disabled {
-    cursor: default;
+  &.copied {
+    background-color: $veryGood;
+    color: white;
   }
 }
 
@@ -122,76 +109,41 @@
   top: 0;
   left: 0;
   transition: all 0.2s ease;
-
+  
   &.hidden {
     opacity: 0;
     transform: scale(0.8);
   }
 }
 
-.copySymbol {
-  z-index: 1;
-}
-
-.checkSymbol {
-  z-index: 2;
-  
-  &:not(.hidden) {
-    animation: checkmark 0.4s ease-out forwards;
-  }
-}
-
 .tooltip {
   position: absolute;
   top: -30px;
-  right: 50%;
-  transform: translateX(50%) translateY(10px);
-  padding: 4px 8px;
-  background-color: #1f2937;
+  left: 50%;
+  transform: translateX(-50%) translateY(10px);
+  background-color: $color;
   color: white;
-  font-size: 0.875rem;
+  padding: 4px 8px;
   border-radius: 4px;
+  font-size: 0.8rem;
   opacity: 0;
   pointer-events: none;
   transition: all 0.2s ease;
   white-space: nowrap;
 
-  &::after {
+  &.visible {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+
+  &:after {
     content: '';
     position: absolute;
     bottom: -4px;
-    right: 50%;
-    transform: translateX(50%) rotate(45deg);
+    left: 50%;
+    transform: translateX(-50%) rotate(45deg);
     width: 8px;
     height: 8px;
-    background-color: #1f2937;
-  }
-
-  &.visible {
-    opacity: 1;
-    transform: translateX(50%) translateY(0);
-  }
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(-10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes checkmark {
-  0% {
-    transform: scale(0.8);
-  }
-  50% {
-    transform: scale(1.2);
-  }
-  100% {
-    transform: scale(1);
+    background-color: inherit;
   }
 }

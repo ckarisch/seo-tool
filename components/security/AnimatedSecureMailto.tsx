@@ -1,5 +1,5 @@
 "use client";
-// components/AnimatedSecureMailto.tsx
+
 import React, { useState, useEffect } from 'react';
 import styles from './AnimatedSecureMailto.module.scss';
 
@@ -12,7 +12,7 @@ interface AnimatedSecureMailtoProps {
   variant?: 'underline' | 'highlight' | 'slide' | 'glow' | 'brackets';
 }
 
-const AnimatedSecureMailto: React.FC<AnimatedSecureMailtoProps> = ({
+export const AnimatedSecureMailto: React.FC<AnimatedSecureMailtoProps> = ({
   email,
   subject = '',
   body = '',
@@ -26,7 +26,6 @@ const AnimatedSecureMailto: React.FC<AnimatedSecureMailtoProps> = ({
     setIsClient(true);
   }, []);
 
-  // Security functions
   const encode = (str: string): string => {
     if (typeof window === 'undefined') return str;
     return window.btoa(str);
@@ -83,5 +82,3 @@ const AnimatedSecureMailto: React.FC<AnimatedSecureMailtoProps> = ({
     </a>
   );
 };
-
-export default AnimatedSecureMailto;

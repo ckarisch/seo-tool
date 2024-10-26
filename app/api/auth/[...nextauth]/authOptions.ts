@@ -23,7 +23,7 @@ export const authOptions: NextAuthOptions = {
           }
   
           if (process.env.ADMIN_EMAIL === credentials?.email && process.env.ADMIN_PASSWORD === credentials?.password) {
-            return { email: 'admin@formundzeichen.at', name: 'admin', id: '-1' };
+            return { email: 'admin@localhost', name: 'admin', id: '-1' };
           }
   
           const user = await prisma.user.findUnique({ where: { email: credentials?.email } })
@@ -58,58 +58,4 @@ export const authOptions: NextAuthOptions = {
       // Set to jwt in order to CredentialsProvider works properly
       strategy: 'jwt',
     },
-  //   callbacks: {
-  //     async jwt({ token, account }) {
-  //         if (account) {
-  //             token.accessToken = account.access_token;
-  //             token.accessTokenExpire = account.expires_at
-  //                 ? account.expires_at * 1000
-  //                 : 0;
-  //             token.refreshToken = account?.refresh_token;
-  //             token.id_token = account?.id_token;
-  //             token.accessTokenIssuedAt = Date.now();
-  //         }
-  //             return token;
-  //     },
-  //     // eslint-disable-next-line require-await
-  //     async session({ session, user, token }) {
-  //         if (token && typeof token.accessTokenExpire === 'number' && typeof token.accessTokenIssuedAt === 'number') {
-  //             const tempsession: any = session;
-  //             // session interval in seconds, It's accesstoken expire - 10 minutes
-  //             let interval = Math.round(((token.accessTokenExpire - token.accessTokenIssuedAt) - (60000 * 10)) / 1000);
-  //             if (interval < 300) {
-  //                 interval = 2
-  //             }
-  //             tempsession.interval = interval;
-  //             return tempsession;
-  //         } else {
-  //             return session;
-  //         }
-  //     },
-  // },
-    // callbacks: {
-    //   async session ({ session, token, user }) {
-    //     const sanitizedToken = Object.keys(token).reduce((p, c) => {
-    //       // strip unnecessary properties
-    //       if (
-    //         c !== "iat" &&
-    //         c !== "exp" &&
-    //         c !== "jti" &&
-    //         c !== "apiToken"
-    //       ) {
-    //         return { ...p, [c]: token[c] }
-    //       } else {
-    //         return p
-    //       }
-    //     }, {})
-    //     return { ...session, user: sanitizedToken, apiToken: token.apiToken }
-    //   },
-    //   async jwt ({ token, user, account, profile }) {
-    //     if (typeof user !== "undefined") {
-    //       // user has just signed in so the user object is populated
-    //       return user as unknown as JWT
-    //     }
-    //     return token
-    //   }
-    // }
   }

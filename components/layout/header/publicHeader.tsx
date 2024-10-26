@@ -29,8 +29,8 @@ export const PublicHeader = () => (
                     </Link>
                 </li>
                 <li className={[styles.globalheaderLi, styles.desktop].join(' ')}>
-                    <Link href={'/'} className={styles.globalheaderLink}>
-                        Prices
+                    <Link href={'/pricing'} className={styles.globalheaderLink}>
+                        Pricing
                     </Link>
                 </li>
                 <li className={styles.globalheaderLi}>
