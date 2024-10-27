@@ -57,7 +57,8 @@ export async function GET(request: Request) {
           timePassed = new Date().getTime() - cronStartTime;
           timeLeft = maxExecutionTime - timePassed;
           yield* cronLogger.log(`${cron.name}: time left: ${timeLeft}`);
-          if(checkTimeout(timePassed, maxDurationInMilliseconds)){
+
+          if (checkTimeout(timePassed, maxDurationInMilliseconds)) {
             await prisma.cronJob.update({
               where: { id: cron.id },
               data: { status: "idle", lastEnd: new Date() },

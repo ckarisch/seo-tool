@@ -27,7 +27,8 @@ export async function* recursiveCrawl(
     requestStartTime: number,
     subLogger: Logger): AsyncGenerator<LogEntry, recursiveCrawlResponse, unknown> {
 
-    yield* subLogger.log('Subfunction started');
+    yield* subLogger.log('recursive crawl started');
+    yield* subLogger.log('extractedDomain: ' + extractedDomain);
     let timePassed, requestTime;
 
     let requests = 0;
@@ -63,7 +64,6 @@ export async function* recursiveCrawl(
                     }
 
                     if (isInternal) {
-                        yield* subLogger.log('extractedDomain: ' + extractedDomain);
                         yield* subLogger.log('Crawling: ' + normalizedLink);
                         if (subdomain != analyzedUrl.subdomain) {
                             yield* subLogger.log(`warning: subdomain (${normalizedLink}) not matching with requested url`)
