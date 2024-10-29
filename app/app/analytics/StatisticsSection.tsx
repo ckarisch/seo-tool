@@ -13,9 +13,10 @@ import {
   Cell
 } from 'recharts';
 import styles from './page.module.scss';
+import { DomainStats } from './page';
 
-const StatisticsSection = ({ domainStats }) => {
-  const getChartData = (stats) => {
+const StatisticsSection = ({ domainStats }: {domainStats: DomainStats}) => {
+  const getChartData = (stats : DomainStats) => {
     return [
       {
         name: 'Error Rate',
@@ -32,7 +33,7 @@ const StatisticsSection = ({ domainStats }) => {
     ];
   };
 
-  const getBarColor = (index) => {
+  const getBarColor = (index: number) => {
     const colors = ['#ef4444', '#f59e0b', '#10b981'];
     return colors[index];
   };

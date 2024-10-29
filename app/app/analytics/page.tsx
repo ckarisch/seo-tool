@@ -23,7 +23,7 @@ interface Domain {
     externalLinks: { id: string }[];
 }
 
-interface DomainStats {
+export interface DomainStats {
     totalCrawls: number;
     errorRate: number;
     warningRate: number;
