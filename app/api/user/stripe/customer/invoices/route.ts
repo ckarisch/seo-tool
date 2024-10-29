@@ -48,29 +48,48 @@ export async function GET(
       throw new Error("No customer found");
     }
 
-    // Get the customer ID (using first customer for now)
-    const customerId = sessionUser.stripeCustomers[0];
-
     // Get pagination parameters
     const { searchParams } = new URL(request.url);
     const limit = Number(searchParams.get("limit")) || 10;
     const starting_after = searchParams.get("starting_after") || undefined;
 
-    // Fetch invoices from Stripe
-    const invoices = await stripe.invoices.list({
-      customer: customerId,
-      limit,
-      starting_after,
-      expand: [
-        "data.subscription",
-        "data.payment_intent",
-        "data.payment_intent.payment_method"
-      ],
-    });
+    // Fetch invoices for all customers
+    const allInvoicesPromises = sessionUser.stripeCustomers.map((customerId) =>
+      stripe.invoices.list({
+        customer: customerId,
+        limit,
+        starting_after,
+        expand: [
+          "data.subscription",
+          "data.payment_intent",
+          "data.payment_intent.payment_method"
+        ],
+      })
+    );
+
+    const allInvoicesResponses = await Promise.all(allInvoicesPromises);
+
+    // Combine all invoices
+    const combinedInvoices = allInvoicesResponses.reduce<Stripe.Invoice[]>(
+      (acc, response) => [...acc, ...response.data],
+      []
+    );
+
+    // Sort combined invoices by date (newest first)
+    const sortedInvoices = combinedInvoices.sort((a, b) => 
+      (b.created || 0) - (a.created || 0)
+    );
+
+    // Apply pagination to combined results
+    const paginatedInvoices = sortedInvoices.slice(0, limit);
+    
+    // Check if there are more invoices
+    const hasMore = sortedInvoices.length > limit || 
+      allInvoicesResponses.some(response => response.has_more);
 
     return NextResponse.json({
-      invoices: invoices.data,
-      hasMore: invoices.has_more,
+      invoices: paginatedInvoices,
+      hasMore,
     });
   } catch (err) {
     console.error("Error fetching invoices:", err);

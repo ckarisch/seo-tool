@@ -1,0 +1,296 @@
+@import "@/app/variables";
+
+.heroContainer {
+  padding: 40px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  animation: slideDown 0.5s ease-out;
+}
+
+.title {
+  font-size: 2.5rem;
+  font-weight: 500;
+  line-height: 1.2;
+}
+
+.description {
+  font-size: 1.1rem;
+  color: $text-secondary;
+  max-width: 640px;
+  line-height: 1.5;
+}
+
+.analyticsContent {
+  padding: 40px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+  animation: fadeIn 0.3s ease-in;
+}
+
+.domainSelector {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.selectLabel {
+  font-size: 1rem;
+  font-weight: 500;
+  color: $color;
+}
+
+.select {
+  padding: 8px 16px;
+  border-radius: $border-radius;
+  border: 1px solid $background-light;
+  background-color: white;
+  font-size: 1rem;
+  color: $color;
+  min-width: 200px;
+
+  &:focus {
+    outline: none;
+    border-color: $color;
+  }
+}
+
+.metricsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 24px;
+  animation: slideUp 0.5s ease-out;
+}
+
+.metricCard {
+  background: white;
+  border-radius: 16px;
+  padding: 24px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  }
+}
+
+.metricHeader {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+
+  h3 {
+    font-size: 1rem;
+    font-weight: 500;
+    color: $text-secondary;
+  }
+}
+
+.metricIcon {
+  width: 24px;
+  height: 24px;
+  color: $color;
+}
+
+.scoreValue {
+  font-size: 2.5rem;
+  font-weight: 600;
+  color: $color;
+  line-height: 1;
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+}
+
+.scoreUnit {
+  font-size: 1rem;
+  color: $text-secondary;
+  font-weight: 400;
+}
+
+.statsSection {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.sectionTitle {
+  font-size: 1.5rem;
+  font-weight: 500;
+  color: $color;
+}
+
+.chartContainer {
+  background: white;
+  border-radius: 16px;
+  padding: 24px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  height: 350px;
+}
+
+.statsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 24px;
+}
+
+.statCard {
+  background: white;
+  border-radius: 16px;
+  padding: 24px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+
+  h4 {
+    font-size: 0.9rem;
+    color: $text-secondary;
+    margin-bottom: 8px;
+  }
+
+  p {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: $color;
+  }
+}
+
+.loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 400px;
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid $background-light;
+  border-top: 3px solid $color;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+.error {
+  text-align: center;
+  color: #ef4444;
+  padding: 40px;
+  font-size: 1.1rem;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.statsSection {
+    display: flex;
+    flex-direction: column;
+    gap: 40px;
+    width: 100%;
+    animation: fadeIn 0.3s ease-in;
+  }
+  
+  .chartsWrapper {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 24px;
+    margin-bottom: 16px;
+    
+    @media (min-width: 1024px) {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+  
+  .chartCard {
+    background: white;
+    border-radius: 16px;
+    padding: 24px;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+    }
+  }
+  
+  .chartTitle {
+    font-size: 1rem;
+    font-weight: 500;
+    color: $text-secondary;
+    margin-bottom: 16px;
+  }
+  
+  .chartContainer {
+    position: relative;
+    width: 100%;
+    height: 300px;
+  }
+  
+  .metricsGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 24px;
+    animation: slideUp 0.5s ease-out;
+  }
+  
+  .metricCard {
+    background: white;
+    border-radius: 16px;
+    padding: 24px;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+    }
+  
+    .metricHeader {
+      margin-bottom: 12px;
+  
+      h4 {
+        font-size: 0.9rem;
+        color: $text-secondary;
+        font-weight: 500;
+      }
+    }
+  
+    .metricValue {
+      font-size: 2rem;
+      font-weight: 600;
+      color: $color;
+    }
+  }

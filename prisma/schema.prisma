@@ -51,20 +51,20 @@ model User {
   id                   String                @id @default(auto()) @map("_id") @db.ObjectId
   email                String                @unique
   name                 String?
-  password             String?               // For credentials login
-  salt                 String?               // For password hashing
-  role                 String                // Existing role field
+  password             String? // For credentials login
+  salt                 String? // For password hashing
+  role                 String // Existing role field
   domains              Domain[]
   notificationContacts NotificationContact[]
   AdminLogs            AdminLog[]
   stripeCustomers      String[]
-  
-  emailVerified      DateTime?
-  image              String?
-  accounts           Account[]
-  sessions           Session[]
-  createdAt          DateTime?               @default(now())
-  updatedAt          DateTime?               @updatedAt
+
+  emailVerified DateTime?
+  image         String?
+  accounts      Account[]
+  sessions      Session[]
+  createdAt     DateTime? @default(now())
+  updatedAt     DateTime? @updatedAt
 
   @@map("user")
 }
@@ -103,25 +103,25 @@ model Domain {
   lastCrawlTime                     Int?
   disableNotifications              Boolean?
   warning                           Boolean?
-  error                            Boolean?
-  errorUnknown                     Boolean?
-  error404                         Boolean?
-  error404NotificationDisabled     Boolean?
+  error                             Boolean?
+  errorUnknown                      Boolean?
+  error404                          Boolean?
+  error404NotificationDisabled      Boolean?
   error404NotificationDisabledUntil DateTime?
-  error503                         Boolean?
-  error503NotificationDisabled     Boolean?
+  error503                          Boolean?
+  error503NotificationDisabled      Boolean?
   error503NotificationDisabledUntil DateTime?
-  score                            Float?
-  adminLogs                        AdminLog[]
-  image                            String?
-  performanceScore                 Float?
-  lastLighthouseAnalysis          DateTime?
-  lastQuickAnalysis               DateTime?
-  robotsIndex                     Boolean?
-  robotsFollow                    Boolean?
-  timeoutPercentage               Float?
-  badRequestPercentage            Float?
-  typeErrorPercentage             Float?
+  score                             Float?
+  adminLogs                         AdminLog[]
+  image                             String?
+  performanceScore                  Float?
+  lastLighthouseAnalysis            DateTime?
+  lastQuickAnalysis                 DateTime?
+  robotsIndex                       Boolean?
+  robotsFollow                      Boolean?
+  timeoutPercentage                 Float?
+  badRequestPercentage              Float?
+  typeErrorPercentage               Float?
 
   @@map("domain")
 }
@@ -140,6 +140,7 @@ model DomainCrawl {
   errorMessage       String?
   warningDoubleSlash Boolean?
   error404           Boolean?
+  error503           Boolean?
 
   @@map("domaincrawl")
 }

@@ -1,0 +1,161 @@
+@import "@/app/variables";
+
+.heroContainer {
+  padding: 40px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  animation: slideDown 0.5s ease-out;
+}
+
+.title {
+  font-size: 2.5rem;
+  font-weight: 500;
+  line-height: 1.2;
+  color: $color;
+}
+
+.description {
+  font-size: 1.1rem;
+  color: $text-secondary;
+  max-width: 640px;
+  line-height: 1.5;
+}
+
+.premiumContainer {
+  padding: 40px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  animation: fadeIn 0.3s ease-in;
+}
+
+.errorContainer {
+  padding: 40px 0;
+  animation: fadeIn 0.3s ease-in;
+}
+
+.checkoutContainer {
+  padding: 40px 0;
+  animation: slideUp 0.5s ease-out;
+}
+
+.statusCard {
+  background: white;
+  border-radius: 16px;
+  overflow: hidden;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  animation: slideUp 0.5s ease-out;
+  
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  }
+}
+
+.cardHeader {
+  padding: 24px;
+}
+
+.cardTitleRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.icon {
+  width: 24px;
+  height: 24px;
+  color: $color;
+}
+
+.statusActive {
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  background-color: #ecfdf5;
+  color: #065f46;
+}
+
+.cardTitle {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: $color;
+  margin-bottom: 8px;
+}
+
+.cardDescription {
+  font-size: 1rem;
+  color: $text-secondary;
+  line-height: 1.5;
+}
+
+.divider {
+  width: 100%;
+  height: 1px;
+  background-color: $background-light;
+  margin: 0;
+}
+
+.cardActions {
+  padding: 24px;
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.actionButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 20px;
+  background-color: $background-light;
+  color: $color;
+  border-radius: $border-radius;
+  font-weight: 500;
+  font-size: 0.95rem;
+  text-decoration: none;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background-color: darken($background-light, 5%);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

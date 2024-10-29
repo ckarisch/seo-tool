@@ -19,6 +19,18 @@ const Alert = React.forwardRef<HTMLDivElement, AlertProps>(
 )
 Alert.displayName = "Alert"
 
+const AlertTitle = React.forwardRef<
+  HTMLParagraphElement,
+  React.HTMLAttributes<HTMLHeadingElement>
+>(({ className = "", ...props }, ref) => (
+  <h5
+    ref={ref}
+    className={`${styles.title} ${className}`}
+    {...props}
+  />
+))
+AlertTitle.displayName = "AlertTitle"
+
 interface AlertDescriptionProps extends React.HTMLAttributes<HTMLDivElement> {}
 
 const AlertDescription = React.forwardRef<HTMLDivElement, AlertDescriptionProps>(
@@ -32,4 +44,4 @@ const AlertDescription = React.forwardRef<HTMLDivElement, AlertDescriptionProps>
 )
 AlertDescription.displayName = "AlertDescription"
 
-export { Alert, AlertDescription }
+export { Alert, AlertTitle, AlertDescription }

@@ -44,6 +44,9 @@ export async function GET(req: NextRequest, res: NextResponse) {
     orderBy: {
       name: "asc",
     },
+    include: {
+      internalLinks: true
+    }
   });
 
   for (const d of domains) {
@@ -58,7 +61,12 @@ export async function GET(req: NextRequest, res: NextResponse) {
   }
 
   // refresh domains
-  domains = await prisma.domain.findMany({ where: { userId: user.id } });
+  domains = await prisma.domain.findMany({
+    where: { userId: user.id },
+    include: {
+      internalLinks: true
+    }
+  });
   domains.sort((a, b) => {
     // First compare by verification status
     if (a.domainVerified !== b.domainVerified) {
