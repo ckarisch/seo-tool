@@ -13,6 +13,7 @@ import { crawlerGenerator } from "@/apiComponents/cron/crawlerGenerator";
 import { lighthouseGenerator } from "@/apiComponents/cron/lighthouseGenerator";
 import { quickAnalysisGenerator } from "@/apiComponents/cron/quickAnalysisGenerator";
 import { checkTimeout } from "../seo/domains/[domainName]/crawl/crawlLinkHelper";
+import { userGenerator } from "@/apiComponents/cron/userGenerator";
 const prisma = new PrismaClient();
 
 export async function GET(request: Request) {
@@ -111,6 +112,16 @@ export async function GET(request: Request) {
                     controller,
                     encoder,
                     quickAnalysisGenerator(timeLeft, host, cron)
+                  );
+                }
+                if (cron.type === "user") {
+                  yield* cronLogger.log(
+                    `${cron.name}: starting quick analysis`
+                  );
+                  await streamLogs(
+                    controller,
+                    encoder,
+                    userGenerator(timeLeft, host, cron)
                   );
                 }
                 await prisma.cronJob.update({
