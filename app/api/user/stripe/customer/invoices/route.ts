@@ -28,14 +28,12 @@ export async function GET(
       throw new Error("STRIPE_SECRET_KEY is not defined");
     }
 
-    // Get user from session
     const session = await getServerSession(authOptions);
     if (!session || !session.user) {
       console.log("error: no session");
       throw new Error("Not authenticated");
     }
 
-    // Get user from database
     const sessionUser = await prisma.user.findFirst({
       where: { email: session.user.email! },
     });
@@ -48,35 +46,41 @@ export async function GET(
       throw new Error("No customer found");
     }
 
-    // Get pagination parameters
     const { searchParams } = new URL(request.url);
     const limit = Number(searchParams.get("limit")) || 10;
     const starting_after = searchParams.get("starting_after") || undefined;
 
-    // Fetch invoices for all customers
-    const allInvoicesPromises = sessionUser.stripeCustomers.map((customerId) =>
-      stripe.invoices.list({
-        customer: customerId,
-        limit,
-        starting_after,
-        expand: [
-          "data.subscription",
-          "data.payment_intent",
-          "data.payment_intent.payment_method"
-        ],
-      })
-    );
+    // Fetch invoices for all customers with error handling
+    const invoicesPromises = sessionUser.stripeCustomers.map(async customerId => {
+      try {
+        return await stripe.invoices.list({
+          customer: customerId,
+          limit,
+          starting_after,
+          expand: [
+            "data.subscription",
+            "data.payment_intent",
+            "data.payment_intent.payment_method"
+          ],
+        });
+      } catch (error) {
+        if (error instanceof Stripe.errors.StripeError) {
+          console.log(`Stripe error for customer ${customerId}:`, error.message);
+        } else {
+          console.error(`Unknown error for customer ${customerId}:`, error);
+        }
+        // Return empty invoice list for failed requests
+        return { data: [], has_more: false };
+      }
+    });
 
-    const allInvoicesResponses = await Promise.all(allInvoicesPromises);
+    const invoicesResponses = await Promise.all(invoicesPromises);
 
     // Combine all invoices
-    const combinedInvoices = allInvoicesResponses.reduce<Stripe.Invoice[]>(
-      (acc, response) => [...acc, ...response.data],
-      []
-    );
-
-    // Sort combined invoices by date (newest first)
-    const sortedInvoices = combinedInvoices.sort((a, b) => 
+    const allInvoices = invoicesResponses.flatMap(response => response.data);
+    
+    // Sort invoices by created date (newest first)
+    const sortedInvoices = allInvoices.sort((a, b) => 
       (b.created || 0) - (a.created || 0)
     );
 
@@ -85,7 +89,7 @@ export async function GET(
     
     // Check if there are more invoices
     const hasMore = sortedInvoices.length > limit || 
-      allInvoicesResponses.some(response => response.has_more);
+      invoicesResponses.some(response => response.has_more);
 
     return NextResponse.json({
       invoices: paginatedInvoices,

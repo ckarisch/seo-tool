@@ -11,9 +11,6 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY ?? "", {
   apiVersion: "2024-09-30.acacia",
 });
 
-const customerIdSchema = z.string().min(1);
-
-// Updated response type to match Stripe's API
 interface SubscriptionsResponse {
   subscriptions: Stripe.Subscription[];
   hasMore: boolean;
@@ -24,8 +21,7 @@ interface ErrorResponse {
 }
 
 export async function GET(
-  request: Request,
-  { params }: { params: { customerId: string } }
+  request: Request
 ): Promise<NextResponse<SubscriptionsResponse | ErrorResponse>> {
   try {
     if (!process.env.STRIPE_SECRET_KEY) {
@@ -33,47 +29,71 @@ export async function GET(
     }
 
     const session = await getServerSession(authOptions);
-
-    if (!session || !session!.user) {
+    if (!session || !session.user) {
       console.log("error: no session");
       throw new Error("Not authenticated");
     }
+
     const sessionUser = await prisma.user.findFirst({
       where: { email: session.user.email! },
     });
 
     if (!sessionUser) {
-      throw new Error("user not found");
+      throw new Error("User not found");
     }
 
     if (!sessionUser.stripeCustomers.length) {
-      throw new Error("no customer found");
+      throw new Error("No customer found");
     }
-
-    // const customerId = customerIdSchema.parse(params.customerId);
-    const customerId = sessionUser.stripeCustomers[0];
 
     const { searchParams } = new URL(request.url);
     const limit = Number(searchParams.get("limit")) || 10;
     const starting_after = searchParams.get("starting_after") || undefined;
 
-    const subscriptions = await stripe.subscriptions.list({
-      customer: customerId,
-      limit,
-      starting_after,
-      expand: [
-        "data.default_payment_method",
-        "data.items.data.price",
-        "data.items.data.plan",
-      ], //, "data.items.data.price.product"],
+    // Fetch subscriptions for all customer IDs with error handling
+    const subscriptionsPromises = sessionUser.stripeCustomers.map(async customerId => {
+      try {
+        return await stripe.subscriptions.list({
+          customer: customerId,
+          limit,
+          starting_after,
+          expand: [
+            "data.default_payment_method",
+            "data.items.data.price",
+            "data.items.data.plan",
+          ],
+        });
+      } catch (error) {
+        if (error instanceof Stripe.errors.StripeError) {
+          console.log(`Stripe error for customer ${customerId}:`, error.message);
+        } else {
+          console.error(`Unknown error for customer ${customerId}:`, error);
+        }
+        // Return empty subscription list for failed requests
+        return { data: [], has_more: false };
+      }
     });
 
-    console.log(subscriptions.data[0].items.data[0].plan);
-    console.log(subscriptions.data[0].items.data[0].price);
+    const subscriptionsResponses = await Promise.all(subscriptionsPromises);
+    
+    // Combine all subscription data
+    const allSubscriptions = subscriptionsResponses.flatMap(response => response.data);
+    
+    // Sort subscriptions by created date (newest first)
+    const sortedSubscriptions = allSubscriptions.sort((a, b) => 
+      (b.created || 0) - (a.created || 0)
+    );
+
+    // Apply pagination to combined results
+    const paginatedSubscriptions = sortedSubscriptions.slice(0, limit);
+    
+    // Check if there are more subscriptions
+    const hasMore = sortedSubscriptions.length > limit || 
+      subscriptionsResponses.some(response => response.has_more);
 
     return NextResponse.json({
-      subscriptions: subscriptions.data,
-      hasMore: subscriptions.has_more,
+      subscriptions: paginatedSubscriptions,
+      hasMore,
     });
   } catch (err) {
     console.error("Error fetching subscriptions:", err);
@@ -87,14 +107,38 @@ export async function GET(
 
     if (err instanceof z.ZodError) {
       return NextResponse.json(
-        { error: "Invalid customer ID format" },
+        { error: "Invalid format" },
         { status: 400 }
       );
+    }
+
+    // Handle specific error messages
+    if (err instanceof Error) {
+      if (err.message === "Not authenticated") {
+        return NextResponse.json(
+          { error: "Not authenticated" },
+          { status: 401 }
+        );
+      }
+      if (err.message === "User not found") {
+        return NextResponse.json(
+          { error: "User not found" },
+          { status: 404 }
+        );
+      }
+      if (err.message === "No customer found") {
+        return NextResponse.json(
+          { error: "No Stripe customer found" },
+          { status: 404 }
+        );
+      }
     }
 
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }
     );
+  } finally {
+    await prisma.$disconnect();
   }
 }

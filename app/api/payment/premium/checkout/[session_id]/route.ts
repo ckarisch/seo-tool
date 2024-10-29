@@ -1,4 +1,3 @@
-// app/api/checkout/[session_id]/route.ts
 import { authOptions } from "@/app/api/auth/[...nextauth]/authOptions";
 import { ErrorResponse, SessionResponse } from "@/app/api/types";
 import { PrismaClient } from "@prisma/client";
@@ -44,37 +43,62 @@ export async function GET(
     // Validate session ID
     const validatedSessionId = sessionIdSchema.parse(params.session_id);
 
-    const session = await stripe.checkout.sessions.retrieve(validatedSessionId);
-    console.log(session);
+    const checkoutSession = await stripe.checkout.sessions.retrieve(validatedSessionId, {
+      expand: ['customer'] // Expand customer object to get more details
+    });
+    console.log(checkoutSession);
 
     // Validate session data
-    if (!session) {
+    if (!checkoutSession) {
       throw new Error("Session not found");
     }
 
     // Ensure customer_details exists
-    if (!session.customer_details) {
+    if (!checkoutSession.customer_details) {
       throw new Error("Customer details not found");
     }
 
-    // update db user
-    if (session.customer) {
-      const customerId = getCustomerId(session.customer);
+    const updateData: {
+      stripeCustomers?: string[];
+      role?: string;
+      name?: string;
+    } = {};
+
+    // Handle Stripe customer ID
+    if (checkoutSession.customer) {
+      const customerId = getCustomerId(checkoutSession.customer);
       console.log(`stripe customer id ${customerId}`);
       if (customerId && !sessionUser.stripeCustomers.includes(customerId)) {
         console.log(
           `push customer id ${customerId} to user ${sessionUser.email} (${sessionUser.id})`
         );
-        await prisma.user.update({
-          where: { id: sessionUser.id },
-          data: { stripeCustomers: { push: customerId } },
-        });
+        updateData.stripeCustomers = [...sessionUser.stripeCustomers, customerId];
       }
     }
 
+    // Update role to premium if payment is successful
+    if (checkoutSession.status === 'complete' && checkoutSession.payment_status === 'paid') {
+      console.log('Payment successful - updating user role to premium');
+      updateData.role = 'premium';
+    }
+
+    // Update name if available from customer details
+    if (checkoutSession.customer_details.name) {
+      console.log(`Updating user name to: ${checkoutSession.customer_details.name}`);
+      updateData.name = checkoutSession.customer_details.name;
+    }
+
+    // Only update if we have changes to make
+    if (Object.keys(updateData).length > 0) {
+      await prisma.user.update({
+        where: { id: sessionUser.id },
+        data: updateData
+      });
+    }
+
     return NextResponse.json({
-      status: session.status,
-      customer_email: session.customer_details.email ?? null,
+      status: checkoutSession.status,
+      customer_email: checkoutSession.customer_details.email ?? null,
     });
   } catch (err) {
     console.error("Stripe session retrieval error:", err);
@@ -91,5 +115,7 @@ export async function GET(
             : 500,
       }
     );
+  } finally {
+    await prisma.$disconnect();
   }
 }

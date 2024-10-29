@@ -43,13 +43,23 @@ function validateEnv(): string {
 
 async function checkExistingAccess(customerIds: string[]) {
   // Check all subscriptions for all customer IDs
-  const subscriptionsPromises = customerIds.map(customerId =>
-    stripe.subscriptions.list({
-      customer: customerId,
-      status: 'active',
-      expand: ['data.latest_invoice', 'data.items.data.price'],
-    })
-  );
+  const subscriptionsPromises = customerIds.map(async customerId => {
+    try {
+      return await stripe.subscriptions.list({
+        customer: customerId,
+        status: 'active',
+        expand: ['data.latest_invoice', 'data.items.data.price'],
+      });
+    } catch (error) {
+      if (error instanceof Stripe.errors.StripeError) {
+        console.log(`Stripe error for customer ${customerId}:`, error.message);
+      } else {
+        console.error(`Unknown error for customer ${customerId}:`, error);
+      }
+      // Return empty subscription list for failed requests
+      return { data: [], has_more: false };
+    }
+  });
 
   const subscriptionsResponses = await Promise.all(subscriptionsPromises);
   const activeSubscriptions = subscriptionsResponses.flatMap(response => response.data);
@@ -105,13 +115,23 @@ async function checkExistingAccess(customerIds: string[]) {
     };
   }
 
-  // Check for lifetime access purchases
-  const chargesPromises = customerIds.map(customerId =>
-    stripe.charges.list({
-      customer: customerId,
-      limit: 100,
-    })
-  );
+  // Check for lifetime access purchases with error handling
+  const chargesPromises = customerIds.map(async customerId => {
+    try {
+      return await stripe.charges.list({
+        customer: customerId,
+        limit: 100,
+      });
+    } catch (error) {
+      if (error instanceof Stripe.errors.StripeError) {
+        console.log(`Stripe error for charges ${customerId}:`, error.message);
+      } else {
+        console.error(`Unknown error for charges ${customerId}:`, error);
+      }
+      // Return empty charges list for failed requests
+      return { data: [] };
+    }
+  });
 
   const chargesResponses = await Promise.all(chargesPromises);
   const allCharges = chargesResponses.flatMap(response => response.data);
