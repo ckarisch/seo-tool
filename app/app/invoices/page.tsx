@@ -1,89 +1,110 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import type Stripe from 'stripe'
 import styles from './page.module.scss'
 import Section from "@/components/layout/section"
 import Background from "@/components/layout/background"
 import { ExternalLink } from 'lucide-react'
 
-interface InvoiceData {
-    invoices: Stripe.Invoice[]
-    hasMore: boolean
+interface TransformedTransaction {
+  id: string;
+  date: number;
+  formatted_date: string;
+  amount: number;
+  formatted_amount: string;
+  currency: string;
+  status: string;
+  type: 'charge' | 'invoice' | 'checkout';
+  description: string;
+  metadata: Record<string, string>;
+  number?: string;
+  invoice_url?: string;
+  hosted_invoice_url?: string;
+  payment_intent?: string;
+  customer?: string;
 }
 
-const isStripeSubscription = (
-    subscription: string | Stripe.Subscription | null
-): subscription is Stripe.Subscription => {
-    return subscription !== null && typeof subscription !== 'string' && 'id' in subscription;
-};
-
-const isStripePaymentIntent = (
-    paymentIntent: string | Stripe.PaymentIntent | null
-): paymentIntent is Stripe.PaymentIntent => {
-    return paymentIntent !== null && typeof paymentIntent !== 'string' && 'id' in paymentIntent;
-};
+interface InvoiceData {
+  invoices: TransformedTransaction[];
+  hasMore: boolean;
+}
 
 export default function InvoicesPage() {
-    const [invoices, setInvoices] = useState<InvoiceData | null>(null)
-    const [loading, setLoading] = useState(true)
-    const [error, setError] = useState<string | null>(null)
+    const [invoices, setInvoices] = useState<InvoiceData>({
+        invoices: [],
+        hasMore: false
+    });
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
 
     const fetchInvoices = async () => {
         try {
-            setLoading(true)
-            const response = await fetch('/api/user/stripe/customer/invoices')
+            setLoading(true);
+            const response = await fetch('/api/user/stripe/customer/invoices');
             if (!response.ok) {
-                const errorData = await response.json()
-                throw new Error(errorData.error || 'Failed to fetch invoices')
+                const errorData = await response.json();
+                throw new Error(errorData.error || 'Failed to fetch invoices');
             }
 
-            const data: InvoiceData = await response.json()
-            setInvoices(data)
+            const data: InvoiceData = await response.json();
+            setInvoices(data);
         } catch (err) {
-            setError(err instanceof Error ? err.message : 'Failed to load invoices')
+            setError(err instanceof Error ? err.message : 'Failed to load invoices');
         } finally {
-            setLoading(false)
+            setLoading(false);
         }
     }
 
     useEffect(() => {
-        fetchInvoices()
-    }, [])
+        fetchInvoices();
+    }, []);
 
-    const formatDate = (timestamp: number): string => {
-        return new Date(timestamp * 1000).toLocaleDateString('en-US', {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric'
-        })
-    }
-
-    const formatAmount = (amount: number, currency: string): string => {
-        return new Intl.NumberFormat('en-US', {
-            style: 'currency',
-            currency: currency.toLowerCase(),
-            minimumFractionDigits: 2
-        }).format(amount / 100)
-    }
-
-    const getPaymentStatus = (invoice: Stripe.Invoice): {
+    const getPaymentStatus = (status: string): {
         text: string;
         className: string;
     } => {
-        switch (invoice.status) {
+        switch (status.toLowerCase()) {
+            case 'succeeded':
             case 'paid':
-                return { text: 'Paid', className: styles.statusPaid }
+            case 'complete':
+                return { text: 'Paid', className: styles.statusPaid };
             case 'open':
-                return { text: 'Unpaid', className: styles.statusUnpaid }
+            case 'unpaid':
+                return { text: 'Unpaid', className: styles.statusUnpaid };
             case 'void':
-                return { text: 'Void', className: styles.statusUnpaid }
+                return { text: 'Void', className: styles.statusUnpaid };
             default:
-                return invoice.status ? {
-                    text: invoice.status.charAt(0).toUpperCase() + invoice.status.slice(1),
-                    className: styles.statusUnpaid
-                } : { text: 'Error', className: styles.statusUnpaid }
+                return { 
+                    text: status.charAt(0).toUpperCase() + status.slice(1), 
+                    className: styles.statusUnpaid 
+                };
         }
+    }
+
+    const getDocumentType = (invoice: TransformedTransaction): {
+        documentType: string;
+        buttonText: string;
+    } => {
+        // For lifetime access, always show as "invoice" regardless of type
+        if (invoice.description === 'Lifetime Access') {
+            return {
+                documentType: 'Invoice',
+                buttonText: 'View Invoice'
+            };
+        }
+
+        // For regular transactions, base it on the type and hosted invoice availability
+        if (invoice.type === 'invoice' || invoice.hosted_invoice_url) {
+            return {
+                documentType: 'Invoice',
+                buttonText: 'View Invoice'
+            };
+        }
+
+        return {
+            documentType: 'Receipt',
+            buttonText: 'View Receipt'
+        };
     }
 
     if (loading) {
@@ -91,15 +112,15 @@ export default function InvoicesPage() {
             <div className={styles.loading}>
                 <div className={styles.spinner} />
             </div>
-        )
+        );
     }
 
     if (error) {
-        return <div className={styles.error}>Error: {error}</div>
+        return <div className={styles.error}>Error: {error}</div>;
     }
 
-    if (!invoices?.invoices.length) {
-        return <div className={styles.loading}>No invoices found</div>
+    if (!invoices.invoices.length) {
+        return <div className={styles.loading}>No invoices found</div>;
     }
 
     return (
@@ -111,7 +132,7 @@ export default function InvoicesPage() {
                             Your Invoices
                         </h1>
                         <p className={styles.description}>
-                            View and download your billing history
+                            View and download your complete billing history
                         </p>
                     </div>
                 </Section>
@@ -120,26 +141,32 @@ export default function InvoicesPage() {
             <Section>
                 <div className={styles.invoicesList}>
                     {invoices.invoices.map((invoice) => {
-                        const status = getPaymentStatus(invoice)
-
+                        const status = getPaymentStatus(invoice.status);
+                        const { documentType, buttonText } = getDocumentType(invoice);
+                        
                         return (
                             <div key={invoice.id} className={styles.invoiceCard}>
                                 <div className={styles.cardHeader}>
                                     <div className={styles.cardMain}>
                                         <div className={styles.cardTitleRow}>
-                                            <h3 className={styles.invoiceNumber}>
-                                                Invoice #{invoice.number}
-                                            </h3>
+                                            <div>
+                                                <span className={styles.invoiceType}>
+                                                    {invoice.description}
+                                                </span>
+                                                <h3 className={styles.invoiceNumber}>
+                                                    {documentType} #{invoice.number || invoice.id.split('_')[1]}
+                                                </h3>
+                                            </div>
                                             <span className={status.className}>
                                                 {status.text}
                                             </span>
                                         </div>
                                         <div className={styles.priceContainer}>
                                             <span className={styles.price}>
-                                                {formatAmount(invoice.total, invoice.currency)}
+                                                {invoice.formatted_amount}
                                             </span>
                                             <span className={styles.date}>
-                                                {formatDate(invoice.created)}
+                                                {invoice.formatted_date}
                                             </span>
                                         </div>
                                     </div>
@@ -149,38 +176,33 @@ export default function InvoicesPage() {
 
                                 <div className={styles.cardContent}>
                                     <div className={styles.detailsList}>
-                                        {invoice.subscription && isStripeSubscription(invoice.subscription) && (
-                                            <p className={styles.detail}>
-                                                Subscription: {invoice.subscription.id}
-                                            </p>
-                                        )}
                                         <p className={styles.detail}>
-                                            Period: {formatDate(invoice.period_start)} - {formatDate(invoice.period_end)}
+                                            Payment Date: {invoice.formatted_date}
                                         </p>
-                                        {invoice.payment_intent && isStripePaymentIntent(invoice.payment_intent) && (
+                                        {invoice.payment_intent && (
                                             <p className={styles.detail}>
-                                                Payment ID: {invoice.payment_intent.id}
+                                                Payment ID: {invoice.payment_intent}
                                             </p>
                                         )}
                                     </div>
 
-                                    {invoice.hosted_invoice_url && (
-                                        <a
-                                            href={invoice.hosted_invoice_url}
+                                    {invoice.invoice_url && (
+                                        <a 
+                                            href={invoice.invoice_url}
                                             target="_blank"
                                             rel="noopener noreferrer"
                                             className={styles.viewButton}
                                         >
-                                            View Invoice
+                                            {buttonText}
                                             <ExternalLink size={16} />
                                         </a>
                                     )}
                                 </div>
                             </div>
-                        )
+                        );
                     })}
                 </div>
             </Section>
         </main>
-    )
+    );
 }

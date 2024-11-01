@@ -16,6 +16,28 @@ const sessionIdSchema = z.string().min(1);
 
 const prisma = new PrismaClient();
 
+type StripeAddress = {
+  city: string | null;
+  country: string | null;
+  line1: string | null;
+  line2: string | null;
+  postal_code: string | null;
+  state: string | null;
+};
+
+function convertAddress(address: StripeAddress | null): Stripe.AddressParam | undefined {
+  if (!address) return undefined;
+
+  return {
+    city: address.city || undefined,
+    country: address.country || undefined,
+    line1: address.line1 || undefined,
+    line2: address.line2 || undefined,
+    postal_code: address.postal_code || undefined,
+    state: address.state || undefined,
+  };
+}
+
 export async function GET(
   request: Request,
   { params }: { params: { session_id: string } }
@@ -44,9 +66,9 @@ export async function GET(
     const validatedSessionId = sessionIdSchema.parse(params.session_id);
 
     const checkoutSession = await stripe.checkout.sessions.retrieve(validatedSessionId, {
-      expand: ['customer'] // Expand customer object to get more details
+      expand: ['customer', 'payment_intent', 'payment_intent.latest_charge'] 
     });
-    console.log(checkoutSession);
+    console.log('Checkout Session:', checkoutSession);
 
     // Validate session data
     if (!checkoutSession) {
@@ -64,20 +86,61 @@ export async function GET(
       name?: string;
     } = {};
 
-    // Handle Stripe customer ID
-    if (checkoutSession.customer) {
-      const customerId = getCustomerId(checkoutSession.customer);
-      console.log(`stripe customer id ${customerId}`);
-      if (customerId && !sessionUser.stripeCustomers.includes(customerId)) {
-        console.log(
-          `push customer id ${customerId} to user ${sessionUser.email} (${sessionUser.id})`
-        );
-        updateData.stripeCustomers = [...sessionUser.stripeCustomers, customerId];
+    // Get customer ID from session or payment intent charge
+    let stripeCustomerId: string | null = null;
+
+    if (checkoutSession.mode === 'subscription' && checkoutSession.customer) {
+      // For subscriptions, use the session customer
+      stripeCustomerId = getCustomerId(checkoutSession.customer);
+    } else if (checkoutSession.mode === 'payment' && checkoutSession.payment_intent) {
+      const paymentIntent = checkoutSession.payment_intent as Stripe.PaymentIntent;
+      
+      // Create a new customer for one-time payments
+      if (checkoutSession.customer_details?.email) {
+        try {
+          const customer = await stripe.customers.create({
+            email: checkoutSession.customer_details.email,
+            name: checkoutSession.customer_details.name || undefined,
+            address: convertAddress(checkoutSession.customer_details.address),
+            metadata: {
+              paymentIntentId: paymentIntent.id,
+              checkoutSessionId: checkoutSession.id
+            }
+          });
+          stripeCustomerId = customer.id;
+          
+          // Attach the payment method to the customer for future use
+          if (paymentIntent.payment_method && typeof paymentIntent.payment_method === 'string') {
+            await stripe.paymentMethods.attach(paymentIntent.payment_method, {
+              customer: customer.id,
+            });
+
+            // Set this payment method as the default for the customer
+            await stripe.customers.update(customer.id, {
+              invoice_settings: {
+                default_payment_method: paymentIntent.payment_method
+              }
+            });
+          }
+        } catch (error) {
+          console.error('Error creating/updating customer:', error);
+        }
       }
     }
 
+    if (stripeCustomerId && !sessionUser.stripeCustomers.includes(stripeCustomerId)) {
+      console.log(`Adding customer ID ${stripeCustomerId} to user ${sessionUser.email}`);
+      updateData.stripeCustomers = [...sessionUser.stripeCustomers, stripeCustomerId];
+    }
+
+    // Check if payment is successful
+    const isSuccessful = checkoutSession.payment_status === 'paid' && 
+      (checkoutSession.status === 'complete' || 
+       (checkoutSession.mode === 'payment' && 
+        (checkoutSession.payment_intent as Stripe.PaymentIntent)?.status === 'succeeded'));
+
     // Update role to premium if payment is successful
-    if (checkoutSession.status === 'complete' && checkoutSession.payment_status === 'paid') {
+    if (isSuccessful) {
       console.log('Payment successful - updating user role to premium');
       updateData.role = 'premium';
     }
@@ -90,6 +153,7 @@ export async function GET(
 
     // Only update if we have changes to make
     if (Object.keys(updateData).length > 0) {
+      console.log('Updating user with data:', updateData);
       await prisma.user.update({
         where: { id: sessionUser.id },
         data: updateData

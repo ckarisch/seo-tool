@@ -1,18 +1,19 @@
-// app/get-premium/page.tsx
 'use client'
 
 import React, { useCallback, useState } from 'react'
-import { loadStripe, Stripe } from '@stripe/stripe-js'
+import { loadStripe } from '@stripe/stripe-js'
+import type { Stripe } from '@stripe/stripe-js'
 import {
   EmbeddedCheckoutProvider,
   EmbeddedCheckout
-} from '@stripe/react-stripe-js'
+} from '@stripe/react-stripe-js'  // Changed import
 import { Crown, ExternalLink, Receipt, CreditCard } from "lucide-react"
 import Link from "next/link"
 import styles from './page.module.scss'
 import { Alert, AlertDescription, AlertTitle } from '@/components/layout/alert/Alert'
 import Section from "@/components/layout/section"
 import Background from "@/components/layout/background"
+import PricingSwitch from './PricingSwitch'
 
 interface CheckoutResponse {
   clientSecret?: string;
@@ -22,9 +23,8 @@ interface CheckoutResponse {
   error?: string;
 }
 
-const stripePromise: Promise<Stripe | null> = loadStripe(
-  process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY ?? ''
-)
+// Make sure to use your actual publishable key here
+const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY ?? '')
 
 export default function GetPremiumPage() {
   const [premiumStatus, setPremiumStatus] = useState<{
@@ -33,6 +33,13 @@ export default function GetPremiumPage() {
     subscriptionType: string | null;
   } | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [isMonthlyPlan, setIsMonthlyPlan] = useState(true);
+  const [checkoutKey, setCheckoutKey] = useState(0);
+
+  const handlePlanChange = (isMonthly: boolean) => {
+    setIsMonthlyPlan(isMonthly);
+    setCheckoutKey(prev => prev + 1);
+  };
 
   const fetchClientSecret = useCallback(async (): Promise<string> => {
     try {
@@ -41,6 +48,9 @@ export default function GetPremiumPage() {
         headers: {
           'Content-Type': 'application/json',
         },
+        body: JSON.stringify({
+          planType: isMonthlyPlan ? 'subscription' : 'lifetime'
+        })
       })
 
       if (!response.ok) {
@@ -72,11 +82,7 @@ export default function GetPremiumPage() {
       console.error('Error fetching client secret:', error)
       throw error
     }
-  }, [])
-
-  const options = {
-    fetchClientSecret,
-  }
+  }, [isMonthlyPlan])
 
   if (error) {
     return (
@@ -111,7 +117,9 @@ export default function GetPremiumPage() {
             <div className={styles.heroContainer}>
               <h1 className={styles.title}>Premium Access</h1>
               <p className={styles.description}>
-                Manage your subscription and view your billing history
+                {premiumStatus.accessType === 'lifetime' 
+                  ? 'You have lifetime premium access'
+                  : 'Manage your premium subscription'}
               </p>
             </div>
           </Section>
@@ -130,19 +138,21 @@ export default function GetPremiumPage() {
                 </h3>
                 <p className={styles.cardDescription}>
                   {premiumStatus.accessType === 'lifetime' 
-                    ? `You have lifetime premium access to all features.`
-                    : `You have an active subscription with access to all features.`}
+                    ? `You have unlimited lifetime access to all premium features.`
+                    : `You have an active subscription with access to all premium features.`}
                 </p>
               </div>
 
               <div className={styles.divider} />
 
               <div className={styles.cardActions}>
-                <Link href="/app/subscriptions" className={styles.actionButton}>
-                  <CreditCard size={18} />
-                  Manage Subscription
-                  <ExternalLink size={16} />
-                </Link>
+                {premiumStatus.accessType === 'subscription' && (
+                  <Link href="/app/subscriptions" className={styles.actionButton}>
+                    <CreditCard size={18} />
+                    Manage Subscription
+                    <ExternalLink size={16} />
+                  </Link>
+                )}
                 <Link href="/app/invoices" className={styles.actionButton}>
                   <Receipt size={18} />
                   View Invoices
@@ -163,7 +173,7 @@ export default function GetPremiumPage() {
           <div className={styles.heroContainer}>
             <h1 className={styles.title}>Get Premium Access</h1>
             <p className={styles.description}>
-              Unlock all features and take your experience to the next level
+              Choose between monthly subscription or lifetime access
             </p>
           </div>
         </Section>
@@ -171,12 +181,16 @@ export default function GetPremiumPage() {
 
       <Section>
         <div className={styles.checkoutContainer}>
-          <EmbeddedCheckoutProvider 
-            stripe={stripePromise}
-            options={options}
-          >
-            <EmbeddedCheckout />
-          </EmbeddedCheckoutProvider>
+          <PricingSwitch onPlanChange={handlePlanChange} />
+          <div style={{ width: '100%', maxWidth: '600px', margin: '0 auto' }}>
+            <EmbeddedCheckoutProvider 
+              key={checkoutKey}
+              stripe={stripePromise}
+              options={{ fetchClientSecret }}
+            >
+              <EmbeddedCheckout />
+            </EmbeddedCheckoutProvider>
+          </div>
         </div>
       </Section>
     </main>

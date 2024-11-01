@@ -1,8 +1,9 @@
+// page.tsx
 'use client'
 
 import { useEffect, useState } from 'react'
 import type Stripe from 'stripe'
-import styles from './page.module.css'
+import styles from './page.module.scss'
 
 interface SubscriptionPlan {
   id: string;
@@ -12,22 +13,41 @@ interface SubscriptionPlan {
   interval_count: number;
 }
 
+interface LifetimeLicense {
+  id: string;
+  created: number;
+  amount: number;
+  currency: string;
+  paymentIntentId: string;
+  customerId: string;
+}
+
 interface SubscriptionData {
   subscriptions: Array<Stripe.Subscription & {
     items: {
       data: Array<{
         plan: SubscriptionPlan;
+        price: {
+          product: Stripe.Product;
+        };
       }>;
     };
   }>;
   hasMore: boolean;
+  lifetimeAccess: boolean;
+  lifetimeLicenses: LifetimeLicense[];
 }
 
 export default function SubscriptionsPage() {
-    const [subscriptions, setSubscriptions] = useState<SubscriptionData | null>(null)
-    const [loading, setLoading] = useState(true)
-    const [error, setError] = useState<string | null>(null)
-    const [page, setPage] = useState<number>(1)
+    const [subscriptions, setSubscriptions] = useState<SubscriptionData>({
+        subscriptions: [],
+        hasMore: false,
+        lifetimeAccess: false,
+        lifetimeLicenses: []
+    });
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+    const [page, setPage] = useState<number>(1);
 
     useEffect(() => {
         fetchSubscriptions()
@@ -47,6 +67,29 @@ export default function SubscriptionsPage() {
             setError(err instanceof Error ? err.message : 'Failed to load subscriptions')
         } finally {
             setLoading(false)
+        }
+    }
+
+    const loadMore = async () => {
+        if (!subscriptions.subscriptions.length) return;
+
+        const lastSubscription = subscriptions.subscriptions[subscriptions.subscriptions.length - 1];
+        try {
+            const response = await fetch(
+                `/api/user/stripe/customer/subscriptions?starting_after=${lastSubscription.id}`
+            );
+            if (!response.ok) throw new Error('Failed to load more subscriptions');
+
+            const newData: SubscriptionData = await response.json();
+            setSubscriptions({
+                ...newData,
+                subscriptions: [...subscriptions.subscriptions, ...newData.subscriptions],
+                lifetimeAccess: subscriptions.lifetimeAccess,
+                lifetimeLicenses: subscriptions.lifetimeLicenses
+            });
+            setPage(prev => prev + 1);
+        } catch (err) {
+            setError(err instanceof Error ? err.message : 'Failed to load more subscriptions');
         }
     }
 
@@ -76,27 +119,6 @@ export default function SubscriptionsPage() {
         return subscription.status.charAt(0).toUpperCase() + subscription.status.slice(1)
     }
 
-    const loadMore = async () => {
-        if (!subscriptions?.subscriptions.length) return
-
-        const lastSubscription = subscriptions.subscriptions[subscriptions.subscriptions.length - 1]
-        try {
-            const response = await fetch(
-                `/api/user/stripe/customer/subscriptions?starting_after=${lastSubscription.id}`
-            )
-            if (!response.ok) throw new Error('Failed to load more subscriptions')
-
-            const newData: SubscriptionData = await response.json()
-            setSubscriptions(prev => prev ? {
-                subscriptions: [...prev.subscriptions, ...newData.subscriptions],
-                hasMore: newData.hasMore
-            } : newData)
-            setPage(prev => prev + 1)
-        } catch (err) {
-            setError(err instanceof Error ? err.message : 'Failed to load more subscriptions')
-        }
-    }
-
     if (loading) {
         return (
             <div className={styles.loading}>
@@ -109,65 +131,113 @@ export default function SubscriptionsPage() {
         return <div className={styles.error}>Error: {error}</div>
     }
 
-    if (!subscriptions?.subscriptions.length) {
-        return <div className={styles.loading}>No subscriptions found</div>
-    }
-
     return (
         <div className={styles.container}>
             <h2 className={styles.title}>Your Subscriptions</h2>
-            <div className={styles.subscriptionsList}>
-                {subscriptions.subscriptions.map((subscription) => {
-                    const plan = subscription.items.data[0].plan
-                    
-                    return (
+            
+            {subscriptions.lifetimeAccess && (
+                <div className={styles.lifetimeAccessBanner}>
+                    <h3>🌟 Lifetime Access</h3>
+                    <p>You have unlimited lifetime access to all features</p>
+                </div>
+            )}
+            
+            {/* Show Lifetime Licenses */}
+            {subscriptions.lifetimeLicenses.length > 0 && (
+                <div className={styles.subscriptionsList}>
+                    {subscriptions.lifetimeLicenses.map((license) => (
                         <div 
-                            key={subscription.id}
+                            key={license.id}
                             className={styles.subscriptionCard}
                         >
                             <div className={styles.cardHeader}>
-                                <h3 className={styles.planName}>
-                                    {(subscription.items.data[0].price.product as Stripe.Product).name}
-                                </h3>
-                                <span className={
-                                    subscription.status === 'active' 
-                                        ? styles.statusActive 
-                                        : styles.statusInactive
-                                }>
-                                    {subscription.status.toUpperCase()}
-                                </span>
+                                <h3 className={styles.planName}>Lifetime License</h3>
+                                <span className={styles.statusActive}>ACTIVE</span>
                             </div>
                             
                             <div className={styles.priceContainer}>
                                 <span className={styles.price}>
-                                    {formatPrice(plan.amount, plan.currency)}
+                                    {formatPrice(license.amount, license.currency)}
                                 </span>
                                 <span className={styles.interval}>
-                                    {formatInterval(plan.interval, plan.interval_count)}
+                                    one-time payment
                                 </span>
                             </div>
 
                             <div className={styles.detailsList}>
                                 <p className={styles.detail}>
-                                    Status: {getSubscriptionStatus(subscription)}
+                                    Purchased: {formatDate(license.created)}
                                 </p>
                                 <p className={styles.detail}>
-                                    Started: {formatDate(subscription.start_date)}
-                                </p>
-                                {subscription.cancel_at && (
-                                    <p className={styles.detail}>
-                                        Cancels: {formatDate(subscription.cancel_at)}
-                                    </p>
-                                )}
-                                <p className={styles.detail}>
-                                    Current Period: {formatDate(subscription.current_period_start)} -{' '}
-                                    {formatDate(subscription.current_period_end)}
+                                    License ID: {license.id}
                                 </p>
                             </div>
                         </div>
-                    )
-                })}
-            </div>
+                    ))}
+                </div>
+            )}
+            
+            {/* Show Regular Subscriptions */}
+            {subscriptions.subscriptions.length > 0 && (
+                <div className={styles.subscriptionsList}>
+                    {subscriptions.subscriptions.map((subscription) => {
+                        const plan = subscription.items.data[0].plan
+                        
+                        return (
+                            <div 
+                                key={subscription.id}
+                                className={styles.subscriptionCard}
+                            >
+                                <div className={styles.cardHeader}>
+                                    <h3 className={styles.planName}>
+                                        {(subscription.items.data[0].price.product as Stripe.Product).name}
+                                    </h3>
+                                    <span className={
+                                        subscription.status === 'active' 
+                                            ? styles.statusActive 
+                                            : styles.statusInactive
+                                    }>
+                                        {subscription.status.toUpperCase()}
+                                    </span>
+                                </div>
+                                
+                                <div className={styles.priceContainer}>
+                                    <span className={styles.price}>
+                                        {formatPrice(plan.amount, plan.currency)}
+                                    </span>
+                                    <span className={styles.interval}>
+                                        {formatInterval(plan.interval, plan.interval_count)}
+                                    </span>
+                                </div>
+
+                                <div className={styles.detailsList}>
+                                    <p className={styles.detail}>
+                                        Status: {getSubscriptionStatus(subscription)}
+                                    </p>
+                                    <p className={styles.detail}>
+                                        Started: {formatDate(subscription.start_date)}
+                                    </p>
+                                    {subscription.cancel_at && (
+                                        <p className={styles.detail}>
+                                            Cancels: {formatDate(subscription.cancel_at)}
+                                        </p>
+                                    )}
+                                    <p className={styles.detail}>
+                                        Current Period: {formatDate(subscription.current_period_start)} -{' '}
+                                        {formatDate(subscription.current_period_end)}
+                                    </p>
+                                </div>
+                            </div>
+                        )
+                    })}
+                </div>
+            )}
+            
+            {(!subscriptions.subscriptions.length && !subscriptions.lifetimeLicenses.length) && (
+                <div className={styles.messageContainer}>
+                    <p>No active subscriptions or lifetime licenses found</p>
+                </div>
+            )}
             
             {subscriptions.hasMore && (
                 <button

@@ -1,3 +1,4 @@
+// app/get-premium/page.module.scss
 @import "@/app/variables";
 
 .heroContainer {
@@ -5,7 +6,6 @@
   display: flex;
   flex-direction: column;
   gap: 16px;
-  animation: slideDown 0.5s ease-out;
 }
 
 .title {
@@ -38,6 +38,11 @@
 .checkoutContainer {
   padding: 40px 0;
   animation: slideUp 0.5s ease-out;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
 }
 
 .statusCard {
@@ -48,6 +53,8 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
   border: 1px solid rgba(0, 0, 0, 0.1);
   animation: slideUp 0.5s ease-out;
+  max-width: 600px;
+  margin: 0 auto;
   
   &:hover {
     transform: translateY(-2px);
@@ -128,7 +135,200 @@
   }
 }
 
-/* Animations */
+// app/invoices/page.module.scss
+@import "@/app/variables";
+
+.heroContainer {
+  padding: 40px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.title {
+  font-size: 2.5rem;
+  font-weight: 500;
+  line-height: 1.2;
+}
+
+.description {
+  font-size: 1.1rem;
+  color: $text-secondary;
+  max-width: 640px;
+  line-height: 1.5;
+}
+
+.invoicesList {
+  padding: 40px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.invoiceCard {
+  background: white;
+  border-radius: 16px;
+  overflow: hidden;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  }
+}
+
+.cardHeader {
+  padding: 24px;
+}
+
+.cardMain {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.cardTitleRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.invoiceType {
+  font-size: 0.9rem;
+  color: $text-secondary;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.invoiceNumber {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: $color;
+  margin: 0;
+}
+
+.priceContainer {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+}
+
+.price {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: $color;
+}
+
+.date {
+  color: $text-secondary;
+  font-size: 0.9rem;
+}
+
+.divider {
+  width: 100%;
+  height: 1px;
+  background-color: $background-light;
+  margin: 0;
+}
+
+.cardContent {
+  padding: 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.detailsList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.detail {
+  color: $text-secondary;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+
+  &::before {
+    content: '';
+    display: inline-block;
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background-color: $accent;
+  }
+}
+
+.statusPaid {
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  background-color: #ecfdf5;
+  color: #065f46;
+}
+
+.statusUnpaid {
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  background-color: #fef2f2;
+  color: #991b1b;
+}
+
+.viewButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background-color: $color;
+  color: white;
+  border-radius: $border-radius;
+  font-weight: 500;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
+  text-decoration: none;
+
+  &:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+}
+
+.loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 200px;
+  color: $text-secondary;
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid $background-light;
+  border-top: 3px solid $color;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+.error {
+  color: $error;
+  text-align: center;
+  padding: 40px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
 @keyframes fadeIn {
   from {
     opacity: 0;
@@ -149,13 +349,21 @@
   }
 }
 
-@keyframes slideDown {
-  from {
-    opacity: 0;
-    transform: translateY(-20px);
+@media (max-width: 640px) {
+  .heroContainer {
+    padding: 24px 0;
   }
-  to {
-    opacity: 1;
-    transform: translateY(0);
+
+  .title {
+    font-size: 2rem;
+  }
+
+  .cardActions {
+    flex-direction: column;
+  }
+
+  .actionButton {
+    width: 100%;
+    justify-content: center;
   }
 }
