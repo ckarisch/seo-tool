@@ -245,6 +245,7 @@ export async function POST(
     // For lifetime purchases, we'll create a one-time invoice
     if (planType === 'lifetime') {
       const checkoutSession = await stripe.checkout.sessions.create({
+        ui_mode: 'embedded',
         mode: 'payment',
         line_items: [
           {
@@ -328,6 +329,7 @@ export async function POST(
 
     // For subscription, use the existing flow
     const checkoutSession = await stripe.checkout.sessions.create({
+      ui_mode: 'embedded',
       mode: 'subscription',
       line_items: [
         {

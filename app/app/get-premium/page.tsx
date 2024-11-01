@@ -182,7 +182,7 @@ export default function GetPremiumPage() {
       <Section>
         <div className={styles.checkoutContainer}>
           <PricingSwitch onPlanChange={handlePlanChange} />
-          <div style={{ width: '100%', maxWidth: '600px', margin: '0 auto' }}>
+          <div style={{ width: '100%', margin: '0 auto' }}>
             <EmbeddedCheckoutProvider 
               key={checkoutKey}
               stripe={stripePromise}
