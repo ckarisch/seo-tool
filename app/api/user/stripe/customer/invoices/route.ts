@@ -25,7 +25,7 @@ interface TransformedTransaction {
   description: string;
   metadata: Record<string, string>;
   number?: string;
-  invoice_url?: string;  // Changed from receipt_url
+  invoice_url?: string;
   hosted_invoice_url?: string;
   payment_intent?: string;
   customer?: string;
@@ -53,9 +53,20 @@ const formatDate = (timestamp: number): string => {
   }).format(new Date(timestamp * 1000));
 };
 
-const isLifetimeTransaction = (metadata: Record<string, string> | null) => {
-  return metadata?.type === 'lifetime' ||
-    metadata?.product_id === process.env.LIFETIME_PRODUCT_ID;
+const nullToUndefined = <T>(value: T | null): T | undefined => {
+  return value === null ? undefined : value;
+};
+
+const getBestUrl = (invoice: Stripe.Invoice | null, charge: Stripe.Charge): string | undefined => {
+  if (invoice?.hosted_invoice_url) {
+    return invoice.hosted_invoice_url;
+  }
+  return nullToUndefined(charge.receipt_url);
+};
+
+const isLifetimeTransaction = (metadata: Stripe.Metadata | null) => {
+  return metadata?.type === 'lifetime' || 
+         metadata?.product_id === process.env.LIFETIME_PRODUCT_ID;
 };
 
 export async function GET(
@@ -82,22 +93,22 @@ export async function GET(
 
     for (const customerId of validCustomerIds) {
       try {
-        // First get customer details to check for payment intents
+        // Get customer details
         const customer = await stripe.customers.retrieve(customerId);
         if ('deleted' in customer) continue;
 
-        console.log('Checking customer:', {
+        console.log('Processing customer:', {
           id: customer.id,
           email: customer.email,
           metadata: customer.metadata
         });
 
-        // Check payment intent if it exists in metadata
+        // Check for lifetime purchases in payment intents from customer metadata
         if (customer.metadata?.paymentIntentId) {
           const pi = await stripe.paymentIntents.retrieve(customer.metadata.paymentIntentId, {
             expand: ['invoice']
           });
-
+          
           if (pi.status === 'succeeded' && isLifetimeTransaction(pi.metadata)) {
             const charges = await stripe.charges.list({
               payment_intent: pi.id,
@@ -108,8 +119,9 @@ export async function GET(
             if (charges.data[0] && charges.data[0].paid && !charges.data[0].refunded) {
               const charge = charges.data[0];
               const invoice = charge.invoice as Stripe.Invoice | null;
-
-              transactions.push({
+              const url = getBestUrl(invoice, charge);
+              
+              const transaction: TransformedTransaction = {
                 id: charge.id,
                 date: charge.created,
                 formatted_date: formatDate(charge.created),
@@ -120,16 +132,18 @@ export async function GET(
                 type: 'charge',
                 description: 'Lifetime Access',
                 metadata: pi.metadata || {},
-                invoice_url: invoice?.hosted_invoice_url || charge.receipt_url || undefined,
-                hosted_invoice_url: invoice?.hosted_invoice_url,
+                invoice_url: url,
+                hosted_invoice_url: nullToUndefined(invoice?.hosted_invoice_url),
                 payment_intent: pi.id,
                 customer: customerId
-              });
+              };
+              
+              transactions.push(transaction);
             }
           }
         }
 
-        // Check all charges for the customer
+        // Check all charges
         const charges = await stripe.charges.list({
           customer: customerId,
           limit: 100,
@@ -137,15 +151,15 @@ export async function GET(
         });
 
         for (const charge of charges.data) {
-          if (charge.paid &&
-            !charge.refunded &&
-            isLifetimeTransaction(charge.metadata)) {
-
-            // Only add if we haven't already added this transaction
+          if (charge.paid && 
+              !charge.refunded && 
+              isLifetimeTransaction(charge.metadata)) {
+            
             if (!transactions.some(t => t.id === charge.id)) {
               const invoice = charge.invoice as Stripe.Invoice | null;
-
-              transactions.push({
+              const url = getBestUrl(invoice, charge);
+              
+              const transaction: TransformedTransaction = {
                 id: charge.id,
                 date: charge.created,
                 formatted_date: formatDate(charge.created),
@@ -156,23 +170,25 @@ export async function GET(
                 type: 'charge',
                 description: 'Lifetime Access',
                 metadata: charge.metadata || {},
-                invoice_url: invoice?.hosted_invoice_url || charge.receipt_url || undefined,
-                hosted_invoice_url: invoice?.hosted_invoice_url,
+                invoice_url: url,
+                hosted_invoice_url: nullToUndefined(invoice?.hosted_invoice_url),
                 payment_intent: charge.payment_intent as string,
                 customer: customerId
-              });
+              };
+              
+              transactions.push(transaction);
             }
           }
         }
 
-        // Fetch regular invoices
+        // Fetch invoices
         const invoices = await stripe.invoices.list({
           customer: customerId,
           limit: 100,
           expand: ['data.payment_intent', 'data.charge']
         });
 
-        transactions.push(...invoices.data.map(invoice => {
+        const invoiceTransactions: TransformedTransaction[] = invoices.data.map(invoice => {
           const isLifetime = isLifetimeTransaction(invoice.metadata);
           return {
             id: invoice.id,
@@ -182,25 +198,27 @@ export async function GET(
             formatted_amount: formatAmount(invoice.total),
             currency: invoice.currency,
             status: invoice.paid ? 'paid' : invoice.status || 'unknown',
-            type: 'invoice',
+            type: 'invoice' as const,
             description: isLifetime ? 'Lifetime Access' : 'Premium Subscription',
             metadata: invoice.metadata || {},
-            number: invoice.number,
-            invoice_url: invoice.hosted_invoice_url || undefined,
-            hosted_invoice_url: invoice.hosted_invoice_url || undefined,
+            number: nullToUndefined(invoice.number),
+            invoice_url: nullToUndefined(invoice.hosted_invoice_url),
+            hosted_invoice_url: nullToUndefined(invoice.hosted_invoice_url),
             payment_intent: typeof invoice.payment_intent === 'string'
               ? invoice.payment_intent
               : invoice.payment_intent?.id,
             customer: invoice.customer as string
           };
-        }));
+        });
+
+        transactions.push(...invoiceTransactions);
 
       } catch (error) {
         console.error(`Error fetching data for customer ${customerId}:`, error);
       }
     }
 
-    // Remove any duplicate transactions based on ID
+    // Remove duplicates and sort
     const uniqueTransactions = Array.from(
       new Map(transactions.map(item => [item.id, item])).values()
     );

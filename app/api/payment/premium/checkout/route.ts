@@ -11,11 +11,21 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
   apiVersion: '2024-09-30.acacia',
 })
 
+interface LifetimeLicense {
+  id: string;
+  created: number;
+  amount: number;
+  currency: string;
+  paymentIntentId: string;
+  customerId: string;
+}
+
 interface CheckoutResponse {
   clientSecret?: string;
   hasPremiumAccess?: boolean;
   accessType?: 'subscription' | 'lifetime' | null;
   subscriptionType?: string | null;
+  lifetimeLicenses?: LifetimeLicense[];
 }
 
 interface CheckoutRequest {
@@ -235,7 +245,6 @@ export async function POST(
     // For lifetime purchases, we'll create a one-time invoice
     if (planType === 'lifetime') {
       const checkoutSession = await stripe.checkout.sessions.create({
-        ui_mode: 'embedded',
         mode: 'payment',
         line_items: [
           {
@@ -281,8 +290,28 @@ export async function POST(
             user_id: sessionUser.id
           },
           setup_future_usage: 'off_session'
-        }
-      });
+        },
+        custom_fields: [
+          {
+            key: 'company_name',
+            label: {
+              type: 'custom',
+              custom: 'Firmenname (optional)',
+            },
+            type: 'text',
+            optional: true,
+          },
+          {
+            key: 'tax_id',
+            label: {
+              type: 'custom',
+              custom: 'USt-IdNr. (optional)',
+            },
+            type: 'text',
+            optional: true,
+          }
+        ]
+      } as Stripe.Checkout.SessionCreateParams);
 
       if (!checkoutSession.client_secret) {
         throw new Error('Failed to create checkout session')
@@ -292,13 +321,13 @@ export async function POST(
         clientSecret: checkoutSession.client_secret,
         hasPremiumAccess: false,
         accessType: null,
-        subscriptionType: null
+        subscriptionType: null,
+        lifetimeLicenses: []
       });
     }
 
     // For subscription, use the existing flow
     const checkoutSession = await stripe.checkout.sessions.create({
-      ui_mode: 'embedded',
       mode: 'subscription',
       line_items: [
         {
@@ -339,12 +368,12 @@ export async function POST(
           label: {
             type: 'custom',
             custom: 'USt-IdNr. (optional)',
-          },
-          type: 'text',
-          optional: true,
+            },
+            type: 'text',
+            optional: true,
         }
       ]
-    });
+    } as Stripe.Checkout.SessionCreateParams);
 
     if (!checkoutSession.client_secret) {
       throw new Error('Failed to create checkout session')
