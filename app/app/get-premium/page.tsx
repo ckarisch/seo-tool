@@ -3,7 +3,7 @@
 import React, { useCallback, useState, useEffect } from 'react'
 import { loadStripe } from '@stripe/stripe-js'
 import { useSearchParams } from 'next/navigation'
-import { Crown, ExternalLink, Receipt, CreditCard } from "lucide-react"
+import { Crown, ExternalLink, Receipt, CreditCard, Loader } from "lucide-react"
 import Link from "next/link"
 import styles from './page.module.scss'
 import { Alert, AlertDescription, AlertTitle } from '@/components/layout/alert/Alert'
@@ -11,6 +11,7 @@ import Section from "@/components/layout/section"
 import Background from "@/components/layout/background"
 import PricingSwitch from './PricingSwitch'
 import { EmbeddedCheckout, EmbeddedCheckoutProvider } from '@stripe/react-stripe-js'
+import { useSession } from 'next-auth/react'
 
 interface CheckoutResponse {
   clientSecret?: string;
@@ -23,24 +24,21 @@ interface CheckoutResponse {
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY ?? '')
 
 export default function GetPremiumPage() {
+  const { status } = useSession({
+    required: true
+  });
   const searchParams = useSearchParams()
   const planParam = searchParams.get('plan')
-  
+
+  // Initialize state with plan parameter
   const [premiumStatus, setPremiumStatus] = useState<{
     hasPremiumAccess: boolean;
     accessType: 'subscription' | 'lifetime' | null;
     subscriptionType: string | null;
   } | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [isMonthlyPlan, setIsMonthlyPlan] = useState(true);
+  const [isMonthlyPlan, setIsMonthlyPlan] = useState(() => planParam !== 'lifetime');
   const [checkoutKey, setCheckoutKey] = useState(0);
-
-  // Set initial plan type based on URL parameter
-  useEffect(() => {
-    if (planParam === 'lifetime') {
-      setIsMonthlyPlan(false);
-    }
-  }, [planParam]);
 
   const handlePlanChange = (isMonthly: boolean) => {
     setIsMonthlyPlan(isMonthly);
@@ -90,6 +88,7 @@ export default function GetPremiumPage() {
     }
   }, [isMonthlyPlan])
 
+
   if (error) {
     return (
       <main>
@@ -123,7 +122,7 @@ export default function GetPremiumPage() {
             <div className={styles.heroContainer}>
               <h1 className={styles.title}>Premium Access</h1>
               <p className={styles.description}>
-                {premiumStatus.accessType === 'lifetime' 
+                {premiumStatus.accessType === 'lifetime'
                   ? 'You have lifetime premium access'
                   : 'Manage your premium subscription'}
               </p>
@@ -143,7 +142,7 @@ export default function GetPremiumPage() {
                   {premiumStatus.subscriptionType || 'Premium'} Access
                 </h3>
                 <p className={styles.cardDescription}>
-                  {premiumStatus.accessType === 'lifetime' 
+                  {premiumStatus.accessType === 'lifetime'
                     ? `You have unlimited lifetime access to all premium features.`
                     : `You have an active subscription with access to all premium features.`}
                 </p>
@@ -172,6 +171,16 @@ export default function GetPremiumPage() {
     );
   }
 
+  // Show loading state while checking domains
+  if (status === "loading") {
+    return (
+      <div className={styles.loading}>
+        <Loader className={styles.spinner} size={24} />
+        <span>Loading...</span>
+      </div>
+    );
+  }
+
   return (
     <main>
       <Background backgroundImage="" backgroundStyle={'mainColor'}>
@@ -187,12 +196,12 @@ export default function GetPremiumPage() {
 
       <Section>
         <div className={styles.checkoutContainer}>
-          <PricingSwitch 
-            onPlanChange={handlePlanChange} 
+          <PricingSwitch
+            onPlanChange={handlePlanChange}
             initialIsMonthly={planParam !== 'lifetime'}
           />
           <div style={{ width: '100%', margin: '0 auto' }}>
-            <EmbeddedCheckoutProvider 
+            <EmbeddedCheckoutProvider
               key={checkoutKey}
               stripe={stripePromise}
               options={{ fetchClientSecret }}

@@ -32,12 +32,14 @@ const steps: OnboardingStep[] = [
 ];
 
 export default function OnboardingPage() {
-  const { data: session, status } = useSession({ required: true });
+  const router = useRouter();
+  const { status } = useSession({
+    required: true
+  })
   const [currentStep, setCurrentStep] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const router = useRouter();
   const searchParams = useSearchParams();
   const selectedPlan = searchParams.get('plan');
 
@@ -206,15 +208,6 @@ export default function OnboardingPage() {
         return null;
     }
   };
-
-  if (status === "loading") {
-    return (
-      <div className={styles.loading}>
-        <Loader className={styles.spinner} size={24} />
-        <span>Loading...</span>
-      </div>
-    );
-  }
 
   return (
     <main>
