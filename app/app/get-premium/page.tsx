@@ -1,12 +1,8 @@
 'use client'
 
-import React, { useCallback, useState } from 'react'
+import React, { useCallback, useState, useEffect } from 'react'
 import { loadStripe } from '@stripe/stripe-js'
-import type { Stripe } from '@stripe/stripe-js'
-import {
-  EmbeddedCheckoutProvider,
-  EmbeddedCheckout
-} from '@stripe/react-stripe-js'  // Changed import
+import { useSearchParams } from 'next/navigation'
 import { Crown, ExternalLink, Receipt, CreditCard } from "lucide-react"
 import Link from "next/link"
 import styles from './page.module.scss'
@@ -14,6 +10,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/layout/alert/A
 import Section from "@/components/layout/section"
 import Background from "@/components/layout/background"
 import PricingSwitch from './PricingSwitch'
+import { EmbeddedCheckout, EmbeddedCheckoutProvider } from '@stripe/react-stripe-js'
 
 interface CheckoutResponse {
   clientSecret?: string;
@@ -23,10 +20,12 @@ interface CheckoutResponse {
   error?: string;
 }
 
-// Make sure to use your actual publishable key here
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY ?? '')
 
 export default function GetPremiumPage() {
+  const searchParams = useSearchParams()
+  const planParam = searchParams.get('plan')
+  
   const [premiumStatus, setPremiumStatus] = useState<{
     hasPremiumAccess: boolean;
     accessType: 'subscription' | 'lifetime' | null;
@@ -35,6 +34,13 @@ export default function GetPremiumPage() {
   const [error, setError] = useState<string | null>(null);
   const [isMonthlyPlan, setIsMonthlyPlan] = useState(true);
   const [checkoutKey, setCheckoutKey] = useState(0);
+
+  // Set initial plan type based on URL parameter
+  useEffect(() => {
+    if (planParam === 'lifetime') {
+      setIsMonthlyPlan(false);
+    }
+  }, [planParam]);
 
   const handlePlanChange = (isMonthly: boolean) => {
     setIsMonthlyPlan(isMonthly);
@@ -181,7 +187,10 @@ export default function GetPremiumPage() {
 
       <Section>
         <div className={styles.checkoutContainer}>
-          <PricingSwitch onPlanChange={handlePlanChange} />
+          <PricingSwitch 
+            onPlanChange={handlePlanChange} 
+            initialIsMonthly={planParam !== 'lifetime'}
+          />
           <div style={{ width: '100%', margin: '0 auto' }}>
             <EmbeddedCheckoutProvider 
               key={checkoutKey}

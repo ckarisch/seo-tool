@@ -1,7 +1,7 @@
 // app/onboarding/page.tsx
 "use client";
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import styles from './page.module.scss';
@@ -35,6 +35,7 @@ export default function OnboardingPage() {
   const { data: session, status } = useSession({ required: true });
   const [currentStep, setCurrentStep] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -44,6 +45,36 @@ export default function OnboardingPage() {
   const [companyName, setCompanyName] = useState('');
   const [website, setWebsite] = useState('');
   const [isWebsiteValid, setIsWebsiteValid] = useState(false);
+
+  useEffect(() => {
+    const checkDomains = async () => {
+      try {
+        const response = await fetch('/api/seo/domains');
+        const data = await response.json();
+
+        if (response.ok && Array.isArray(data.domains) && data.domains.length > 0) {
+          // User already has domains, redirect based on context
+          if (selectedPlan) {
+            router.push(`/app/get-premium?plan=${selectedPlan}`);
+          } else {
+            router.push('/app/domains');
+          }
+          return;
+        }
+
+        // No domains found, continue with onboarding
+        setIsLoading(false);
+      } catch (err) {
+        console.error('Error checking domains:', err);
+        setError('Failed to check existing domains');
+        setIsLoading(false);
+      }
+    };
+
+    if (status === "authenticated") {
+      checkDomains();
+    }
+  }, [status, router, selectedPlan]);
 
   const handleAddDomain = async () => {
     if (!isWebsiteValid) {
@@ -72,11 +103,11 @@ export default function OnboardingPage() {
         throw new Error(data.error || 'Failed to add domain');
       }
 
-      // If this is the last step or we have a selected plan
-      if (currentStep === steps.length - 1 || selectedPlan) {
-        router.push('/app/domains');
+      // After successfully adding the domain, redirect based on context
+      if (selectedPlan) {
+        router.push(`/app/get-premium?plan=${selectedPlan}`);
       } else {
-        setCurrentStep(currentStep + 1);
+        router.push('/app/domains');
       }
     } catch (err: any) {
       setError(err.message);
@@ -84,6 +115,16 @@ export default function OnboardingPage() {
       setIsSubmitting(false);
     }
   };
+
+  // Show loading state while checking domains
+  if (status === "loading" || isLoading) {
+    return (
+      <div className={styles.loading}>
+        <Loader className={styles.spinner} size={24} />
+        <span>Loading...</span>
+      </div>
+    );
+  }
 
   const renderStepContent = () => {
     switch (currentStep) {

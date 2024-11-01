@@ -40,7 +40,7 @@ const pricingData: PricingTier[] = [
     period: "forever",
     description: "Perfect for small websites and getting started",
     buttonText: "Start Free",
-    buttonLink: "/auth/signup",
+    buttonLink: "/onboarding",
     icon: <Globe className={styles.tierIcon} />,
     featureGroups: [
       {
@@ -76,7 +76,7 @@ const pricingData: PricingTier[] = [
     period: "month",
     description: "Advanced features for serious businesses",
     buttonText: "Get Premium",
-    buttonLink: "/auth/signup?plan=premium",
+    buttonLink: "/onboarding?plan=premium",
     highlighted: true,
     icon: <Stars className={styles.tierIcon} />,
     featureGroups: [
@@ -120,7 +120,7 @@ const pricingData: PricingTier[] = [
     period: "one-time",
     description: "All premium features with a one-time payment",
     buttonText: "Get Lifetime Access",
-    buttonLink: "/auth/signup?plan=lifetime",
+    buttonLink: "/onboarding?plan=lifetime",
     icon: <Lock className={styles.tierIcon} />,
     featureGroups: [
       {

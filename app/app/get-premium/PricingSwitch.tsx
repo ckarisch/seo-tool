@@ -1,13 +1,19 @@
 // app/get-premium/PricingSwitch.tsx
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import styles from './PricingSwitch.module.scss';
 
 interface PricingSwitchProps {
   onPlanChange: (isMonthly: boolean) => void;
+  initialIsMonthly?: boolean;
 }
 
-export const PricingSwitch: React.FC<PricingSwitchProps> = ({ onPlanChange }) => {
-  const [isMonthly, setIsMonthly] = useState(true);
+export const PricingSwitch: React.FC<PricingSwitchProps> = ({ onPlanChange,
+  initialIsMonthly = true  }) => {
+  const [isMonthly, setIsMonthly] = useState(initialIsMonthly);
+
+  useEffect(() => {
+    setIsMonthly(initialIsMonthly);
+  }, [initialIsMonthly]);
 
   const handleToggle = () => {
     setIsMonthly(!isMonthly);
