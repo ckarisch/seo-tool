@@ -2,16 +2,22 @@
 
 .body {
     font-family: var(--font-inter);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
 }
 
 #globalfooter {
     background-color: $background-light;
     padding: 20px;
-    min-height: 100px;
     margin-top: auto;
 
     @media (prefers-color-scheme: dark) {
         background-color: $background-light-dark;
+    }
+
+    @media (max-width: 768px) {
+        padding: 30px 20px;
     }
 
     .logo {
@@ -22,12 +28,36 @@
         max-width: $max-width;
         margin: 0 auto;
         display: flex;
-        justify-content: space-between;
+        justify-content: flex-start;
         align-items: center;
+        gap: 20px;
+
+        @media (max-width: 768px) {
+            flex-direction: column;
+            align-items: flex-start; // Left align items on mobile
+            gap: 15px;
+        }
+
+        @media (max-width: 480px) {
+            gap: 12px;
+        }
     }
 
     .globalfooterLi {
         list-style: none;
+
+        &:first-child {
+            margin-right: auto; // Push other items to the right on desktop
+        }
+
+        @media (max-width: 768px) {
+            width: 100%;
+            
+            &:first-child {
+                margin-right: 0;
+                margin-bottom: 20px;
+            }
+        }
     }
 
     .globalfooterLink {
@@ -35,8 +65,18 @@
         padding: 5px 20px;
         border-radius: $border-radius;
         color: $color;
+        font-size: 0.9rem;
+        white-space: nowrap;
+        
         @media (prefers-color-scheme: dark) {
             color: $color-dark;
+        }
+
+        @media (max-width: 768px) {
+            padding: 8px 0;
+            width: 100%;
+            font-size: 1rem;
+            text-align: left; // Left align text on mobile
         }
     }
 
@@ -46,11 +86,25 @@
         @media (prefers-color-scheme: dark) {
             background-color: $accent-dark;
         }
+
+        @media (max-width: 768px) {
+            padding: 8px 20px;
+        }
     }
 
     .logoLink {
         display: flex;
-        gap: 5px;
-        padding: 0;
+        align-items: center;
+        gap: 8px;
+        padding: 5px 0;
+        
+        &:hover {
+            background-color: transparent;
+            opacity: 0.8;
+        }
+
+        @media (max-width: 480px) {
+            font-size: 0.9rem;
+        }
     }
 }

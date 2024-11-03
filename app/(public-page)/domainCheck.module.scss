@@ -2,35 +2,65 @@
   width: 100%;
   padding: 100px 0px;
   display: grid;
-  flex-direction: row;
   gap: 40px;
   align-items: center;
   justify-content: space-between;
   grid-template-columns: 50% 1fr;
+
+  @media (max-width: 1024px) {
+    padding: 80px 0;
+    gap: 30px;
+  }
+
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
+    padding: 60px 0;
+    text-align: center;
+  }
 }
 
 .text {
   display: flex;
   flex-direction: column;
+  gap: 20px;
+
+  @media (max-width: 768px) {
+    align-items: center;
+  }
 }
 
 .heading {
   margin-bottom: 20px;
+
+  @media (max-width: 768px) {
+    margin-bottom: 15px;
+  }
 }
 
 .check {
   display: grid;
   gap: 20px;
   grid-template-columns: 1fr auto;
+
+  @media (max-width: 480px) {
+    grid-template-columns: 1fr;
+  }
 }
 
 .checkButton {
   padding: 5px 15px;
   border-radius: 5px;
+
+  @media (max-width: 480px) {
+    padding: 10px 15px; // Slightly bigger touch target on mobile
+  }
 }
 
 .input {
   padding: 5px;
   border-radius: 5px;
-}
 
+  @media (max-width: 480px) {
+    padding: 10px;
+  }
+}
