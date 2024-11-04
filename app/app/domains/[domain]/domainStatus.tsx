@@ -29,7 +29,7 @@ export default function DomainStatus({ params, domainFetchTag, linksFetchTag }: 
             // The user is not authenticated, handle it here.
         },
     });
-
+    const [imageLoaded, setImageLoaded] = useState(false);
     const [loading, setLoading] = useState(true);
     const [domain, setDomainJson] = useState(defaultDomainState);
     const [apiUser, setApiUser] = useState(defaultUserState);
@@ -49,7 +49,6 @@ export default function DomainStatus({ params, domainFetchTag, linksFetchTag }: 
         console.log('domainJson.crawlStatus', domain.crawlStatus);
     }, [domain.crawlStatus]);
 
-
     const handleCrawl = async (event: any) => {
         event.preventDefault();
         const endpoint = process.env.NEXT_PUBLIC_API_DOMAIN + '/api/seo/domains/' + params.domain + '/crawl';
@@ -62,7 +61,6 @@ export default function DomainStatus({ params, domainFetchTag, linksFetchTag }: 
             credetials: 'include',
         }
 
-        // fetch after timeout when crawling started
         setTimeout(async () => {
             await fetchData('api/seo/domains/' + params.domain, domainFetchTag, setDomainJson, null);
             console.log('refetch');
@@ -73,9 +71,7 @@ export default function DomainStatus({ params, domainFetchTag, linksFetchTag }: 
         const jsonData = await response.json();
         setcrawlStatus('idle');
 
-        // fetch after crawling finished
         await fetchData('api/seo/domains/' + params.domain, domainFetchTag, setDomainJson, null);
-        // await fetchData(params.domain, linksFetchTag, setLinksJson);
 
         return jsonData;
     };
@@ -99,7 +95,6 @@ export default function DomainStatus({ params, domainFetchTag, linksFetchTag }: 
         const jsonData = await response.json();
         setcrawlStatus('idle');
 
-        // fetch after crawling finished
         await fetchData('api/seo/domains/' + params.domain, domainFetchTag, setDomainJson, null);
 
         return jsonData;
@@ -107,36 +102,33 @@ export default function DomainStatus({ params, domainFetchTag, linksFetchTag }: 
 
     const icons = () => {
         if (loading) {
-            return <div title={'crawling'}>
+            return <div title='crawling'>
                 <Loading />
             </div>
         }
         else if (noCrawling && noLoading && domain.error) {
-            return <div title={'crawl error'}>
+            return <div title='crawl error'>
                 <Cross />
             </div>
         }
         else if (noCrawling && noLoading && domain.warning) {
-            return <div title={'crawl error'}>
+            return <div title='crawl error'>
                 <Warning />
             </div>
         }
-
-
         else if (noCrawling && noLoading && !domain.error && !domain.warning &&
             domain.crawlStatus == 'idle') {
-
-            return <div title={'status ok'}>
+            return <div title='status ok'>
                 <Check />
             </div>
         }
         else if (!domain.error && !domain.warning && !noCrawling && noLoading) {
-            return <div title={'crawling'}>
+            return <div title='crawling'>
                 <Loading />
             </div>
         }
         else if (crawlStatus === 'crawling') {
-            return <div title={'crawling'}>
+            return <div title='crawling'>
                 <Loading />
             </div>
         }
@@ -169,12 +161,37 @@ export default function DomainStatus({ params, domainFetchTag, linksFetchTag }: 
     return (
         <div>
             <Card className={styles.domainCard}>
-                <div className={[styles.domainIcon].join(' ')}>
-                    {icons()}
-                </div>
+            <div className={[styles.domainIcon].join(' ')}>
+                {icons()}
+            </div>
 
-                <RetinaScrollableImage src={domain.image} width={150} height={100} />
-
+            <div className={styles.imageSection}>
+                {domain.image ? (
+                    <div className={[
+                        styles.imageWrapper,
+                        imageLoaded ? styles.loaded : styles.loading
+                    ].join(' ')}>
+                        <RetinaScrollableImage 
+                            src={domain.image} 
+                            width={150} 
+                            height={100}
+                        />
+                        <Image 
+                            src={domain.image}
+                            alt="Preload Image"
+                            width={1}
+                            height={1}
+                            className={styles.preloadImage}
+                            onLoad={() => setImageLoaded(true)}
+                        />
+                    </div>
+                ) : (
+                    <div className={styles.imagePlaceholder}>
+                        preview
+                    </div>
+                )}
+            </div>
+    
                 <div className={styles.domainStatus}>
                     <h2 className={styles.title}>Domain Status</h2>
                     <div className={styles.infoContainer}>
@@ -206,7 +223,6 @@ export default function DomainStatus({ params, domainFetchTag, linksFetchTag }: 
                                 </span>
                             </div>
                         )}
-                        {/* ... other status items follow the same pattern ... */}
                         <div className={styles.infoItem}>
                             <span className={styles.label}>Last Crawl Time:</span>
                             <span className={styles.value}>
@@ -216,11 +232,27 @@ export default function DomainStatus({ params, domainFetchTag, linksFetchTag }: 
                             </span>
                         </div>
                     </div>
-
-                    {/* ... alerts remain the same ... */}
+    
+                    {domain.error && (
+                        <div className={[styles.alert, styles.error].join(' ')}>
+                            <div className={styles.alertIcon}>
+                                <AlertCircle size={16} />
+                            </div>
+                            <div>{domain.error}</div>
+                        </div>
+                    )}
+                    
+                    {domain.warning && !domain.error && (
+                        <div className={[styles.alert, styles.warning].join(' ')}>
+                            <div className={styles.alertIcon}>
+                                <AlertCircle size={16} />
+                            </div>
+                            <div>{domain.warning}</div>
+                        </div>
+                    )}
                 </div>
             </Card>
-
+    
             <DomainActions
                 crawlStatus={crawlStatus}
                 domainJson={domain}

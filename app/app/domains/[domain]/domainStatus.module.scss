@@ -13,6 +13,48 @@
   overflow: hidden;
   background-color: $background-light;
   max-width: 150px;
+  position: relative;
+}
+
+.imagePlaceholder {
+  width: 150px;
+  height: 100px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: $accent;
+  font-size: 0.9rem;
+  background-color: $background-light;
+}
+
+.imageWrapper {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+
+  &.loaded {
+    animation: imageAppear 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  }
+}
+
+.preloadImage {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+@keyframes imageAppear {
+  0% {
+    opacity: 0;
+    transform: scale(1.05);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 .domainIcon {
