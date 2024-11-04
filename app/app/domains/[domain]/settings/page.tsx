@@ -11,7 +11,7 @@ import Card from "@/components/layout/card";
 import { Play, Pause } from 'lucide-react';
 
 export default function Settings({ params }: { params: { domain: string } }) {
-  const { data: session, status } = useSession({
+  const { status } = useSession({
     required: true,
     onUnauthenticated() {
       // The user is not authenticated, handle it here.
@@ -22,39 +22,37 @@ export default function Settings({ params }: { params: { domain: string } }) {
   const [crawlLoading, setCrawlLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
   const [domainJson, setDomainJson] = useState(defaultDomainState);
-  const domainFetchTag = 'domainFetchTag';
 
   useEffect(() => {
     if (status !== "loading") {
       fetchData(
         'api/seo/domains/' + params.domain, 
-        domainFetchTag, 
+        'domainFetchTag', 
         setDomainJson, 
         () => setInitialLoading(false)
       );
     }
-  }, [status]);
+  }, [status, params.domain]);
 
-  const handleSendNotificationChange = async (e: ChangeEvent<HTMLInputElement>) => {
+  const handleSendNotificationChange = async (_e: ChangeEvent<HTMLInputElement>) => {
     setNotificationsLoading(true);
+    // Use current state to determine new value
+    const newValue = !domainJson.disableNotifications;  // If currently disabled, we want to enable
 
     try {
-      const endpoint = `${process.env.NEXT_PUBLIC_API_DOMAIN}/api/seo/domains/${params.domain}/settings/disableNotifications`;
+      const endpoint = `/api/seo/domains/${params.domain}/settings/disableNotifications`;
       const response = await fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ value: !!e.target.checked })
+        body: JSON.stringify({ value: newValue })
       });
 
       if (!response.ok) throw new Error('Failed to update notifications setting');
 
-      // Update only the relevant part of the state
-      const result = await response.json();
       setDomainJson(prev => ({
         ...prev,
-        disableNotifications: !!e.target.checked
+        disableNotifications: newValue
       }));
-
     } catch (error) {
       console.error('Error updating notifications:', error);
     } finally {
@@ -68,7 +66,7 @@ export default function Settings({ params }: { params: { domain: string } }) {
     
     try {
       const newValue = !domainJson.crawlEnabled;
-      const endpoint = `${process.env.NEXT_PUBLIC_API_DOMAIN}/api/seo/domains/${params.domain}/settings/crawlEnabled`;
+      const endpoint = `/api/seo/domains/${params.domain}/settings/crawlEnabled`;
       const response = await fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -77,12 +75,10 @@ export default function Settings({ params }: { params: { domain: string } }) {
 
       if (!response.ok) throw new Error('Failed to update crawl setting');
 
-      // Update only the relevant part of the state
       setDomainJson(prev => ({
         ...prev,
         crawlEnabled: newValue
       }));
-
     } catch (error) {
       console.error('Error updating crawl setting:', error);
     } finally {
@@ -97,7 +93,7 @@ export default function Settings({ params }: { params: { domain: string } }) {
           <Card>
             <div className={styles.settingItem}>
               <div className={styles.settingContent}>
-                Loading settings...
+                <div className={styles.settingInfo}>Loading settings...</div>
               </div>
             </div>
           </Card>
@@ -118,12 +114,14 @@ export default function Settings({ params }: { params: { domain: string } }) {
                   Control whether you receive notifications about domain changes and updates.
                 </p>
               </div>
-              <Toggle
-                loading={notificationsLoading}
-                checked={!domainJson.disableNotifications}
-                onChange={handleSendNotificationChange}
-                label="Enable notifications"
-              />
+              <div className="self-center">
+                <Toggle
+                  loading={notificationsLoading}
+                  checked={!domainJson.disableNotifications}
+                  onChange={handleSendNotificationChange}
+                  label="Enable notifications"
+                />
+              </div>
             </div>
           </div>
         </Card>
@@ -137,7 +135,7 @@ export default function Settings({ params }: { params: { domain: string } }) {
                   Enable or disable automatic crawling for this domain.
                 </p>
               </div>
-              <form onSubmit={handleSetCrawlEnabled}>
+              <form onSubmit={handleSetCrawlEnabled} className="w-full md:w-auto">
                 <button 
                   className={[
                     styles.button,
@@ -148,11 +146,16 @@ export default function Settings({ params }: { params: { domain: string } }) {
                   disabled={crawlLoading}
                 >
                   {!crawlLoading ? (
-                    domainJson.crawlEnabled ? (
-                      <><Pause size={16} /> Disable crawling</>
-                    ) : (
-                      <><Play size={16} /> Enable crawling</>
-                    )
+                    <>
+                      {domainJson.crawlEnabled ? (
+                        <Pause size={16} />
+                      ) : (
+                        <Play size={16} />
+                      )}
+                      <span>
+                        {domainJson.crawlEnabled ? 'Disable crawling' : 'Enable crawling'}
+                      </span>
+                    </>
                   ) : (
                     'Updating...'
                   )}

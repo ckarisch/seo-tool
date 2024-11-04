@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
-import Link from "next/link";
-import layout from "./layout.module.scss";
+import DomainNavigation from "./DomainNavigation";
+import styles from "./layout.module.scss";
 import Section from "@/components/layout/section";
 
 export const metadata: Metadata = {
@@ -9,68 +9,26 @@ export const metadata: Metadata = {
   robots: "noindex, nofollow"
 };
 
-// Let's use the URL path to determine the active state
-const getActiveState = (currentPath: string, linkPath: string) => {
-  return currentPath === linkPath;
-};
-
-export default function RootLayout({
-  children,
-  params,
-}: Readonly<{
+interface LayoutProps {
   children: React.ReactNode;
   params: { domain: string };
-}>) {
-  // Using server-side pathname comparison
-  const basePath = `/app/domains/${params.domain}`;
-  const pathMap = {
-    overview: basePath,
-    crawls: `${basePath}/crawls`,
-    settings: `${basePath}/settings`
-  };
+}
 
+export default function RootLayout({ children, params }: LayoutProps) {
   return (
     <div>
-      <div className={layout.domainheader}>
+      <div className={styles.domainheader}>
         <Section>
-          <div className={layout.domainheaderContent}>
-            <div className={layout.domain}>
-              <h1 className={layout.domainName}>{params.domain}</h1>
+          <div className={styles.domainheaderContent}>
+            <div className={styles.domain}>
+              <h1 className={styles.domainName}>{params.domain}</h1>
             </div>
-            
-            <nav className={layout.domainnav}>
-              <ul className={layout.domainheaderList}>
-                <li className={layout.domainheaderLi}>
-                  <Link 
-                    href={pathMap.overview}
-                    className={layout.domainheaderLink}
-                  >
-                    Overview
-                  </Link>
-                </li>
-                <li className={layout.domainheaderLi}>
-                  <Link 
-                    href={pathMap.crawls}
-                    className={layout.domainheaderLink}
-                  >
-                    Crawls
-                  </Link>
-                </li>
-                <li className={layout.domainheaderLi}>
-                  <Link 
-                    href={pathMap.settings}
-                    className={layout.domainheaderLink}
-                  >
-                    Settings
-                  </Link>
-                </li>
-              </ul>
-            </nav>
+            <DomainNavigation domain={params.domain} />
           </div>
         </Section>
       </div>
 
-      <main className={layout.main}>
+      <main className={styles.main}>
         <Section>
           {children}
         </Section>

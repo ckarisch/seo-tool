@@ -20,17 +20,51 @@
   width: 100%;
   display: grid;
   grid-template-columns: auto 1fr auto;
-  gap: 20px;
-  padding: 24px;
+  gap: 12px;  // Reduced gap on mobile
+  padding: 16px;  // Reduced padding on mobile
   align-items: center;
+  
+  @media (min-width: 768px) {
+    gap: 20px;
+    padding: 24px;
+  }
+
+  // For very small screens, stack image and content
+  @media (max-width: 360px) {
+    grid-template-columns: 1fr;
+    grid-template-areas: 
+      "image"
+      "info"
+      "notifications";
+    
+    .image {
+      grid-area: image;
+      justify-self: center;
+    }
+    
+    .info {
+      grid-area: info;
+      text-align: center;
+    }
+    
+    .notifications {
+      grid-area: notifications;
+      justify-self: center;
+    }
+  }
 }
 
 .image {
-  width: 100px;
-  height: 60px;
+  width: 80px;  // Slightly smaller on mobile
+  height: 48px;
   background-color: $background-light;
   border-radius: 8px;
   overflow: hidden;
+  
+  @media (min-width: 768px) {
+    width: 100px;
+    height: 60px;
+  }
   
   .placeholder {
     width: 100%;
@@ -39,48 +73,84 @@
     align-items: center;
     justify-content: center;
     color: $accent;
-    font-size: 0.9rem;
+    font-size: 0.85rem;
+    
+    @media (min-width: 768px) {
+      font-size: 0.9rem;
+    }
   }
 }
 
 .info {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 4px;  // Slightly reduced gap on mobile
+  min-width: 0;  // Allows text truncation to work
+  
+  @media (min-width: 768px) {
+    gap: 6px;
+  }
 
   .name {
     font-weight: 600;
-    font-size: 1.1rem;
+    font-size: 1rem;
     color: $color;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    
+    @media (min-width: 768px) {
+      font-size: 1.1rem;
+    }
   }
 
   .domain {
-    font-size: 0.9rem;
+    font-size: 0.85rem;
     color: $text-secondary;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    
+    @media (min-width: 768px) {
+      font-size: 0.9rem;
+    }
   }
 }
 
 .notifications {
   display: flex;
-  gap: 8px;
+  gap: 6px;  // Slightly reduced gap on mobile
+  
+  @media (min-width: 768px) {
+    gap: 8px;
+  }
 }
 
 .notification {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 6px;
+  padding: 5px;  // Slightly smaller on mobile
   border-radius: 50%;
   background-color: $background-light;
   transition: all 0.2s ease;
+  
+  @media (min-width: 768px) {
+    padding: 6px;
+  }
 
   &:hover {
     transform: scale(1.1);
   }
 
   svg {
-    width: 18px;
-    height: 18px;
+    width: 16px;  // Slightly smaller on mobile
+    height: 16px;
+    
+    @media (min-width: 768px) {
+      width: 18px;
+      height: 18px;
+    }
   }
 
   &.warning {
@@ -102,5 +172,9 @@
 }
 
 .content {
-  padding: 24px;
+  padding: 16px;  // Reduced padding on mobile
+  
+  @media (min-width: 768px) {
+    padding: 24px;
+  }
 }

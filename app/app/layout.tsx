@@ -1,55 +1,22 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import layout from "./layout.module.scss";
-import Image from "next/image";
-import Signin from "@/components/user/signin";
+import MainNav from "./MainNav";
 
 export const metadata: Metadata = {
   title: "SEO App",
   description: "The best app for SEO analysis.",
-  robots: "noindex, nofollow" // app path should not be indexed
+  robots: "noindex, nofollow"
 };
 
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
+}) {
   return (
     <>
       <div id={layout.globalheader} className={layout.globalheader}>
-        <nav id={layout.globalnav}>
-          <ul className={layout.globalheaderList}>
-            <li className={layout.globalheaderLi}>
-              <Link href={'/'} className={[layout.globalheaderLink, layout.logoLink].join(' ')}>
-                <Image className={layout.logo} src={'/logo.svg'} alt="logo" width={150} height={30.5}></Image>
-              </Link>
-            </li>
-            <li className={layout.globalheaderLi}>
-              <Link href={'/app/domains'} className={layout.globalheaderLink}>
-                Domains
-              </Link>
-            </li>
-            <li className={layout.globalheaderLi}>
-              <Link href={'/app/get-premium'} className={layout.globalheaderLink}>
-                Get Premium
-              </Link>
-            </li>
-            <li className={layout.globalheaderLi}>
-              <Link href={'/app/subscriptions'} className={layout.globalheaderLink}>
-                Subscriptions
-              </Link>
-            </li>
-            <li className={layout.globalheaderLi}>
-              <Link href={'/app/invoices'} className={layout.globalheaderLink}>
-                Invoices
-              </Link>
-            </li>
-            <li className={layout.globalheaderLi}>
-              <Signin />
-            </li>
-          </ul>
-        </nav>
+        <MainNav />
       </div>
 
       <main className={layout.main}>

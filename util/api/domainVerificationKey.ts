@@ -2,7 +2,9 @@ import { RandomStringGenerator } from "./stringGenerator";
 
 export class VerificationCodeGenerator {
   static generate(): string {
-    return 'fuz-seo-tool-' + RandomStringGenerator.generate();
+    return 'fuz-seo-tool-' + RandomStringGenerator.generate({ length: 16 }) +
+      '-' +
+      RandomStringGenerator.generate({ length: 16 });
   }
 }
 

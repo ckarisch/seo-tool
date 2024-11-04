@@ -1,31 +1,51 @@
 @import "@/app/variables";
 
 .actionItem {
-  padding: 24px;
+  padding: 16px;  // Reduced padding on mobile
   border-bottom: 1px solid $background-light;
+  
+  @media (min-width: 768px) {
+    padding: 24px;
+  }
 
   &:last-child {
     border-bottom: none;
   }
+
+  // Add spacing between stacked buttons on mobile
+  form + form {
+    margin-top: 12px;
+  }
 }
 
 .actionTitle {
-  font-size: 1.1rem;
+  font-size: 1rem;  // Slightly smaller on mobile
   font-weight: 500;
   color: $color;
-  margin-bottom: 8px;
+  margin-bottom: 6px;  // Reduced margin on mobile
+  
+  @media (min-width: 768px) {
+    font-size: 1.1rem;
+    margin-bottom: 8px;
+  }
 }
 
 .actionDescription {
-  font-size: 0.95rem;
+  font-size: 0.9rem;  // Slightly smaller on mobile
   color: $text-secondary;
-  margin-bottom: 16px;
+  margin-bottom: 12px;  // Reduced margin on mobile
   line-height: 1.5;
+  
+  @media (min-width: 768px) {
+    font-size: 0.95rem;
+    margin-bottom: 16px;
+  }
 }
 
 .actionButton {
   display: inline-flex;
   align-items: center;
+  justify-content: center;  // Center content on mobile
   gap: 8px;
   padding: 8px 16px;
   background-color: $color;
@@ -33,6 +53,11 @@
   border-radius: $border-radius;
   font-weight: 500;
   transition: all 0.2s ease;
+  width: 100%;  // Full width on mobile
+  
+  @media (min-width: 768px) {
+    width: auto;  // Auto width on desktop
+  }
 
   svg {
     width: 16px;
@@ -44,9 +69,25 @@
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   }
 
+  &:active:not(:disabled) {
+    transform: translateY(0);
+  }
+
   &:disabled {
     background-color: $background-light;
     color: $text-secondary;
     cursor: not-allowed;
+  }
+}
+
+// Add container for multiple buttons
+.actionButtons {
+  display: flex;
+  flex-direction: column;  // Stack on mobile
+  gap: 12px;
+  
+  @media (min-width: 768px) {
+    flex-direction: row;
+    gap: 16px;
   }
 }

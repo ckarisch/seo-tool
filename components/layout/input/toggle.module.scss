@@ -1,9 +1,15 @@
 @import "@/app/variables";
 
 .toggleContainer {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: 12px;
+  padding: 4px;  // Add padding for better touch target
+  
+  @media (max-width: 768px) {
+    width: 100%;
+    justify-content: space-between;
+  }
 }
 
 .toggle {
@@ -11,12 +17,20 @@
   display: inline-block;
   width: 52px;
   height: 28px;
+  flex-shrink: 0;  // Prevent toggle from shrinking
+  cursor: pointer;
+
+  @media (max-width: 768px) {
+    width: 44px;  // Slightly smaller on mobile
+    height: 24px;
+  }
 }
 
 .input {
   opacity: 0;
   width: 0;
   height: 0;
+  position: absolute;  // Ensure it doesn't interfere with layout
 
   &:checked + .slider {
     background-color: $veryGood;
@@ -24,6 +38,10 @@
 
   &:checked + .slider:before {
     transform: translateX(24px);
+    
+    @media (max-width: 768px) {
+      transform: translateX(20px);  // Adjusted for smaller mobile size
+    }
   }
 
   &:focus + .slider {
@@ -59,10 +77,26 @@
     transition: 0.2s;
     border-radius: 50%;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+
+    @media (max-width: 768px) {
+      height: 16px;  // Smaller circle on mobile
+      width: 16px;
+    }
   }
 
   &:hover:not([disabled]) {
     background-color: darken($background-light, 5%);
+  }
+
+  // Add touch-friendly active state
+  &:active:not([disabled]) {
+    &:before {
+      width: 24px;  // Slightly wider on press
+      
+      @media (max-width: 768px) {
+        width: 20px;
+      }
+    }
   }
 }
 
@@ -74,6 +108,10 @@
   display: flex;
   align-items: center;
   gap: 8px;
+  
+  @media (max-width: 768px) {
+    font-size: 0.9rem;
+  }
 
   .icon {
     display: flex;

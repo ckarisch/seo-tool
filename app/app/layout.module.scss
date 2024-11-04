@@ -1,15 +1,16 @@
 @import "@/app/variables";
 
-
 .main {
     margin: 0 auto;
     width: 100%;
-  }  
-
+}
 
 #globalheader {
     background-color: $background-light;
-    padding: 20px;
+    padding: 15px 20px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
 
     @media (prefers-color-scheme: dark) {
         background-color: $background-light-dark;
@@ -17,18 +18,60 @@
 
     .logo {
         display: block;
+        height: auto;
+        
+        @media (max-width: 480px) {
+            width: 120px;
+        }
     }
 
     .globalheaderList {
         max-width: $max-width;
         margin: 0 auto;
         display: flex;
-        justify-content: space-between;
+        justify-content: flex-start;
         align-items: center;
+        gap: 20px;
+        position: relative;
+    }
+
+    .navContainer {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        margin-left: auto;
+
+        @media (max-width: 768px) {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background-color: $background-light;
+            flex-direction: column;
+            align-items: flex-start;
+            padding: 20px;
+            gap: 15px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+
+            @media (prefers-color-scheme: dark) {
+                background-color: $background-light-dark;
+            }
+        }
+
+        &.mobileMenuOpen {
+            @media (max-width: 768px) {
+                display: flex;
+            }
+        }
     }
 
     .globalheaderLi {
         list-style: none;
+        
+        &:first-child {
+            margin-right: auto;
+        }
     }
 
     .globalheaderLink {
@@ -36,8 +79,15 @@
         padding: 5px 20px;
         border-radius: $border-radius;
         color: $color;
+        white-space: nowrap;
+        
         @media (prefers-color-scheme: dark) {
             color: $color-dark;
+        }
+
+        @media (max-width: 768px) {
+            padding: 8px 0;
+            width: 100%;
         }
     }
 
@@ -47,9 +97,66 @@
         @media (prefers-color-scheme: dark) {
             background-color: $accent-dark;
         }
+
+        @media (max-width: 768px) {
+            padding: 8px 20px;
+        }
     }
 
     .logoLink {
         padding: 0;
+        
+        &:hover {
+            background-color: transparent;
+            opacity: 0.8;
+        }
+    }
+
+    .menuButton {
+        display: none;
+        flex-direction: column;
+        justify-content: space-between;
+        width: 30px;
+        height: 20px;
+        background: transparent;
+        border: none;
+        cursor: pointer;
+        padding: 0;
+        margin-left: auto;
+        box-shadow: none;
+    
+        &:hover,
+        &:active {
+            box-shadow: none;
+        }    
+        
+        @media (max-width: 768px) {
+            display: flex;
+        }
+
+        span {
+            width: 100%;
+            height: 2px;
+            background-color: $color;
+            transition: all 0.3s ease;
+
+            @media (prefers-color-scheme: dark) {
+                background-color: $color-dark;
+            }
+        }
+
+        &.menuOpen {
+            span {
+                &:first-child {
+                    transform: translateY(9px) rotate(45deg);
+                }
+                &:nth-child(2) {
+                    opacity: 0;
+                }
+                &:last-child {
+                    transform: translateY(-9px) rotate(-45deg);
+                }
+            }
+        }
     }
 }

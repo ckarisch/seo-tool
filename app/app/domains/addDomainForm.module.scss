@@ -2,14 +2,22 @@
   background-color: white;
   border-radius: 16px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
-  padding: 40px;
+  padding: 20px; // Reduced padding on mobile
   width: 100%;
   max-width: 800px;
   margin: 0 auto;
-  
+
+  @media (min-width: 768px) {
+    padding: 40px;
+  }
+
   form {
     display: grid;
-    gap: 32px;
+    gap: 24px; // Reduced gap on mobile
+
+    @media (min-width: 768px) {
+      gap: 32px;
+    }
   }
 
   .inputGroup {
@@ -25,7 +33,7 @@
       padding: 12px;
       border: 2px solid #e2e8f0;
       border-radius: 8px;
-      font-size: 1rem;
+      font-size: 16px; // Better for mobile input
       background-color: white;
       transition: all 0.2s ease;
 
@@ -51,8 +59,13 @@
     font-weight: 500;
     cursor: pointer;
     transition: all 0.2s ease;
-    width: fit-content;
-    justify-self: end;
+    width: 100%; // Full width on mobile
+    justify-self: stretch;
+
+    @media (min-width: 768px) {
+      width: fit-content;
+      justify-self: end;
+    }
 
     &:hover {
       transform: translateY(-1px);
@@ -63,16 +76,26 @@
       transform: translateY(0);
     }
   }
-  
+
   .shake {
     animation: shake 0.5s ease-in-out;
   }
 }
 
 @keyframes shake {
-0% { transform: translateX(0); }
-25% { transform: translateX(-10px); }
-50% { transform: translateX(10px); }
-75% { transform: translateX(-10px); }
-100% { transform: translateX(0); }
+  0% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-10px);
+  }
+  50% {
+    transform: translateX(10px);
+  }
+  75% {
+    transform: translateX(-10px);
+  }
+  100% {
+    transform: translateX(0);
+  }
 }

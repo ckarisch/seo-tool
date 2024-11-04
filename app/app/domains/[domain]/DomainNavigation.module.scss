@@ -1,0 +1,68 @@
+// DomainNavigation.module.scss
+@import "@/app/variables";
+
+.domainnav {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  
+  @media (min-width: 768px) {
+    flex: 1;
+    overflow-x: visible;
+  }
+  
+  &::-webkit-scrollbar {
+    display: none;
+  }
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.navList {
+  display: flex;
+  gap: 4px;
+  list-style: none;
+  margin: 0;
+  padding: 0 4px;
+  min-width: min-content;
+  
+  @media (min-width: 768px) {
+    gap: 8px;
+    justify-content: flex-end;
+    padding: 0;
+  }
+}
+
+.navItem {
+  margin: 0;
+  flex: 0 0 auto;
+}
+
+.navLink {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 12px;
+  border-radius: $border-radius;
+  color: $text-secondary;
+  font-weight: 500;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
+  text-decoration: none;
+  white-space: nowrap;
+  
+  @media (min-width: 768px) {
+    padding: 8px 16px;
+    font-size: 0.95rem;
+  }
+
+  &:hover {
+    background-color: $background-light;
+    color: $color;
+  }
+
+  &[aria-current="page"] {
+    background-color: $main;
+    color: $color;
+  }
+}

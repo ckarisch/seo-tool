@@ -1,64 +1,83 @@
 @import "@/app/variables";
 
 .heroContainer {
-  padding: 40px 0;
+  padding: 20px 0;  // Reduced padding on mobile
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 12px;  // Slightly reduced gap
+  
+  @media (min-width: 768px) {
+    padding: 40px 0;
+    gap: 16px;
+  }
 }
 
 .title {
-  font-size: 2.5rem;
+  font-size: 1.8rem;  // Smaller font on mobile
   font-weight: 500;
   line-height: 1.2;
+  
+  @media (min-width: 768px) {
+    font-size: 2.5rem;
+  }
 }
 
 .description {
-  font-size: 1.1rem;
+  font-size: 1rem;  // Adjusted for mobile
   color: $text-secondary;
-  max-width: 640px;
+  max-width: 100%;  // Full width on mobile
   line-height: 1.5;
+  
+  @media (min-width: 768px) {
+    font-size: 1.1rem;
+    max-width: 640px;
+  }
 }
 
 .domainsContent {
-  padding: 40px 0;
+  padding: 20px 0;
+  
+  @media (min-width: 768px) {
+    padding: 40px 0;
+  }
 }
 
 .domainsHeader {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 32px;
+  flex-direction: column;  // Stack on mobile
+  gap: 16px;
+  margin-bottom: 24px;
+  
+  @media (min-width: 768px) {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 32px;
+  }
 }
 
 .domainsTitle {
-  font-size: 2rem;
+  font-size: 1.5rem;  // Smaller on mobile
   font-weight: 500;
+  
+  @media (min-width: 768px) {
+    font-size: 2rem;
+  }
 }
 
 .addButton {
   display: flex;
   align-items: center;
+  justify-content: center;  // Center on mobile
   gap: 8px;
   padding: 8px 16px;
   background-color: #000;
   color: #fff;
   border-radius: $border-radius;
   font-weight: 500;
-}
-
-.formSection {
-  padding: 40px 0;
-  animation: slideIn 0.3s ease-out forwards;
-}
-
-@keyframes slideIn {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
+  width: 100%;  // Full width on mobile
+  
+  @media (min-width: 768px) {
+    width: auto;  // Auto width on desktop
   }
 }

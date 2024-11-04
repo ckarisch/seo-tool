@@ -29,16 +29,18 @@ const DomainActions: React.FC<DomainActionsProps> = ({
                 <p className={styles.actionDescription}>
                     Initiate a new crawl of the domain to update information and check for changes.
                 </p>
-                <form onSubmit={handleCrawl}>
-                    <button
-                        className={styles.actionButton}
-                        type="submit"
-                        disabled={isCrawling}
-                    >
-                        <Play size={16} />
-                        Start Crawl
-                    </button>
-                </form>
+                <div className={styles.actionButtons}>
+                    <form onSubmit={handleCrawl} style={{ width: '100%' }}>
+                        <button
+                            className={styles.actionButton}
+                            type="submit"
+                            disabled={isCrawling}
+                        >
+                            <Play size={16} />
+                            Start Crawl
+                        </button>
+                    </form>
+                </div>
             </div>
 
             <div className={styles.actionItem}>
@@ -46,16 +48,18 @@ const DomainActions: React.FC<DomainActionsProps> = ({
                 <p className={styles.actionDescription}>
                     Clear all existing links associated with the domain and prepare for a fresh crawl.
                 </p>
-                <form onSubmit={handleResetLinks}>
-                    <button
-                        className={styles.actionButton}
-                        type="submit"
-                        disabled={isCrawling}
-                    >
-                        <RotateCcw size={16} />
-                        Reset Links
-                    </button>
-                </form>
+                <div className={styles.actionButtons}>
+                    <form onSubmit={handleResetLinks} style={{ width: '100%' }}>
+                        <button
+                            className={styles.actionButton}
+                            type="submit"
+                            disabled={isCrawling}
+                        >
+                            <RotateCcw size={16} />
+                            Reset Links
+                        </button>
+                    </form>
+                </div>
             </div>
         </MinimizableContainer>
     );

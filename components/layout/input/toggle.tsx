@@ -19,17 +19,17 @@ const Toggle = ({
   icon
 }: ToggleProps) => {
   return (
-    <label className={[
+    <div className={[
       styles.toggleContainer,
       loading ? styles.loading : ''
     ].join(' ')}>
       {label && (
-        <span className={styles.label}>
+        <span className={styles.label} onClick={(e) => e.stopPropagation()}>
           {icon && <span className={styles.icon}>{icon}</span>}
           {label}
         </span>
       )}
-      <div className={styles.toggle}>
+      <label className={styles.toggle}>
         <input
           type="checkbox"
           checked={checked}
@@ -38,8 +38,8 @@ const Toggle = ({
           className={styles.input}
         />
         <span className={styles.slider} />
-      </div>
-    </label>
+      </label>
+    </div>
   );
 };
 
