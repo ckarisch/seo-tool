@@ -1,5 +1,5 @@
 // route.ts
-import { authOptions } from "@/app/api/auth/[...nextauth]/authOptions";
+import { authOptions } from "@/lib/auth";
 import { validateCustomers } from "@/app/api/payment/premium/checkout/validateCustomers";
 import { PrismaClient } from "@prisma/client";
 import { getServerSession } from "next-auth";

@@ -5,7 +5,7 @@ import layout from "./layout.module.scss";
 import Providers from "./providers";
 import Signin from "../components/user/signin";
 import { getServerSession } from "next-auth";
-import { authOptions } from "./api/auth/[...nextauth]/authOptions";
+import { authOptions } from "../lib/auth";
 import Section from "@/components/layout/section";
 import Link from "next/link";
 import Image from "next/image";

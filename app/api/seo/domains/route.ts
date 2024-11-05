@@ -3,7 +3,7 @@ import { NextApiRequest, NextApiResponse } from "next";
 import { getServerSession } from "next-auth";
 
 import { NextRequest, NextResponse } from "next/server";
-import { authOptions } from "../../auth/[...nextauth]/authOptions";
+import { authOptions } from "../../../../lib/auth";
 import { VerificationCodeGenerator } from "@/util/api/domainVerificationKey";
 
 const prisma = new PrismaClient();

@@ -1,6 +1,6 @@
 import { getServerSession } from 'next-auth';
 import { crawlDomain, crawlDomainResponse } from './crawlDomain';
-import { authOptions } from '@/app/api/auth/[...nextauth]/authOptions';
+import { authOptions } from '@/lib/auth';
 import { createLogger } from '@/apiComponents/dev/logger';
 import { LogEntry, streamLogs } from '@/apiComponents/dev/StreamingLogViewer';
 import { NextResponse } from 'next/server';

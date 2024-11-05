@@ -11,7 +11,7 @@ import { Link, checkRequests, checkTimeoutAndPush, getStrongestErrorCode, linkTy
 import { extractLinks } from "@/crawler/extractLinks";
 import { recursiveCrawl, recursiveCrawlResponse } from "@/crawler/recursiveCrawl";
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/app/api/auth/[...nextauth]/authOptions";
+import { authOptions } from "@/lib/auth";
 import { CrawlResponseYieldType, createLogger, isLogEntry, Logger, LoggerFunctionWithReturn } from "@/apiComponents/dev/logger";
 import { LogEntry } from "@/apiComponents/dev/StreamingLogViewer";
 import { lighthouseAnalysis, lighthouseAnalysisResponse } from "@/crawler/lighthouseAnalysis";

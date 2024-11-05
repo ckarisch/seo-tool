@@ -1,6 +1,7 @@
 .adminBanner {
     position: absolute;
-    top: -17px;
+    top: 0;
     left: 50%;
-    transform: translate3d(-50%, 0, 0);
+    transform: translate3d(-50%, -50%, 0);
+    z-index: 1;
 }

@@ -1,29 +1,66 @@
-"use client"
+'use client'
 
-import { User } from "@/icons/user"
-import { useSession, signIn, signOut } from "next-auth/react"
+import { useSession, signOut } from "next-auth/react"
+import { useRouter } from 'next/navigation'
+import { useState } from 'react'
+import Link from 'next/link'
 import styles from "./signin.module.scss"
+import { LogIn, User, LogOut, UserCircle } from 'lucide-react'
 import AdminBanner from "@/components/user/adminBanner"
 
 export default function Signin() {
   const { data: session } = useSession()
-  // Signed in as {session.user?.email} <br />
-  if (session) {
+  const router = useRouter()
+  const [isMenuOpen, setIsMenuOpen] = useState(false)
+
+  const handleSignIn = () => {
+    router.push('/auth/signin')
+  }
+
+  const handleSignOut = async () => {
+    await signOut()
+    setIsMenuOpen(false)
+  }
+
+  const toggleMenu = () => {
+    setIsMenuOpen(!isMenuOpen)
+  }
+
+  if (!session) {
     return (
-      <>
-        <button title={'abmelden'} className={styles.signOut} onClick={() => signOut()}>
-          <User />
-          <AdminBanner />
-        </button>
-      </>
+      <button 
+        title='Sign in' 
+        className={styles.signIn} 
+        onClick={handleSignIn}
+      >
+        <LogIn strokeWidth={1.5} />
+      </button>
     )
   }
+
   return (
-    <>
-      <button title={'anmelden'} className={styles.signOut} onClick={() => signIn()}>
-        <User />
-        <AdminBanner />
+    <div className={styles.userContainer}>
+      <AdminBanner />
+      <button 
+        title='User menu' 
+        className={`${styles.userButton} ${isMenuOpen ? styles.active : ''}`} 
+        onClick={toggleMenu}
+      >
+        <User strokeWidth={1.5} />
       </button>
-    </>
+      
+      <div className={`${styles.submenu} ${isMenuOpen ? styles.open : ''}`}>
+        <div className={styles.submenuContent}>
+          <Link href="/app/profile" className={styles.menuItem}>
+            <UserCircle strokeWidth={1.5} />
+            <span>Profile</span>
+          </Link>
+          <button onClick={handleSignOut} className={styles.menuItem}>
+            <LogOut strokeWidth={1.5} />
+            <span>Sign out</span>
+          </button>
+        </div>
+      </div>
+    </div>
   )
 }

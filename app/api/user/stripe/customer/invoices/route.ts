@@ -1,4 +1,4 @@
-import { authOptions } from "@/app/api/auth/[...nextauth]/authOptions";
+import { authOptions } from "@/lib/auth";
 import { validateCustomers } from "@/app/api/payment/premium/checkout/validateCustomers";
 import { ErrorResponse } from "@/app/api/types";
 import { PrismaClient } from "@prisma/client";

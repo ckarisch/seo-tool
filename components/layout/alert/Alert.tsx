@@ -1,8 +1,8 @@
 import * as React from "react"
 import styles from './Alert.module.scss'
 
-interface AlertProps extends React.HTMLAttributes<HTMLDivElement> {
-  variant?: "default" | "destructive";
+export interface AlertProps extends React.HTMLAttributes<HTMLDivElement> {
+  variant?: "default" | "destructive" | "success";
 }
 
 const Alert = React.forwardRef<HTMLDivElement, AlertProps>(
@@ -19,16 +19,17 @@ const Alert = React.forwardRef<HTMLDivElement, AlertProps>(
 )
 Alert.displayName = "Alert"
 
-const AlertTitle = React.forwardRef<
-  HTMLParagraphElement,
-  React.HTMLAttributes<HTMLHeadingElement>
->(({ className = "", ...props }, ref) => (
-  <h5
-    ref={ref}
-    className={`${styles.title} ${className}`}
-    {...props}
-  />
-))
+interface AlertTitleProps extends React.HTMLAttributes<HTMLHeadingElement> {}
+
+const AlertTitle = React.forwardRef<HTMLHeadingElement, AlertTitleProps>(
+  ({ className = "", ...props }, ref) => (
+    <h5
+      ref={ref}
+      className={`${styles.title} ${className}`}
+      {...props}
+    />
+  )
+)
 AlertTitle.displayName = "AlertTitle"
 
 interface AlertDescriptionProps extends React.HTMLAttributes<HTMLDivElement> {}

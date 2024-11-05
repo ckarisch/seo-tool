@@ -58,7 +58,7 @@ export default function SignUpPage() {
       }
 
       // Redirect to onboarding with plan if specified
-      router.push(plan ? `/onboarding?plan=${plan}` : '/onboarding');
+      router.push(plan ? `/app/onboarding?plan=${plan}` : '/app/onboarding');
     } catch (err: any) {
       setError(err.message || 'An unexpected error occurred');
     } finally {

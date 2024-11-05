@@ -1,5 +1,5 @@
 
-import { authOptions } from '@/app/api/auth/[...nextauth]/authOptions';
+import { authOptions } from '@/lib/auth';
 import { Domain } from '@/interfaces/domain';
 import { DnsLookupError, performDnsLookup } from '@/util/api/dnsLookup';
 import { PrismaClient } from '@prisma/client'

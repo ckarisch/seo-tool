@@ -1,0 +1,531 @@
+@import "@/app/variables";
+
+.heroContainer {
+  padding: 40px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  animation: slideDown 0.5s ease-out;
+}
+
+.title {
+  font-size: 2.5rem;
+  font-weight: 500;
+  line-height: 1.2;
+  color: $color;
+
+  @media (prefers-color-scheme: dark) {
+    color: $color-dark;
+  }
+}
+
+.description {
+  font-size: 1.1rem;
+  color: $text-secondary;
+  max-width: 640px;
+  line-height: 1.5;
+}
+
+.profileContent {
+  padding: 40px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  animation: fadeIn 0.3s ease-in;
+}
+
+.profileGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 24px;
+  animation: slideUp 0.5s ease-out;
+}
+
+.infoCard, .notificationsCard {
+  background: white;
+  border-radius: 16px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    background: $background-light-dark;
+    border-color: rgba(255, 255, 255, 0.1);
+  }
+}
+
+.cardHeader {
+  padding: 24px;
+  border-bottom: 1px solid $background-light;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  h2 {
+    font-size: 1.25rem;
+    font-weight: 500;
+    color: $color;
+    margin: 0;
+    flex: 1;
+    min-width: 0;
+
+    @media (prefers-color-scheme: dark) {
+      color: $color-dark;
+    }
+  }
+
+  @media (prefers-color-scheme: dark) {
+    border-color: rgba(255, 255, 255, 0.1);
+  }
+}
+
+.cardIcon {
+  width: 24px;
+  height: 24px;
+  color: $color;
+
+  @media (prefers-color-scheme: dark) {
+    color: $color-dark;
+  }
+}
+
+.infoButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+  border: none;
+  background: transparent;
+  color: $text-secondary;
+  cursor: pointer;
+  border-radius: 100%;
+  transition: all 0.2s ease;
+  margin-left: auto;
+
+  &:hover {
+    background-color: $background-light;
+    color: $color;
+
+    @media (prefers-color-scheme: dark) {
+      background-color: $background-light-dark;
+      color: $color-dark;
+    }
+  }
+}
+
+.addButton {
+  margin-left: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background-color: $color;
+  color: white;
+  border: none;
+  border-radius: $border-radius;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 0.9rem;
+  font-weight: 500;
+  white-space: nowrap;
+
+  &:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    background-color: $color-dark;
+  }
+}
+
+.cardContent {
+  padding: 24px;
+}
+
+.infoRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px solid $background-light;
+  
+  &:last-child {
+    border-bottom: none;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    border-color: rgba(255, 255, 255, 0.1);
+  }
+}
+
+.label {
+  color: $text-secondary;
+  font-size: 0.9rem;
+}
+
+.value {
+  font-weight: 500;
+  color: $color;
+
+  @media (prefers-color-scheme: dark) {
+    color: $color-dark;
+  }
+}
+
+.valueWithIcon {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.roleIcon {
+  color: #eab308;
+}
+
+.infoBox {
+  background-color: rgba($color, 0.05);
+  border-radius: $border-radius;
+  padding: 16px;
+  margin: 16px 24px;
+  display: flex;
+  gap: 12px;
+  opacity: 0;
+  transform: translateY(-10px);
+  animation: slideDownFade 0.2s ease-out forwards;
+
+  @media (prefers-color-scheme: dark) {
+    background-color: rgba($color-dark, 0.1);
+  }
+
+  svg {
+    flex-shrink: 0;
+    color: $color;
+
+    @media (prefers-color-scheme: dark) {
+      color: $color-dark;
+    }
+  }
+
+  h4 {
+    margin: 0 0 8px 0;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: $color;
+
+    @media (prefers-color-scheme: dark) {
+      color: $color-dark;
+    }
+  }
+
+  p {
+    margin: 0;
+    font-size: 0.9rem;
+    line-height: 1.5;
+    color: $text-secondary;
+  }
+}
+
+.addContactForm {
+  padding: 24px;
+  border-bottom: 1px solid $background-light;
+  animation: slideDown 0.3s ease-out;
+
+  @media (prefers-color-scheme: dark) {
+    border-color: rgba(255, 255, 255, 0.1);
+  }
+}
+
+.formGroup {
+  margin-bottom: 16px;
+
+  label {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 0.9rem;
+    color: $text-secondary;
+  }
+
+  input {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid $background-light;
+    border-radius: $border-radius;
+    font-size: 0.95rem;
+    background-color: white;
+    color: $color;
+    transition: border-color 0.2s ease;
+    
+    &:focus {
+      outline: none;
+      border-color: $color;
+    }
+
+    &::placeholder {
+      color: lighten($text-secondary, 20%);
+    }
+
+    @media (prefers-color-scheme: dark) {
+      background-color: $background-light-dark;
+      border-color: rgba(255, 255, 255, 0.1);
+      color: $color-dark;
+
+      &:focus {
+        border-color: $color-dark;
+      }
+    }
+  }
+}
+
+.formActions {
+  display: flex;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.submitButton, .cancelButton {
+  padding: 10px 20px;
+  border-radius: $border-radius;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.submitButton {
+  background-color: $color;
+  color: white;
+  border: none;
+
+  &:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    background-color: $color-dark;
+  }
+}
+
+.cancelButton {
+  background-color: transparent;
+  border: 1px solid $background-light;
+  color: $text-secondary;
+
+  &:hover {
+    background-color: $background-light;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    border-color: rgba(255, 255, 255, 0.1);
+    
+    &:hover {
+      background-color: rgba(255, 255, 255, 0.05);
+    }
+  }
+}
+
+.contactsList {
+  padding: 24px;
+}
+
+.contactCard {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px;
+  border: 1px solid $background-light;
+  border-radius: $border-radius;
+  margin-bottom: 12px;
+  transition: all 0.2s ease;
+  
+  &:hover {
+    border-color: $color;
+    transform: translateX(2px);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    border-color: rgba(255, 255, 255, 0.1);
+
+    &:hover {
+      border-color: $color-dark;
+    }
+  }
+}
+
+.contactInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.contactName {
+  font-weight: 500;
+  color: $color;
+
+  @media (prefers-color-scheme: dark) {
+    color: $color-dark;
+  }
+}
+
+.contactEmail {
+  font-size: 0.9rem;
+  color: $text-secondary;
+}
+
+.deleteButton {
+  padding: 8px;
+  border: none;
+  background: transparent;
+  color: $text-secondary;
+  cursor: pointer;
+  border-radius: 100%;
+  transition: all 0.2s ease;
+
+  &:hover {
+    color: #ef4444;
+    background-color: #fee2e2;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    &:hover {
+      background-color: rgba(239, 68, 68, 0.2);
+    }
+  }
+}
+
+.emptyState {
+  text-align: center;
+  color: $text-secondary;
+  padding: 24px;
+  font-size: 0.95rem;
+}
+
+.loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  gap: 12px;
+  color: $text-secondary;
+  
+  .spinner {
+    animation: spin 1s linear infinite;
+  }
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideDownFade {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 768px) {
+  .title {
+    font-size: 2rem;
+  }
+
+  .profileGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .infoButton {
+    margin-left: auto;
+    margin-right: 8px;
+  }
+
+  .addButton {
+    margin-left: 0;
+  }
+
+  .formActions {
+    flex-direction: column;
+
+    button {
+      width: 100%;
+    }
+  }
+
+  .contactCard {
+    flex-direction: column;
+    text-align: center;
+    gap: 12px;
+
+    &:hover {
+      transform: none;
+    }
+  }
+
+  .contactInfo {
+    align-items: center;
+  }
+
+  .deleteButton {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 12px;
+    border-radius: $border-radius;
+    
+    &:hover {
+      background-color: #fee2e2;
+    }
+  }
+
+  .infoBox {
+    margin: 16px;
+    flex-direction: column;
+    text-align: center;
+
+    svg {
+      margin: 0 auto;
+    }
+  }
+}

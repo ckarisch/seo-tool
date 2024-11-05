@@ -1,0 +1,147 @@
+@import "@/app/variables";
+
+.backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+  animation: fadeIn 0.2s ease-out;
+}
+
+.dialog {
+  background: white;
+  border-radius: $border-radius;
+  width: 90%;
+  max-width: 500px;
+  animation: slideUp 0.3s ease-out;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+
+  @media (prefers-color-scheme: dark) {
+    background-color: $background-light-dark;
+  }
+}
+
+.header {
+  padding: 16px 24px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border-bottom: 1px solid $background-light;
+}
+
+.icon {
+  color: #ef4444;
+  width: 24px;
+  height: 24px;
+}
+
+.title {
+  flex: 1;
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 500;
+  color: $color;
+
+  @media (prefers-color-scheme: dark) {
+    color: $color-dark;
+  }
+}
+
+.closeButton {
+  padding: 8px;
+  border: none;
+  background: transparent;
+  border-radius: 100%;
+  cursor: pointer;
+  color: $text-secondary;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background-color: $background-light;
+    color: $color;
+
+    @media (prefers-color-scheme: dark) {
+      background-color: $background-light-dark;
+      color: $color-dark;
+    }
+  }
+}
+
+.content {
+  padding: 24px;
+}
+
+.description {
+  margin: 0;
+  color: $text-secondary;
+  line-height: 1.5;
+}
+
+.footer {
+  padding: 16px 24px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  border-top: 1px solid $background-light;
+}
+
+.cancelButton,
+.confirmButton {
+  padding: 8px 16px;
+  border-radius: $border-radius;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.cancelButton {
+  background: transparent;
+  border: 1px solid $background-light;
+  color: $text-secondary;
+
+  &:hover {
+    background: $background-light;
+  }
+}
+
+.confirmButton {
+  background: $color;
+  border: none;
+  color: white;
+
+  &:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
+
+  &.danger {
+    background: #ef4444;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

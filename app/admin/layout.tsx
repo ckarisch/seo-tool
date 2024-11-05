@@ -11,7 +11,7 @@ import Signin from '@/components/user/signin';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import AdminDashboard from '@/components/admin/dashboard/adminDashboard';
-import { PublicHeader } from '@/components/layout/header/publicHeader';
+import { PublicHeader } from '@/components/layout/Header/publicHeader';
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   const router = useRouter();

@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import layout from "./layout.module.scss";
-import MainNav from "./MainNav";
+import AppHeader from "../../components/layout/Header/AppHeader";
 
 export const metadata: Metadata = {
   title: "SEO App",
@@ -15,10 +15,7 @@ export default function RootLayout({
 }) {
   return (
     <>
-      <div id={layout.globalheader} className={layout.globalheader}>
-        <MainNav />
-      </div>
-
+      <AppHeader />
       <main className={layout.main}>
         {children}
       </main>
