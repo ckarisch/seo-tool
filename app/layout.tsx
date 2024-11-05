@@ -3,13 +3,12 @@ import { Bricolage_Grotesque, Inter } from "next/font/google";
 import "./globals.css";
 import layout from "./layout.module.scss";
 import Providers from "./providers";
-import Signin from "../components/user/signin";
 import { getServerSession } from "next-auth";
 import { authOptions } from "../lib/auth";
 import Section from "@/components/layout/section";
 import Link from "next/link";
-import Image from "next/image";
 import { LogoIcon } from "@/icons/logoIcon";
+import { isPreviewEnv } from "@/utils/environment";
 
 const inter = Inter({
   subsets: ['latin'],
@@ -31,20 +30,13 @@ export const metadata: Metadata = {
   robots: "noindex, nofollow"
 };
 
-// Helper function to determine if we're in a development environment
-const isDevelopmentEnv = (): boolean => {
-  return process.env.NODE_ENV === 'development' || 
-         process.env.VERCEL_ENV === 'preview' || 
-         process.env.NEXT_PUBLIC_VERCEL_ENV === 'preview';
-}
-
 export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
   const session = await getServerSession(authOptions)
-  const showDevLinks = isDevelopmentEnv();
+  const isPreview = isPreviewEnv()
 
   return (
     <html lang="en">
@@ -66,7 +58,7 @@ export default async function RootLayout({
                     Imprint
                   </Link>
                 </li>
-                {showDevLinks && (
+                {isPreview && (
                   <>
                     <li className={layout.globalfooterLi}>
                       <Link href={'/accessibility'} className={layout.globalfooterLink}>

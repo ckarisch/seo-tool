@@ -4,9 +4,11 @@ import styles from './Header.shared.module.scss';
 import Image from "next/image";
 import Signin from "@/components/user/signin";
 import { useState } from "react";
+import { isPreviewEnv } from '@/utils/environment';
 
 export const PublicHeader = () => {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const isPreview = isPreviewEnv();
 
     const toggleMenu = () => {
         setIsMenuOpen(!isMenuOpen);
@@ -14,10 +16,10 @@ export const PublicHeader = () => {
 
     return (
         <div id={styles.header} className={styles.header}>
-        <nav>
-            <ul className={styles.headerList}>
-                <li className={styles.headerLi}>
-                    <Link href={'/'} className={[styles.headerLink, styles.logoLink].join(' ')}>
+            <nav>
+                <ul className={styles.headerList}>
+                    <li className={styles.headerLi}>
+                        <Link href={'/'} className={[styles.headerLink, styles.logoLink].join(' ')}>
                             <Image className={styles.logo} src={'/logo.svg'} alt="logo" width={150} height={30.5}></Image>
                         </Link>
                     </li>
@@ -36,16 +38,20 @@ export const PublicHeader = () => {
                                 SEO App
                             </Link>
                         </li>
-                        <li className={styles.headerLi}>
-                            <Link href={'/'} className={styles.headerLink}>
-                                Products
-                            </Link>
-                        </li>
-                        <li className={styles.headerLi}>
-                            <Link href={'/'} className={styles.headerLink}>
-                                Tools
-                            </Link>
-                        </li>
+                        {isPreview && (
+                            <>
+                                <li className={styles.headerLi}>
+                                    <Link href={'/'} className={styles.headerLink}>
+                                        Products
+                                    </Link>
+                                </li>
+                                <li className={styles.headerLi}>
+                                    <Link href={'/'} className={styles.headerLink}>
+                                        Tools
+                                    </Link>
+                                </li>
+                            </>
+                        )}
                         <li className={styles.headerLi}>
                             <Link href={'/pricing'} className={styles.headerLink}>
                                 Pricing
