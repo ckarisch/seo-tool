@@ -2,6 +2,8 @@ import { PrismaClient } from '@prisma/client'
 import { NextRequest, NextResponse } from 'next/server';
 import { adminOnly } from '@/apiComponents/security/adminOnly';
 
+export const dynamic = 'force-dynamic'
+
 const prisma = new PrismaClient();
 
 export const revalidate = 60;
