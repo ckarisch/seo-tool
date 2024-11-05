@@ -4,11 +4,13 @@ import styles from './Header.shared.module.scss';
 import Image from "next/image";
 import Signin from "@/components/user/signin";
 import { useState } from "react";
-import { isPreviewEnv } from '@/utils/environment';
 
-export const PublicHeader = () => {
+interface PublicHeaderProps {
+    isPreview: boolean;
+}
+
+export const PublicHeader = ({ isPreview }: PublicHeaderProps) => {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
-    const isPreview = isPreviewEnv();
 
     const toggleMenu = () => {
         setIsMenuOpen(!isMenuOpen);
@@ -23,8 +25,8 @@ export const PublicHeader = () => {
                             <Image className={styles.logo} src={'/logo.svg'} alt="logo" width={150} height={30.5}></Image>
                         </Link>
                     </li>
-                    <button 
-                        className={[styles.menuButton, isMenuOpen ? styles.menuOpen : ''].join(' ')} 
+                    <button
+                        className={[styles.menuButton, isMenuOpen ? styles.menuOpen : ''].join(' ')}
                         onClick={toggleMenu}
                         aria-label="Toggle menu"
                     >

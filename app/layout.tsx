@@ -8,7 +8,7 @@ import { authOptions } from "../lib/auth";
 import Section from "@/components/layout/section";
 import Link from "next/link";
 import { LogoIcon } from "@/icons/logoIcon";
-import { isPreviewEnv } from "@/utils/environment";
+import { isPreviewEnv } from "@/util/environment";
 
 const inter = Inter({
   subsets: ['latin'],

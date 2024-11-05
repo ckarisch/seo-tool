@@ -5,6 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import Section from "@/components/layout/section";
 import { PublicHeader } from '@/components/layout/Header/PublicHeader';
+import { isPreviewEnv } from "@/util/environment";
 
 export const metadata: Metadata = {
   title: "SEO Tool",
@@ -18,9 +19,10 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
 
+  const isPreview = isPreviewEnv()
   return (
     <div className={layout.layout}>
-      <PublicHeader />
+      <PublicHeader isPreview={isPreview} />
       {children}
     </div>
   );
