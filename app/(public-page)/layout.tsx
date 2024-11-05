@@ -4,7 +4,7 @@ import layout from "./layout.module.scss";
 import Link from "next/link";
 import Image from "next/image";
 import Section from "@/components/layout/section";
-import { PublicHeader } from "@/components/layout/Header/publicHeader";
+import { PublicHeader } from "@/components/layout/Header/PublicHeader";
 
 export const metadata: Metadata = {
   title: "SEO Tool",
