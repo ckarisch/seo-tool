@@ -11,7 +11,7 @@ import Signin from '@/components/user/signin';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import AdminDashboard from '@/components/admin/dashboard/adminDashboard';
-import { PublicHeader } from '@/components/layout/Header/PublicHeader';
+import AppHeader from '@/components/layout/Header/AppHeader';
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -60,7 +60,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
   return (
     <>
-      <PublicHeader />
+      <AppHeader />
       <main className={adminStyles.adminContainer}>
         <AdminDashboard >
           {children}
