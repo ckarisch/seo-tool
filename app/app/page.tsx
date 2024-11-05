@@ -66,7 +66,7 @@ export default function DashboardPage() {
       title: 'Settings',
       description: 'Configure your account settings and preferences.',
       icon: <Settings className={styles.cardIcon} />,
-      link: '/app/settings'
+      link: '/app/profile'
     }
   ];
 
