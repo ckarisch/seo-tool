@@ -1,73 +1,53 @@
 "use client";
 
-import { useRouter } from 'next/navigation';
 import styles from './addDomainForm.module.scss';
 import URLInput from '@/components/layout/input/URLinput';
 import { useState } from 'react';
+import { useDomainsStore } from '@/store/domains';
 
 interface AddDomainFormProps {
     onClose?: () => void;
 }
 
 export default function AddDomainForm({ onClose }: AddDomainFormProps) {
-    const router = useRouter();
     const [url, setUrl] = useState('');
     const [isUrlValid, setIsUrlValid] = useState(false);
     const [isError, setIsError] = useState(false);
 
-    const handleSubmit = async (event: any) => {
+    const addDomain = useDomainsStore(state => state.addDomain);
+
+    const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
         if (!isUrlValid) {
             setIsError(true);
-
             setTimeout(() => {
                 setIsError(false);
             }, 500);
             return false;
         }
 
+        const formData = new FormData(event.currentTarget);
         const data = {
-            name: event.target.name.value,
+            name: formData.get('name') as string,
             domainName: url,
+        };
+
+        const result = await addDomain(data);
+
+        if (!result.success) {
+            alert(result.error); // We'll replace this with banner notification
+            return;
         }
 
-        const JSONdata = JSON.stringify(data);
-        const endpoint = '/api/seo/domains/';
-
-        const options = {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSONdata,
-        }
-
-        const response = await fetch(endpoint, options);
-        const result = await response.json();
-        console.log("result", result);
-        switch (result.error) {
-            case undefined: break;
-            case 'domain_already_exists':
-                alert('This domain already exists.');
-                return;
-            default:
-                alert('Unknown error');
-                return;
-        }
-
-        alert('Saved');
-
-        event.target.name.value = '';
-        event.target.url.value = '';
-
+        // Clear form and close
+        (event.target as HTMLFormElement).reset();
+        setUrl('');
         if (onClose) {
             onClose();
         }
-
-        router.refresh();
     }
 
-    const handleInputChange = (event: any) => {
+    const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         setUrl(event.target.value);
     };
 
@@ -94,5 +74,5 @@ export default function AddDomainForm({ onClose }: AddDomainFormProps) {
                 <button type="submit">Add</button>
             </form>
         </div>
-    )
+    );
 }

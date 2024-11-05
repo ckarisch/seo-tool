@@ -8,7 +8,19 @@ import Link from "next/link";
 import DomainStatusContent from "./domainStatusContent";
 import Image from "next/image";
 
-export default function DomainSummary({ domain, dummyText }: { domain: Partial<Domain>, dummyText: boolean }) {
+interface DomainSummaryProps {
+  domain: Partial<Domain>;
+  dummyText: boolean;
+  onVerifyClick: (domain: string, verificationKey: string, onVerify: () => Promise<void>) => void;
+  onVerificationComplete: (success: boolean, message: string) => void;
+}
+
+export default function DomainSummary({ 
+  domain, 
+  dummyText, 
+  onVerifyClick,
+  onVerificationComplete 
+}: DomainSummaryProps) {
   return (
     <Link href={'/app/domains/' + domain.domainName}>
       <div className={styles.card}>
@@ -26,10 +38,10 @@ export default function DomainSummary({ domain, dummyText }: { domain: Partial<D
             }
           </div>
           <div className={styles.info}>
-            <div className={[styles.name, dummyText ? 'dummyText' : ''].join(' ')}>
+            <div className={[styles.name, dummyText ? styles.dummyText : ''].join(' ')}>
               {domain.name}
             </div>
-            <div className={[styles.domain, dummyText ? 'dummyText' : ''].join(' ')}>
+            <div className={[styles.domain, dummyText ? styles.dummyText : ''].join(' ')}>
               {domain.domainName}
             </div>
           </div>
@@ -53,7 +65,12 @@ export default function DomainSummary({ domain, dummyText }: { domain: Partial<D
         </div>
         <div className={styles.divider} />
         <div className={styles.content}>
-          <DomainStatusContent domain={domain} />
+          <DomainStatusContent 
+            domain={domain} 
+            onVerifyClick={onVerifyClick}
+            onVerificationComplete={onVerificationComplete}
+            dummyText={dummyText}
+          />
         </div>
       </div>
     </Link>

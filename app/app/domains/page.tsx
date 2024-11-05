@@ -1,3 +1,4 @@
+// domains/page.tsx
 "use client";
 
 import { useState, useRef } from 'react';
@@ -7,10 +8,37 @@ import AddDomainForm from './addDomainForm';
 import { Plus, X } from 'lucide-react';
 import Section from "@/components/layout/section";
 import Background from "@/components/layout/background";
+import { ConfirmDialog } from '@/components/layout/dialog/ConfirmDialog';
+import { Alert, AlertDescription } from '@/components/layout/alert/Alert';
+import { CheckCircle, AlertCircle } from 'lucide-react';
+
+interface VerificationDialogState {
+  isOpen: boolean;
+  domain: string;
+  verificationKey: string;
+  onVerify: () => Promise<void>;
+}
 
 export default function DomainsPage() {
   const [showAddForm, setShowAddForm] = useState(false);
   const formRef = useRef<HTMLDivElement>(null);
+  const [alert, setAlert] = useState<{ type: 'success' | 'error', message: string } | null>(null);
+  const [verificationDialog, setVerificationDialog] = useState<VerificationDialogState>({
+    isOpen: false,
+    domain: '',
+    verificationKey: '',
+    onVerify: async () => {}
+  });
+
+  // Method to be passed to DomainStatusContent
+  const openVerificationDialog = (domain: string, verificationKey: string, onVerify: () => Promise<void>) => {
+    setVerificationDialog({
+      isOpen: true,
+      domain,
+      verificationKey,
+      onVerify
+    });
+  };
 
   const handleAddDomainClick = () => {
     setShowAddForm(!showAddForm);
@@ -19,6 +47,18 @@ export default function DomainsPage() {
         formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
       }, 100);
     }
+  };
+
+  const handleVerificationComplete = async (success: boolean, message: string) => {
+    setAlert({
+      type: success ? 'success' : 'error',
+      message
+    });
+
+    // Clear alert after 5 seconds
+    setTimeout(() => {
+      setAlert(null);
+    }, 5000);
   };
 
   return (
@@ -38,6 +78,17 @@ export default function DomainsPage() {
 
       <Section>
         <div className={styles.domainsContent}>
+          {alert && (
+            <Alert variant={alert.type === 'success' ? 'success' : 'destructive'}>
+              {alert.type === 'success' ? (
+                <CheckCircle className="h-4 w-4" />
+              ) : (
+                <AlertCircle className="h-4 w-4" />
+              )}
+              <AlertDescription>{alert.message}</AlertDescription>
+            </Alert>
+          )}
+
           <div className={styles.domainsHeader}>
             <h2 className={styles.domainsTitle}>Your Domains</h2>
             <button
@@ -49,7 +100,7 @@ export default function DomainsPage() {
             </button>
           </div>
           
-          <DomainList />
+          <DomainList onVerifyClick={openVerificationDialog} onVerificationComplete={handleVerificationComplete} />
         </div>
       </Section>
 
@@ -62,6 +113,27 @@ export default function DomainsPage() {
           </Section>
         </Background>
       )}
+
+      <ConfirmDialog
+        isOpen={verificationDialog.isOpen}
+        title="Verify Domain Ownership"
+        description={
+          `Please add the following TXT record to your domain's DNS settings:
+          
+          Record type: TXT
+          Host: @ or empty
+          Value: ${verificationDialog.verificationKey}
+          
+          After adding the DNS record, click 'Verify' to confirm ownership. Note that DNS changes may take up to 48 hours to propagate.`
+        }
+        confirmLabel="Verify"
+        cancelLabel="Cancel"
+        onConfirm={async () => {
+          await verificationDialog.onVerify();
+          setVerificationDialog(prev => ({ ...prev, isOpen: false }));
+        }}
+        onCancel={() => setVerificationDialog(prev => ({ ...prev, isOpen: false }))}
+      />
     </main>
   );
 }

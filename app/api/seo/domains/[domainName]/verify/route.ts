@@ -42,16 +42,23 @@ export async function GET(
     const dnsRecords = await performDnsLookup(domain.domainName, { txtOnly: true });
     console.log(JSON.stringify(dnsRecords, null, 2));
 
+    let isVerified = false;
+
     for (const entry of dnsRecords.txt) {
       if (entry.includes(domain.domainVerificationKey)) {
         await prisma.domain.update({ where: { id: domain.id }, data: { domainVerified: true } })
+        isVerified = true;
       }
     }
     const result: Partial<Domain> = {
       id: domain.id,
       domainName: domain.name,
-      domainVerified: true
+      domainVerified: isVerified
     };
+
+    if (!isVerified) {
+      return Response.json(result, { status: 500 })
+    }
 
     return Response.json(result, { status: 200 })
 
