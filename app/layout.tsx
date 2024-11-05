@@ -31,13 +31,21 @@ export const metadata: Metadata = {
   robots: "noindex, nofollow"
 };
 
+// Helper function to determine if we're in a development environment
+const isDevelopmentEnv = (): boolean => {
+  return process.env.NODE_ENV === 'development' || 
+         process.env.VERCEL_ENV === 'preview' || 
+         process.env.NEXT_PUBLIC_VERCEL_ENV === 'preview';
+}
+
 export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-
   const session = await getServerSession(authOptions)
+  const showDevLinks = isDevelopmentEnv();
+
   return (
     <html lang="en">
       <body className={[inter.className, bricolage.variable, inter.variable, layout.body].join(' ')}>
@@ -58,16 +66,20 @@ export default async function RootLayout({
                     Imprint
                   </Link>
                 </li>
-                <li className={layout.globalfooterLi}>
-                  <Link href={'/accessibility'} className={layout.globalfooterLink}>
-                    Accessibility
-                  </Link>
-                </li>
-                <li className={layout.globalfooterLi}>
-                  <Link href={'/privacy'} className={layout.globalfooterLink}>
-                    Data Privacy
-                  </Link>
-                </li>
+                {showDevLinks && (
+                  <>
+                    <li className={layout.globalfooterLi}>
+                      <Link href={'/accessibility'} className={layout.globalfooterLink}>
+                        Accessibility
+                      </Link>
+                    </li>
+                    <li className={layout.globalfooterLi}>
+                      <Link href={'/privacy'} className={layout.globalfooterLink}>
+                        Data Privacy
+                      </Link>
+                    </li>
+                  </>
+                )}
               </ul>
             </nav>
           </Section>
