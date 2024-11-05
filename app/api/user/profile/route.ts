@@ -3,13 +3,15 @@ import { getServerSession } from "next-auth/next"
 import { prisma } from "@/lib/prisma"
 import { authOptions } from "@/lib/auth"
 
+export const dynamic = 'force-dynamic'
+
 export async function GET() {
   try {
     const session = await getServerSession(authOptions)
     
     if (!session?.user?.email) {
-      return new NextResponse(
-        JSON.stringify({ error: 'Unauthorized' }),
+      return NextResponse.json(
+        { error: 'Unauthorized' },
         { status: 401 }
       )
     }
@@ -34,17 +36,18 @@ export async function GET() {
     })
 
     if (!user) {
-      return new NextResponse(
-        JSON.stringify({ error: 'User not found' }),
+      return NextResponse.json(
+        { error: 'User not found' },
         { status: 404 }
       )
     }
 
-    return new NextResponse(JSON.stringify(user))
+    return NextResponse.json(user)
+    
   } catch (error) {
     console.error('Profile fetch error:', error)
-    return new NextResponse(
-      JSON.stringify({ error: 'Internal server error' }),
+    return NextResponse.json(
+      { error: 'Internal server error' },
       { status: 500 }
     )
   }
