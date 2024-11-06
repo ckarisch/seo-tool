@@ -1,8 +1,9 @@
+import { verificationSuffix } from "@/config/config";
 import { RandomStringGenerator } from "./stringGenerator";
 
 export class VerificationCodeGenerator {
   static generate(): string {
-    return 'fuz-seo-tool-' + RandomStringGenerator.generate({ length: 16 }) +
+    return verificationSuffix + RandomStringGenerator.generate({ length: 16 }) +
       '-' +
       RandomStringGenerator.generate({ length: 16 });
   }

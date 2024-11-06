@@ -4,3 +4,5 @@ export const visibleDateFormat = 'dd/MM/yyyy HH:mm'; // 'dd/MM/yyyy HH:mm' is UK
  
 export const companyEmail = 'office@rankidang.com';
 export const privacyEmail = 'privacy@rankidang.com';
+
+export const verificationSuffix = 'rankidang-';
