@@ -28,6 +28,8 @@ interface ConsentUpdateDetail {
   analytics: boolean;
 }
 
+type ConsentPreferences = ConsentUpdateDetail;
+
 // Custom event type for TypeScript
 declare global {
   interface WindowEventMap {
@@ -97,7 +99,7 @@ export const CookieConsent = () => {
   const [showDetails, setShowDetails] = useState(false);
   const [expandedCategories, setExpandedCategories] = useState<string[]>([]);
   const {hasConsent, loading} = useCookieConsent();
-  const [preferences, setPreferences] = useState<Record<string, boolean>>({
+  const [preferences, setPreferences] = useState<ConsentPreferences>({
     necessary: true,
     functional: false,
     analytics: false
@@ -107,14 +109,13 @@ export const CookieConsent = () => {
 
   useEffect(() => {
     if (status === 'loading' || loading || hasConsent) return;
-    // Rest of your code
   }, [status, hasConsent, loading]);
 
   useEffect(() => {
     const savedPreferences = localStorage.getItem('cookieConsent');
     if (savedPreferences) {
       try {
-        const parsed = JSON.parse(savedPreferences);
+        const parsed = JSON.parse(savedPreferences) as ConsentPreferences;
         setIsOpen(false);
         setPreferences(parsed);
       } catch (error) {
@@ -123,14 +124,14 @@ export const CookieConsent = () => {
     }
   }, []);
 
-  const emitConsentUpdate = (selectedPreferences: Record<string, boolean>) => {
+  const emitConsentUpdate = (selectedPreferences: ConsentPreferences) => {
     const event = new CustomEvent<ConsentUpdateDetail>(COOKIE_CONSENT_EVENT, {
-      detail: selectedPreferences
+      detail: selectedPreferences,
     });
     window.dispatchEvent(event);
   };
 
-  const toggleCategory = (categoryId: string) => {
+  const toggleCategory = (categoryId: keyof ConsentPreferences) => {
     if (categoryId === 'necessary') return;
     setPreferences(prev => ({
       ...prev,
@@ -147,9 +148,11 @@ export const CookieConsent = () => {
   };
 
   const handleAcceptAll = () => {
-    const allAccepted = Object.fromEntries(
-      cookieCategories.map(category => [category.id, true])
-    );
+    const allAccepted: ConsentPreferences = {
+      necessary: true,
+      functional: true,
+      analytics: true
+    };
     setPreferences(allAccepted);
     savePreferences(allAccepted);
     window.location.reload();
@@ -160,8 +163,8 @@ export const CookieConsent = () => {
     window.location.reload();
   };
 
-  const savePreferences = (selectedPreferences: Record<string, boolean>) => {
-    const finalPreferences = {
+  const savePreferences = (selectedPreferences: ConsentPreferences) => {
+    const finalPreferences: ConsentPreferences = {
       ...selectedPreferences,
       necessary: true
     };
@@ -175,8 +178,6 @@ export const CookieConsent = () => {
       window.localStorage.removeItem('va-firstview');
       window.localStorage.removeItem('va-sessionid');
     }
-
-    // resetCookieConsent();
   };
 
   if (!isOpen || hasConsent || loading) return null;
@@ -220,8 +221,8 @@ export const CookieConsent = () => {
                       <label className={styles.categoryLabel}>
                         <input
                           type="checkbox"
-                          checked={preferences[category.id]}
-                          onChange={() => toggleCategory(category.id)}
+                          checked={preferences[category.id as keyof ConsentPreferences]}
+                          onChange={() => toggleCategory(category.id as keyof ConsentPreferences)}
                           disabled={category.required}
                           aria-describedby={`${category.id}-description`}
                         />
