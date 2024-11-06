@@ -1,2 +1,5 @@
 @import "@/app/variables";
 
+.main {
+    min-height: 100vh; //scrollbar should be visible
+}

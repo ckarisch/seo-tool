@@ -7,6 +7,8 @@ import Section from "@/components/layout/section";
 import Background from "@/components/layout/background";
 import Card from "@/components/layout/card";
 import { AnimatedSecureMailto } from '../security/AnimatedSecureMailto';
+import { Mail } from 'lucide-react';
+import { companyEmail } from '@/config/config';
 
 interface ContactItemProps {
   title: string;
@@ -50,14 +52,14 @@ const defaultCompanyInfo: CompanyInfo = {
   },
   contact: {
     phone: "+43 681 8111 9035",
-    email: "seo-tool@formundzeichen.at"
+    email: companyEmail
   },
   // legal: [{
   //   director: "Roman Pendl, MA",
-  //   email: "roman@formundzeichen.at",
+  //   email: companyEmail,
   // }, {
   //   director: "Bernhard Karisch, MA",
-  //   email: "bernhard@formundzeichen.at"
+  //   email: companyEmail
   // }],
   regulatory: {
     name: "Bezirkshauptmannschaft Graz"
@@ -124,12 +126,14 @@ export default function ImprintPage({
                   </ContactItem>
                   <ContactItem title="Contact">
                     Phone: <SecurePhoneReveal phoneNumber={companyInfo.contact.phone} /><br />
-                    Email: <AnimatedSecureMailto
+                    Email: 
+                    <AnimatedSecureMailto
                       email={companyInfo.contact.email}
+                      subject="Company email address"
                       variant="highlight"
-                      description="Contact email address for Form und Zeichen Development GmbH"
                       showIcon={true}
-                      requireClick={true}
+                      className={styles.emailLink}
+                      description="Contact email address for Form und Zeichen Development GmbH"
                       ariaLabel="Click to reveal company email address"
                     />
                   </ContactItem>

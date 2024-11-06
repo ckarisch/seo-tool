@@ -6,6 +6,8 @@ import Section from "@/components/layout/section";
 import Background from "@/components/layout/background";
 import { Shield, Database, Mail, Phone, Building, Lock, Globe, Server } from 'lucide-react';
 import AnimatedSecureMailto from '@/components/security/AnimatedSecureMailto';
+import SecurePhoneReveal from '@/components/security/SecurePhoneReveal';
+import { companyEmail, privacyEmail } from '@/config/config';
 
 export default function PrivacyPage() {
   return (
@@ -34,20 +36,25 @@ export default function PrivacyPage() {
               <div className={styles.contactGrid}>
                 <div className={styles.contactItem}>
                   <Building className={styles.contactIcon} />
-                  <span>Your Address<br/>Austria</span>
+                  <span>Villefortgasse 11 <br />8010 Graz <br />Austria</span>
                 </div>
                 <div className={styles.contactItem}>
                   <Mail className={styles.contactIcon} />
-                  <AnimatedSecureMailto
-                    email="office@formundzeichen.at"
-                    subject="Privacy Policy Inquiry"
-                    variant="underline"
-                    description="Contact email for privacy related inquiries"
-                  />
+                  <div className={styles.contactItem}>
+                    <AnimatedSecureMailto
+                      email={companyEmail}
+                      subject="Privacy Policy Inquiry"
+                      variant="highlight"
+                      showIcon={false}
+                      className={styles.emailLink}
+                      description="Contact email for privacy related inquiries"
+                      inline
+                    />
+                  </div>
                 </div>
                 <div className={styles.contactItem}>
                   <Phone className={styles.contactIcon} />
-                  <span>+43 YOUR-PHONE</span>
+                  <SecurePhoneReveal phoneNumber={'+43 681 8111 9035'} />
                 </div>
               </div>
             </div>
@@ -171,12 +178,17 @@ export default function PrivacyPage() {
             <div className={styles.contactInfo}>
               <div className={styles.contactItem}>
                 <Mail className={styles.contactIcon} />
-                <AnimatedSecureMailto
-                  email="privacy@formundzeichen.at"
-                  subject="Privacy Rights Request"
-                  variant="underline"
-                  description="Contact email for privacy rights requests"
-                />
+                <div className={styles.contactItem}>
+                  <AnimatedSecureMailto
+                    email={privacyEmail}
+                    subject="Privacy Rights Request"
+                    variant="highlight"
+                    showIcon={false}
+                    className={styles.emailLink}
+                    description="Contact email for privacy rights requests"
+                    inline
+                  />
+                </div>
               </div>
             </div>
           </div>

@@ -15,6 +15,7 @@ interface AnimatedSecureMailtoProps {
   requireClick?: boolean;
   ariaLabel?: string;
   description?: string;
+  inline?: boolean;
 }
 
 export const AnimatedSecureMailto: React.FC<AnimatedSecureMailtoProps> = ({
@@ -27,7 +28,8 @@ export const AnimatedSecureMailto: React.FC<AnimatedSecureMailtoProps> = ({
   showIcon = true,
   requireClick = true,
   ariaLabel,
-  description
+  description,
+  inline
 }) => {
   const [isClient, setIsClient] = useState(false);
   const [isRevealed, setIsRevealed] = useState(!requireClick);
@@ -221,7 +223,8 @@ export const AnimatedSecureMailto: React.FC<AnimatedSecureMailtoProps> = ({
   if (!isClient) return null;
 
   return (
-    <div className={styles.container}>
+    <div className={styles.container}
+    data-inline={inline}>
       {description && (
         <span className={styles.srOnly} id="emailDescription">
           {description}

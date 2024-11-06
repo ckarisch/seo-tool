@@ -56,8 +56,13 @@ export default async function RootLayout({
                   </Link>
                 </li>
                 <li className={layout.globalfooterLi}>
-                  <Link href={'/imprint'} className={layout.globalfooterLink}>
-                    Imprint
+                  <Link href={'/privacy'} className={layout.globalfooterLink}>
+                    Data Privacy
+                  </Link>
+                </li>
+                <li className={layout.globalfooterLi}>
+                  <Link href={'/terms'} className={layout.globalfooterLink}>
+                    Terms of Service
                   </Link>
                 </li>
                 {isPreview && (
@@ -67,13 +72,13 @@ export default async function RootLayout({
                         Accessibility
                       </Link>
                     </li>
-                    <li className={layout.globalfooterLi}>
-                      <Link href={'/privacy'} className={layout.globalfooterLink}>
-                        Data Privacy
-                      </Link>
-                    </li>
                   </>
                 )}
+                <li className={layout.globalfooterLi}>
+                  <Link href={'/imprint'} className={layout.globalfooterLink}>
+                    Imprint
+                  </Link>
+                </li>
               </ul>
             </nav>
           </Section>
