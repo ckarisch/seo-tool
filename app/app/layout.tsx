@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import layout from "./layout.module.scss";
 import AppHeader from "../../components/layout/Header/AppHeader";
+import SessionCheck from "./sessionCheck";
 
 export const metadata: Metadata = {
   title: "SEO App",
@@ -15,6 +16,7 @@ export default function RootLayout({
 }) {
   return (
     <>
+      <SessionCheck />
       <AppHeader />
       <main className={layout.main}>
         {children}
