@@ -95,6 +95,7 @@ model NotificationContact {
 
 enum ImplementationStatus {
   NOT_IMPLEMENTED
+  TEST
   DEVELOPMENT
   PRODUCTION
 }

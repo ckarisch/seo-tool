@@ -6,6 +6,10 @@ const prisma = new PrismaClient();
 const isDevelopment = process.env.NODE_ENV?.toLowerCase() === 'development'
     || process.env.NODE_ENV?.toLowerCase() === 'local';
 
+const isTest = isDevelopment && (
+    process.env.NEXT_PUBLIC_TEST_MODE === 'true'
+)
+
 interface PageCheckParams {
     data: string;               // HTML content from axios
     domainId: string;          // ID of the domain being checked
@@ -68,9 +72,17 @@ async function logError(params: {
     if (!errorType) return;
 
     // Check implementation status based on environment
-    if (isDevelopment) {
+    if (isTest) {
+        // In test mode, accept TEST, DEVELOPMENT, and PRODUCTION implementations
+        if (errorType.implementation !== 'TEST' &&
+            errorType.implementation !== 'DEVELOPMENT' &&
+            errorType.implementation !== 'PRODUCTION') {
+            return;
+        }
+    } else if (isDevelopment) {
         // In development, accept both DEVELOPMENT and PRODUCTION implementations
-        if (errorType.implementation !== 'DEVELOPMENT' && errorType.implementation !== 'PRODUCTION') {
+        if (errorType.implementation !== 'DEVELOPMENT' &&
+            errorType.implementation !== 'PRODUCTION') {
             return;
         }
     } else {

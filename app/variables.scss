@@ -8,7 +8,8 @@ $main-dark: #2f5c85; // Maintaining 4.5:1 contrast with white
 $main-light: #e0f2fe;
 
 // Text Colors
-$color: #111827; // Darker for better contrast
+$text-primary: #111827; // Base text color
+$color: #111827; // Darker for better contrast (keeping for backwards compatibility)
 $text-secondary: #4b5563; // Adjusted for 4.5:1 contrast ratio
 
 // Background Colors
@@ -40,7 +41,7 @@ $button-secondary: $text-secondary;
 /* Color Contrast Ratios (against white background):
 main: 7.5:1
 main-dark: 4.6:1 (meets WCAG 2.1 AA for all text sizes)
-color: 15.8:1
+text-primary: 15.8:1
 text-secondary: 7:1
 error: 6.5:1
 warning: 4.8:1

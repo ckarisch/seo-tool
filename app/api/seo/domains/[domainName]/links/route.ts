@@ -1,4 +1,3 @@
-
 import { authOptions } from '@/lib/auth';
 import { PrismaClient } from '@prisma/client'
 import { getServerSession } from 'next-auth';
@@ -23,10 +22,28 @@ export async function GET(
     return Response.json({ error: 'domain not found' }, { status: 404 })
   }
 
-  const links = await prisma.internalLink.findMany({ where: { domainId: domain.id } })
+  const links = await prisma.internalLink.findMany({
+    where: { domainId: domain.id },
+    include: {
+      errorLogs: {
+        include: {
+          errorType: true
+        }
+      }
+    }
+  });
+  
   const externalLinks = await prisma.externalLink.findMany({ where: { domainId: domain.id } })
 
-  return Response.json({ links, externalLinks, crawlingStatus: domain.crawlStatus, lastErrorTime: domain.lastErrorTime, lastErrorType: domain.lastErrorType, lastErrorMessage: domain.lastErrorMessage, loaded: true }, { status: 200 })
+  return Response.json({ 
+    links, 
+    externalLinks, 
+    crawlingStatus: domain.crawlStatus, 
+    lastErrorTime: domain.lastErrorTime, 
+    lastErrorType: domain.lastErrorType, 
+    lastErrorMessage: domain.lastErrorMessage, 
+    loaded: true 
+  }, { status: 200 })
 }
 
 export async function DELETE(

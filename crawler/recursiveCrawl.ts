@@ -1,9 +1,10 @@
 import { analyzeLink } from "@/apiComponents/crawler/linkTools";
 import { LogEntry, Logger } from "@/apiComponents/dev/logger";
-import { checkRequests, checkTimeout, createPushLinkInput, getStrongestErrorCode, linkType, pushAllLinks, pushExternalLink } from "@/app/api/seo/domains/[domainName]/crawl/crawlLinkHelper";
+import { checkRequests, checkTimeout, createPushLinkInput, getStrongestErrorCode, linkType, pushAllLinks, pushExternalLink, pushLink } from "@/app/api/seo/domains/[domainName]/crawl/crawlLinkHelper";
 import axios, { AxiosError } from "axios";
 import { load } from "cheerio";
 import runErrorChecks from "./errorChecker";
+import { DomainCrawl, InternalLink } from "@prisma/client";
 
 export interface recursiveCrawlResponse {
     timeout: boolean,
@@ -24,6 +25,8 @@ export async function* recursiveCrawl(
     maxRequests: number,
     url: string,
     domainId: string,
+    domainCrawl: DomainCrawl,
+    internalLink: InternalLink,
     pushLinksToDomain: boolean,
     requestStartTime: number,
     subLogger: Logger): AsyncGenerator<LogEntry, recursiveCrawlResponse, unknown> {
@@ -119,12 +122,21 @@ export async function* recursiveCrawl(
 
                             try {
                                 timePassed = (new Date().getTime() - crawlStartTime);
+
+                                requestStartTime = new Date().getTime();
                                 data = (await axios.get(requestUrl, { timeout: maxCrawlTime - timePassed })).data;
+                                requestTime = new Date().getTime() - requestStartTime;
+                                let internalLinkId = undefined;
+
+                                if (pushLinksToDomain && domainId) {
+                                    const internalLink = await pushLink(prisma, '', normalizedLink, false, domainId, linkType.page, requestTime, null);
+                                    internalLinkId = internalLink.id;
+                                }
                                 await runErrorChecks({
                                     data,
                                     domainId,
-                                    internalLinkId: undefined,
-                                    domainCrawlId: undefined,
+                                    internalLinkId,
+                                    domainCrawlId: domainCrawl.id,
                                     url: requestUrl
                                 });
                             }
@@ -154,16 +166,15 @@ export async function* recursiveCrawl(
                                     throw error;
                                 }
                             }
-                            requestTime = new Date().getTime() - requestStartTime;
                             yield* subLogger.log(`request time (${requestUrl}): ${new Date().getTime() - requestStartTime}`);
 
                             const strongestErrorCode = getStrongestErrorCode(errors);
                             // await pushLink(prisma, links[i].foundOnPath, normalizedLink, warningDoubleSlash, domain.id, linkType.page, requestTime, strongestErrorCode);
 
-                            if (pushLinksToDomain && domainId) {
-                                const pushLinkInput = createPushLinkInput(links[i].foundOnPath, normalizedLink, warningDoubleSlash, domainId, linkType.page, requestTime, strongestErrorCode);
-                                pushLinkInputs.push(pushLinkInput);
-                            }
+                            // if (pushLinksToDomain && domainId) {
+                            //     const pushLinkInput = createPushLinkInput(links[i].foundOnPath, normalizedLink, warningDoubleSlash, domainId, linkType.page, requestTime, strongestErrorCode);
+                            //     pushLinkInputs.push(pushLinkInput);
+                            // }
 
                             if (!data) continue;
                             const $ = load(data);

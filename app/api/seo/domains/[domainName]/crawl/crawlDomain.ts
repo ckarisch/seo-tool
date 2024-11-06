@@ -182,7 +182,7 @@ export async function* crawlDomain(
 
 
         // links.push({ path: '/', foundOnPath: '/' });
-        await pushLink(prisma, '', analyzedFinalUrl.normalizedLink, false, domain.id, linkType.page, requestTime, null);
+        const internalLink = await pushLink(prisma, '', analyzedFinalUrl.normalizedLink, false, domain.id, linkType.page, requestTime, null);
 
         if (!followLinks) {
             await prisma.domainCrawl.update({
@@ -221,6 +221,8 @@ export async function* crawlDomain(
             maxRequests,
             extractedDomain,
             domain.id,
+            domainCrawl,
+            internalLink,
             true,
             requestStartTime, logger);
 

@@ -3,7 +3,7 @@
 .sectionContainer {
   display: flex;
   flex-direction: column;
-  gap: 24px; // This ensures consistent spacing between sections
+  gap: 24px;
 }
 
 .links {
@@ -47,20 +47,61 @@
   align-items: center;
   transition: background-color 0.2s ease;
 
-  > div:first-child {
+  &:hover {
+    background-color: $background-light;
+  }
+}
+
+.linkHeadingMain {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  overflow: hidden;
+
+  .path {
     font-weight: 500;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
+}
 
-  > div:not(:first-child) {
-    color: $text-secondary;
-    font-size: 0.9rem;
+.linkHeading > div:not(:first-child) {
+  color: $text-secondary;
+  font-size: 0.9rem;
+}
+
+.severityBadge {
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: lowercase;
+  flex-shrink: 0;
+
+  &.critical {
+    background: $error;
+    color: white;
   }
 
-  &:hover {
-    background-color: $background-light;
+  &.high {
+    background: rgba($error, 0.8);
+    color: white;
+  }
+
+  &.medium {
+    background: $warning;
+    color: white;
+  }
+
+  &.low {
+    background: rgba($warning, 0.5);
+    color: $text-primary;
+  }
+
+  &.info {
+    background: $background-light;
+    color: $text-secondary;
   }
 }
 
@@ -73,7 +114,8 @@
 
   &.visible {
     padding: 16px;
-    max-height: 500px;
+    max-height: 800px; // Increase if needed
+    overflow-y: auto; // Enable vertical scrolling if content is too long
   }
 
   > div {
@@ -91,5 +133,81 @@
       color: $text-secondary;
       min-width: 100px;
     }
+  }
+}
+
+.errorLogsContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+  margin-top: 8px;
+
+  > strong {
+    color: $text-secondary;
+    margin-bottom: 8px;
+  }
+}
+
+.errorLog {
+  background: white;
+  border-radius: 8px;
+  border: 1px solid rgba($error, 0.1);
+  overflow: hidden;
+}
+
+.errorTypeHeader {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  background: rgba($error, 0.03);
+  border-bottom: 1px solid rgba($error, 0.1);
+}
+
+.errorCode {
+  font-family: monospace;
+  font-size: 0.9rem;
+  color: $text-secondary;
+}
+
+.errorDetails {
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-width: 100%; // Ensure container doesn't overflow
+  overflow: hidden; // Hide any overflow
+
+  > div {
+    display: flex;
+    gap: 8px;
+    align-items: flex-start;
+    width: 100%; // Take full width
+    overflow: hidden; // Hide overflow
+
+    strong {
+      color: $text-secondary;
+      min-width: 120px;
+      flex-shrink: 0; // Prevent label from shrinking
+    }
+  }
+}
+
+.metadata {
+  flex-direction: column !important;
+  width: 100%; // Ensure it takes full width of parent
+
+  pre {
+    background: $background-light;
+    padding: 8px;
+    border-radius: 4px;
+    font-size: 0.85rem;
+    margin: 4px 0;
+    overflow: auto; // Enable scrolling
+    max-height: 200px; // Limit vertical height
+    max-width: 100%; // Prevent horizontal overflow
+    word-wrap: break-word; // Break long words
+    white-space: pre-wrap; // Preserve whitespace but wrap text
   }
 }
