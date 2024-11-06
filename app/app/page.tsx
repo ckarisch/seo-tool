@@ -72,7 +72,7 @@ export default function DashboardPage() {
 
   return (
     <main>
-      <Background backgroundImage="" backgroundStyle={'mainColor'}>
+      <Background backgroundImage="" backgroundStyle={'mainDark'}>
         <Section>
           <div className={styles.heroContainer}>
             <h1 className={styles.title}>

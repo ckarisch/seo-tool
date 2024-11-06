@@ -63,10 +63,24 @@ model User {
   image         String?
   accounts      Account[]
   sessions      Session[]
-  createdAt     DateTime? @default(now())
-  updatedAt     DateTime? @updatedAt
+  createdAt     DateTime?      @default(now())
+  updatedAt     DateTime?      @updatedAt
+  activities    UserActivity[]
 
   @@map("user")
+}
+
+model UserActivity {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String   @db.ObjectId
+  type      String // LOGIN, LOGIN_FAILED, OAUTH_LOGIN, etc.
+  provider  String? // For OAuth logins
+  ipAddress String
+  userAgent String
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@index([userId])
 }
 
 model NotificationContact {

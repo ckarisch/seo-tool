@@ -1,0 +1,365 @@
+@import "@/app/variables";
+
+.overlay {
+  position: fixed;
+  inset: 0; // Covers the entire viewport
+  background-color: rgba(0, 0, 0, 0.7); // Increased opacity for better contrast
+  z-index: 1000;
+  display: flex;
+  justify-content: center;
+  align-items: center; // Center vertically for desktop
+  padding: 20px;
+
+  @media (max-width: 768px) {
+    align-items: flex-end; // Bottom alignment for mobile
+    padding: 0; // Remove padding on mobile
+  }
+}
+
+.container {
+  background-color: $white;
+  border-radius: $border-radius;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  max-width: 800px;
+  max-height: 80vh; // Reduced from 90vh for better usability
+  overflow-y: auto;
+  position: relative; // For scroll shadows
+
+  @media (max-width: 768px) {
+    max-height: 85vh;
+    border-radius: $border-radius $border-radius 0 0; // Rounded corners only at top
+  }
+
+  // Scroll shadows for better visual hierarchy
+  &::before,
+  &::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 20px;
+    z-index: 1;
+    pointer-events: none;
+  }
+
+  &::before {
+    top: 0;
+    background: linear-gradient($white 0%, rgba($white, 0) 100%);
+  }
+
+  &::after {
+    bottom: 0;
+    background: linear-gradient(rgba($white, 0) 0%, $white 100%);
+  }
+}
+
+.header {
+  position: sticky;
+  top: 0;
+  background-color: $white;
+  padding: 20px;
+  border-bottom: 1px solid rgba($main-dark, 0.1);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  z-index: 2; // Above scroll shadows
+
+  @media (max-width: 768px) {
+    padding: 16px;
+  }
+}
+
+.titleContainer {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  .icon {
+    color: $main-dark;
+    width: 24px;
+    height: 24px;
+    flex-shrink: 0;
+  }
+
+  h2 {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 500;
+    color: $color;
+
+    @media (max-width: 768px) {
+      font-size: 1.25rem;
+    }
+  }
+}
+
+.detailsToggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: none;
+  border: 2px solid $main-dark; // Enhanced for better visibility
+  color: $main-dark;
+  cursor: pointer;
+  font-size: 0.9rem;
+  padding: 8px 12px;
+  border-radius: $border-radius;
+  transition: all 0.2s;
+  min-width: 120px; // Ensure consistent button width
+  justify-content: center;
+
+  &:hover,
+  &:focus-visible {
+    background-color: rgba($main-dark, 0.1);
+  }
+
+  &:focus-visible {
+    outline: 2px solid $main-dark;
+    outline-offset: 2px;
+  }
+
+  @media (max-width: 768px) {
+    min-width: auto;
+    padding: 6px 10px;
+  }
+}
+
+.content {
+  padding: 20px;
+  position: relative;
+
+  @media (max-width: 768px) {
+    padding: 16px;
+  }
+
+  p {
+    margin: 0 0 20px 0;
+    line-height: 1.6;
+    color: $text-secondary;
+    font-size: 1rem;
+
+    @media (max-width: 768px) {
+      font-size: 0.95rem;
+    }
+
+    a {
+      color: $main-dark;
+      text-decoration: underline; // Better accessibility
+      font-weight: 500;
+
+      &:hover,
+      &:focus-visible {
+        text-decoration: none;
+      }
+
+      &:focus-visible {
+        outline: 2px solid $main-dark;
+        outline-offset: 2px;
+      }
+    }
+  }
+}
+
+.categories {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.category {
+  border: 1px solid rgba($main-dark, 0.1);
+  border-radius: $border-radius;
+  overflow: hidden;
+  transition: border-color 0.2s;
+
+  &:hover {
+    border-color: rgba($main-dark, 0.3);
+  }
+}
+
+.categoryHeader {
+  padding: 16px;
+  background-color: $background-light;
+}
+
+.categoryInfo {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.categoryLabel {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  flex: 1;
+
+  input[type="checkbox"] {
+    width: 20px;
+    height: 20px;
+    margin: 0;
+    cursor: pointer;
+    border: 2px solid $main-dark;
+    border-radius: 4px;
+
+    &:disabled {
+      cursor: not-allowed;
+      opacity: 0.7;
+    }
+
+    &:focus-visible {
+      outline: 2px solid $main-dark;
+      outline-offset: 2px;
+    }
+  }
+}
+
+.categoryTitle {
+  font-weight: 500;
+  color: $color;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.requiredBadge {
+  background-color: rgba($main-dark, 0.1);
+  color: $main-dark;
+  font-size: 0.75rem;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-weight: 600;
+}
+
+.expandButton {
+  background: none;
+  border: none;
+  color: $main-dark;
+  cursor: pointer;
+  padding: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: background-color 0.2s;
+  flex-shrink: 0;
+
+  &:hover,
+  &:focus-visible {
+    background-color: rgba($main-dark, 0.1);
+  }
+
+  &:focus-visible {
+    outline: 2px solid $main-dark;
+    outline-offset: 2px;
+  }
+}
+
+.categoryDescription {
+  margin: 0;
+  font-size: 0.9rem;
+  color: $text-secondary;
+  line-height: 1.5;
+}
+
+.cookieDetails {
+  padding: 16px;
+  background-color: $white;
+  overflow-x: auto;
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+    min-width: 600px; // Ensure table doesn't get too cramped
+
+    th,
+    td {
+      padding: 12px 8px;
+      text-align: left;
+      border-bottom: 1px solid rgba($main-dark, 0.1);
+      line-height: 1.4;
+    }
+
+    th {
+      font-weight: 600;
+      color: $color;
+      background-color: $background-light;
+      position: sticky;
+      top: 0;
+    }
+
+    td {
+      color: $text-secondary;
+      word-break: break-word;
+    }
+
+    tr:hover td {
+      background-color: rgba($main-dark, 0.02);
+    }
+  }
+}
+
+.actions {
+  position: sticky;
+  bottom: 0;
+  background-color: $white;
+  padding: 20px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  border-top: 1px solid rgba($main-dark, 0.1);
+  z-index: 2; // Above scroll shadows
+
+  @media (max-width: 768px) {
+    padding: 16px;
+    flex-direction: column;
+  }
+}
+
+.overlay button {
+  padding: 12px 24px;
+  border-radius: $border-radius;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 1rem;
+  min-height: 48px; // Better touch targets
+
+  &:focus-visible {
+    outline: 2px solid $main-dark;
+    outline-offset: 2px;
+  }
+
+  @media (max-width: 768px) {
+    width: 100%;
+    min-height: 44px;
+  }
+}
+
+.acceptSelected {
+  background-color: $background-light;
+  border: 2px solid $main-dark;
+  color: $main-dark;
+
+  &:hover,
+  &:focus-visible {
+    background-color: rgba($main-dark, 0.1);
+  }
+}
+
+.acceptAll {
+  background-color: $main-dark;
+  border: 2px solid $main-dark;
+  color: $white;
+
+  &:hover,
+  &:focus-visible {
+    background-color: darken($main-dark, 10%);
+  }
+}

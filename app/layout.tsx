@@ -9,6 +9,7 @@ import Section from "@/components/layout/section";
 import Link from "next/link";
 import { LogoIcon } from "@/icons/logoIcon";
 import { isPreviewEnv } from "@/util/environment";
+import { CookieConsent } from '@/components/cookie/CookieConsent';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -42,6 +43,7 @@ export default async function RootLayout({
     <html lang="en">
       <body className={[inter.className, bricolage.variable, inter.variable, layout.body].join(' ')}>
         <Providers session={session}>
+          <CookieConsent />
           {children}
         </Providers>
         <div id={layout.globalfooter} className={layout.globalfooter}>

@@ -2,7 +2,6 @@
 
 import React, { useEffect, useState } from 'react';
 import adminStyles from './admin.module.scss';
-import { useSession } from 'next-auth/react';
 import { defaultUserState } from '@/interfaces/user';
 import { fetchData } from '@/util/client/fetchData';
 import layout from "./layout.module.scss";
@@ -12,17 +11,12 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import AdminDashboard from '@/components/admin/dashboard/adminDashboard';
 import AppHeader from '@/components/layout/Header/AppHeader';
+import { useProtectedSession } from '@/hooks/useProtectedSession';
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
 
-  const { data: session, status } = useSession({
-    required: true,
-    onUnauthenticated() {
-      // The user is not authenticated, handle it here.
-      router.push('/')
-    },
-  });
+  const { data: session, status } = useProtectedSession();
 
   const [apiUser, setApiUser] = useState(defaultUserState);
 

@@ -13,12 +13,10 @@
   font-size: 2.5rem;
   font-weight: 500;
   line-height: 1.2;
-  color: $color;
 }
 
 .description {
   font-size: 1.1rem;
-  color: $text-secondary;
   max-width: 640px;
   line-height: 1.5;
   margin: 0 auto;
@@ -44,8 +42,14 @@
   font-size: 0.9rem;
   margin-bottom: 24px;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 8px;
+
+  svg {
+    flex-shrink: 0;
+    color: $error;
+    margin-top: 2px;
+  }
 }
 
 .form {
@@ -104,7 +108,7 @@
 
   &.inputError {
     border-color: $error;
-    
+
     &:focus {
       box-shadow: 0 0 0 4px rgba($error, 0.1);
     }
@@ -148,7 +152,7 @@
     opacity: 0.7;
     cursor: not-allowed;
     background-color: lighten($main-dark, 20%);
-    
+
     &:hover {
       transform: none;
       box-shadow: none;
@@ -157,6 +161,20 @@
 
   .spinner {
     animation: spin 1s linear infinite;
+  }
+}
+
+.submitButton {
+  &:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+    background-color: lighten($main-dark, 20%);
+    transform: none;
+    box-shadow: none;
+    
+    &:hover {
+      background-color: lighten($main-dark, 20%);
+    }
   }
 }
 
@@ -169,7 +187,6 @@
   background-color: $background-light;
   border: 2px solid transparent;
   border-radius: $border-radius;
-  color: $color;
   font-weight: 500;
   transition: all 0.2s ease;
   cursor: pointer;
@@ -198,7 +215,7 @@
 
   &:before,
   &:after {
-    content: '';
+    content: "";
     position: absolute;
     top: 50%;
     width: calc(50% - 20px);
@@ -221,6 +238,50 @@
     font-size: 0.9rem;
   }
 }
+
+.cookieWarning {
+  padding: 16px;
+  background-color: rgba($main-dark, 0.1);
+  border-radius: $border-radius;
+  margin-bottom: 24px;
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+
+  .warningIcon {
+    color: $main-dark;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  .warningContent {
+    flex-grow: 1;
+
+    p {
+      margin: 0;
+      color: $color;
+      font-weight: 500;
+      font-size: 0.9rem;
+    }
+  }
+}
+
+.cookieSettingsButton {
+  margin-top: 8px;
+  padding: 6px 12px;
+  background-color: $main-dark;
+  color: white;
+  border: none;
+  border-radius: $border-radius;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: background-color 0.2s;
+
+  &:hover {
+    background-color: darken($main-dark, 10%);
+  }
+}
+
 
 .footer {
   margin-top: 32px;
@@ -253,8 +314,12 @@
 }
 
 @keyframes spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 // Responsive adjustments
@@ -288,5 +353,30 @@
   .providerButton,
   .submitButton {
     width: 100%;
+  }
+}
+
+.loadingState {
+  min-height: 400px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.loadingSpinner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  color: $text-secondary;
+
+  .spinner {
+    animation: spin 1s linear infinite;
+    color: $main-dark;
+  }
+
+  p {
+    margin: 0;
+    font-size: 0.9rem;
   }
 }

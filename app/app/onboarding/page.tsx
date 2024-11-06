@@ -211,7 +211,7 @@ export default function OnboardingPage() {
 
   return (
     <main>
-      <Background backgroundImage="" backgroundStyle={'mainColor'}>
+      <Background backgroundImage="" backgroundStyle={'mainDark'}>
         <Section>
           <div className={styles.heroContainer}>
             <h1 className={styles.title}>Let&apos;s get you started</h1>

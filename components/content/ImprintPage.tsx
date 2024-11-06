@@ -82,7 +82,7 @@ export default function ImprintPage({
 }) {
   return (
     <main>
-      <Background backgroundImage="" backgroundStyle={'mainColor'}>
+      <Background backgroundImage="" backgroundStyle={'mainDark'}>
         <Section>
           <div className={styles.heroContainer}>
             <h1 className={styles.title}>Imprint</h1>
@@ -124,9 +124,14 @@ export default function ImprintPage({
                   </ContactItem>
                   <ContactItem title="Contact">
                     Phone: <SecurePhoneReveal phoneNumber={companyInfo.contact.phone} /><br />
-                    Email: <AnimatedSecureMailto email={companyInfo.contact.email}>
-                      Contact us
-                    </AnimatedSecureMailto>
+                    Email: <AnimatedSecureMailto
+                      email={companyInfo.contact.email}
+                      variant="highlight"
+                      description="Contact email address for Form und Zeichen Development GmbH"
+                      showIcon={true}
+                      requireClick={true}
+                      ariaLabel="Click to reveal company email address"
+                    />
                   </ContactItem>
                 </div>
               </div>
@@ -143,9 +148,14 @@ export default function ImprintPage({
                             {entry.director}
                           </ContactItem>
                           <ContactItem title="Email">
-                            <AnimatedSecureMailto email={entry.email}>
-                              Send email
-                            </AnimatedSecureMailto>
+                            <AnimatedSecureMailto
+                              email={entry.email}
+                              variant="highlight"
+                              description={"Contact email address for " + entry.director}
+                              showIcon={true}
+                              requireClick={true}
+                              ariaLabel="Click to reveal email address"
+                            />
                           </ContactItem>
                         </React.Fragment>
                       ))}

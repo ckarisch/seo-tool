@@ -1,13 +1,12 @@
 "use client";
 
-import { useSession } from "next-auth/react";
 import { useEffect, useState } from "react";
-import Section from "@/components/layout/section";
 import { fetchData } from "@/util/client/fetchData";
 import { defaultUserState } from "@/interfaces/user";
 import { Admin } from "@/icons/admin";
 import styles from "./adminBanner.module.scss";
 import { PremiumUser } from "@/icons/premiumUser";
+import { useProtectedSession } from "@/hooks/useProtectedSession";
 
 const image = (role: string | undefined) => {
     switch (role) {
@@ -20,12 +19,7 @@ const image = (role: string | undefined) => {
 }
 
 export default function AdminBanner() {
-    const { data: session, status } = useSession({
-        required: true,
-        onUnauthenticated() {
-            // The user is not authenticated, handle it here.
-        },
-    });
+    const { data: session, status } = useProtectedSession();
 
     const [apiUser, setApiUser] = useState(defaultUserState);
 

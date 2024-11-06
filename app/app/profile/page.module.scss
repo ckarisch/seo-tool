@@ -12,16 +12,10 @@
   font-size: 2.5rem;
   font-weight: 500;
   line-height: 1.2;
-  color: $color;
-
-  @media (prefers-color-scheme: dark) {
-    color: $color-dark;
-  }
 }
 
 .description {
   font-size: 1.1rem;
-  color: $text-secondary;
   max-width: 640px;
   line-height: 1.5;
 }

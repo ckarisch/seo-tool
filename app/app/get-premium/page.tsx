@@ -92,7 +92,7 @@ export default function GetPremiumPage() {
   if (error) {
     return (
       <main>
-        <Background backgroundImage="" backgroundStyle={'mainColor'}>
+        <Background backgroundImage="" backgroundStyle={'mainDark'}>
           <Section>
             <div className={styles.heroContainer}>
               <h1 className={styles.title}>Premium Access</h1>
@@ -117,7 +117,7 @@ export default function GetPremiumPage() {
   if (premiumStatus?.hasPremiumAccess) {
     return (
       <main>
-        <Background backgroundImage="" backgroundStyle={'mainColor'}>
+        <Background backgroundImage="" backgroundStyle={'mainDark'}>
           <Section>
             <div className={styles.heroContainer}>
               <h1 className={styles.title}>Premium Access</h1>
@@ -183,7 +183,7 @@ export default function GetPremiumPage() {
 
   return (
     <main>
-      <Background backgroundImage="" backgroundStyle={'mainColor'}>
+      <Background backgroundImage="" backgroundStyle={'mainDark'}>
         <Section>
           <div className={styles.heroContainer}>
             <h1 className={styles.title}>Get Premium Access</h1>

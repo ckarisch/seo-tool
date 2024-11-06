@@ -1,15 +1,16 @@
 'use client'
 
-import { useSession, signOut } from "next-auth/react"
+import { signOut } from "next-auth/react"
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import Link from 'next/link'
 import styles from "./signin.module.scss"
 import { LogIn, User, LogOut, UserCircle } from 'lucide-react'
 import AdminBanner from "@/components/user/adminBanner"
+import { useProtectedSession } from "@/hooks/useProtectedSession"
 
 export default function Signin() {
-  const { data: session } = useSession()
+  const { data: session, status } = useProtectedSession();
   const router = useRouter()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
 
@@ -28,9 +29,9 @@ export default function Signin() {
 
   if (!session) {
     return (
-      <button 
-        title='Sign in' 
-        className={styles.signIn} 
+      <button
+        title='Sign in'
+        className={styles.signIn}
         onClick={handleSignIn}
       >
         <LogIn strokeWidth={1.5} />
@@ -41,14 +42,14 @@ export default function Signin() {
   return (
     <div className={styles.userContainer}>
       <AdminBanner />
-      <button 
-        title='User menu' 
-        className={`${styles.userButton} ${isMenuOpen ? styles.active : ''}`} 
+      <button
+        title='User menu'
+        className={`${styles.userButton} ${isMenuOpen ? styles.active : ''}`}
         onClick={toggleMenu}
       >
         <User strokeWidth={1.5} />
       </button>
-      
+
       <div className={`${styles.submenu} ${isMenuOpen ? styles.open : ''}`}>
         <div className={styles.submenuContent}>
           <Link href="/app/profile" className={styles.menuItem}>

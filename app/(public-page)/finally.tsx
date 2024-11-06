@@ -1,4 +1,4 @@
-
+// finally.tsx
 import Section from "@/components/layout/section";
 import styles from "./finally.module.scss";
 import Background from "@/components/layout/background";
@@ -6,7 +6,7 @@ import { Graphs } from "@/grafics/Graphs";
 
 export default function Finally() {
   return (
-    <Background backgroundImage="" backgroundStyle={'mainColor'}>
+    <Background backgroundImage="" backgroundStyle={'mainDark'}>
       <Section>
         <div className={styles.finally}>
           <div className={styles.text}>
@@ -21,7 +21,7 @@ export default function Finally() {
           </div>
 
           <div className={styles.imageContainer}>
-          <Graphs />
+            <Graphs />
           </div>
         </div>
       </Section>

@@ -63,7 +63,7 @@ export default function DomainsPage() {
 
   return (
     <main>
-      <Background backgroundImage="" backgroundStyle={'mainColor'}>
+      <Background backgroundImage="" backgroundStyle={'mainDark'}>
         <Section>
           <div className={styles.heroContainer}>
             <h1 className={styles.title}>
@@ -105,7 +105,7 @@ export default function DomainsPage() {
       </Section>
 
       {showAddForm && (
-        <Background backgroundImage="" backgroundStyle={'mainColor'}>
+        <Background backgroundImage="" backgroundStyle={'mainDark'}>
           <Section>
             <div ref={formRef} className={styles.formSection}>
               <AddDomainForm onClose={() => setShowAddForm(false)} />
