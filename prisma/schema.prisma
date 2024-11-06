@@ -1,4 +1,3 @@
-// prisma/schema.prisma
 generator client {
   provider = "prisma-client-js"
 }
@@ -51,21 +50,20 @@ model User {
   id                   String                @id @default(auto()) @map("_id") @db.ObjectId
   email                String                @unique
   name                 String?
-  password             String? // For credentials login
-  salt                 String? // For password hashing
-  role                 String // Existing role field
+  password             String?
+  salt                 String?
+  role                 String
   domains              Domain[]
   notificationContacts NotificationContact[]
   AdminLogs            AdminLog[]
   stripeCustomers      String[]
-
-  emailVerified DateTime?
-  image         String?
-  accounts      Account[]
-  sessions      Session[]
-  createdAt     DateTime?      @default(now())
-  updatedAt     DateTime?      @updatedAt
-  activities    UserActivity[]
+  emailVerified        DateTime?
+  image                String?
+  accounts             Account[]
+  sessions             Session[]
+  createdAt            DateTime?             @default(now())
+  updatedAt            DateTime?             @updatedAt
+  activities           UserActivity[]
 
   @@map("user")
 }
@@ -73,8 +71,8 @@ model User {
 model UserActivity {
   id        String   @id @default(auto()) @map("_id") @db.ObjectId
   userId    String   @db.ObjectId
-  type      String // LOGIN, LOGIN_FAILED, OAUTH_LOGIN, etc.
-  provider  String? // For OAuth logins
+  type      String
+  provider  String?
   ipAddress String
   userAgent String
   createdAt DateTime @default(now())
@@ -92,6 +90,52 @@ model NotificationContact {
   userId String  @db.ObjectId
 
   @@map("notificationcontact")
+}
+
+
+enum ImplementationStatus {
+  NOT_IMPLEMENTED
+  DEVELOPMENT
+  PRODUCTION
+}
+
+
+model ErrorType {
+  id        String     @id @default(auto()) @map("_id") @db.ObjectId
+  code      String     @unique
+  name      String
+  category  String
+  severity  Severity
+  implementation  ImplementationStatus @default(NOT_IMPLEMENTED)
+  errorLogs ErrorLog[]
+
+  @@map("errortype")
+}
+
+model ErrorLog {
+  id            String       @id @default(auto()) @map("_id") @db.ObjectId
+  errorType     ErrorType    @relation(fields: [errorTypeId], references: [id])
+  errorTypeId   String       @db.ObjectId
+  createdAt     DateTime     @default(now())
+  resolvedAt    DateTime?
+  domain        Domain?      @relation("DomainErrors", fields: [domainId], references: [id])
+  domainId      String?      @db.ObjectId
+  internalLink  InternalLink? @relation("PageErrors", fields: [internalLinkId], references: [id])
+  internalLinkId String?     @db.ObjectId
+  domainCrawl   DomainCrawl? @relation("CrawlErrors", fields: [domainCrawlId], references: [id])
+  domainCrawlId String?      @db.ObjectId
+  metadata      Json?
+  occurrence    Int          @default(1)
+
+  @@map("errorlog")
+}
+
+enum Severity {
+  CRITICAL
+  HIGH
+  MEDIUM
+  LOW
+  INFO
 }
 
 model Domain {
@@ -135,15 +179,16 @@ model Domain {
   robotsFollow                      Boolean?
   timeoutPercentage                 Float?
   badRequestPercentage              Float?
-  typeErrorPercentage               Float?
+  typeErrorPercentage              Float?
+  errorLogs                        ErrorLog[]      @relation("DomainErrors")
 
   @@map("domain")
 }
 
 model DomainCrawl {
-  id                 String    @id @default(auto()) @map("_id") @db.ObjectId
-  domain             Domain    @relation(fields: [domainId], references: [id])
-  domainId           String    @db.ObjectId
+  id                 String     @id @default(auto()) @map("_id") @db.ObjectId
+  domain             Domain     @relation(fields: [domainId], references: [id])
+  domainId           String     @db.ObjectId
   crawlType          String?
   startTime          DateTime
   endTime            DateTime?
@@ -155,6 +200,7 @@ model DomainCrawl {
   warningDoubleSlash Boolean?
   error404           Boolean?
   error503           Boolean?
+  errorLogs          ErrorLog[] @relation("CrawlErrors")
 
   @@map("domaincrawl")
 }
@@ -177,18 +223,19 @@ model AnonymousCrawl {
 }
 
 model InternalLink {
-  id                 String   @id @default(auto()) @map("_id") @db.ObjectId
+  id                 String     @id @default(auto()) @map("_id") @db.ObjectId
   path               String
   lastCheck          DateTime
   lastLoadTime       Int
   seoData            SeoData?
   seoDataId          String?
-  domain             Domain   @relation(fields: [domainId], references: [id])
-  domainId           String   @db.ObjectId
+  domain             Domain     @relation(fields: [domainId], references: [id])
+  domainId           String     @db.ObjectId
   type               String?
   errorCode          Int?
   foundOnPath        String?
   warningDoubleSlash Boolean?
+  errorLogs          ErrorLog[] @relation("PageErrors")
 
   @@unique([domainId, path])
   @@map("internalLink")

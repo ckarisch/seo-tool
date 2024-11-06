@@ -2,11 +2,15 @@
   "name": "seo-tool",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "scripts": {
     "dev": "next dev",
     "build": "prisma generate && next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "db:seed": "cross-env NODE_OPTIONS=--loader=ts-node/esm node prisma/seed/errorTypes.ts",
+    "check:implementation": "cross-env NODE_OPTIONS=--loader=ts-node/esm node scripts/updateImplementation.ts check",
+    "update:implementation": "cross-env NODE_OPTIONS=--loader=ts-node/esm node scripts/updateImplementation.ts update"
   },
   "dependencies": {
     "@babel/preset-env": "^7.24.0",
@@ -46,13 +50,15 @@
   "devDependencies": {
     "@types/is-url": "^1.2.32",
     "@types/mailgun-js": "^0.22.18",
-    "@types/node": "^20",
+    "@types/node": "^20.17.6",
     "@types/nodemailer-mailgun-transport": "^1.4.6",
     "@types/react": "^18.2.64",
     "@types/react-dom": "^18.2.21",
+    "cross-env": "^7.0.3",
     "eslint": "^8",
     "eslint-config-next": "14.1.1",
     "prisma": "^5.11.0",
+    "ts-node": "^10.9.2",
     "typescript": "^5"
   }
 }

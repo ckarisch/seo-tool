@@ -3,6 +3,7 @@ import { LogEntry, Logger } from "@/apiComponents/dev/logger";
 import { checkRequests, checkTimeout, createPushLinkInput, getStrongestErrorCode, linkType, pushAllLinks, pushExternalLink } from "@/app/api/seo/domains/[domainName]/crawl/crawlLinkHelper";
 import axios, { AxiosError } from "axios";
 import { load } from "cheerio";
+import runErrorChecks from "./errorChecker";
 
 export interface recursiveCrawlResponse {
     timeout: boolean,
@@ -119,6 +120,13 @@ export async function* recursiveCrawl(
                             try {
                                 timePassed = (new Date().getTime() - crawlStartTime);
                                 data = (await axios.get(requestUrl, { timeout: maxCrawlTime - timePassed })).data;
+                                await runErrorChecks({
+                                    data,
+                                    domainId,
+                                    internalLinkId: undefined,
+                                    domainCrawlId: undefined,
+                                    url: requestUrl
+                                });
                             }
                             catch (error: AxiosError | TypeError | any) {
                                 // Handle any errors
@@ -202,6 +210,6 @@ export async function* recursiveCrawl(
 
         yield* subLogger.log(`end pushing links (${pushLinkInputs.length}): ${new Date().getTime() - requestStartTime}`);
     }
-    
+
     return response;
 }
