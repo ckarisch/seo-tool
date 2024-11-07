@@ -73,7 +73,15 @@ export default async function RootLayout({
                       </Link>
                     </li>
                   </>
-                )}
+                ) && (
+                    <>
+                      <li className={layout.globalfooterLi}>
+                        <Link href={'/dev/error-types'} className={layout.globalfooterLink}>
+                          DEV: error-types
+                        </Link>
+                      </li>
+                    </>
+                  )}
                 <li className={layout.globalfooterLi}>
                   <Link href={'/imprint'} className={layout.globalfooterLink}>
                     Imprint

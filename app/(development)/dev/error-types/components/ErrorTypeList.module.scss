@@ -1,0 +1,166 @@
+@import "@/app/variables";
+
+.container {
+  .category {
+    margin-bottom: 3rem;
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+
+  .categoryHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1.5rem;
+  }
+
+  .categoryTitle {
+    font-size: 1.5rem;
+    color: $text-primary;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid $accent;
+  }
+
+  .categoryStats {
+    display: flex;
+    gap: 0.5rem;
+  }
+
+  .statBadge {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+    border-radius: $border-radius;
+    font-weight: 500;
+    min-width: 1.5rem;
+    text-align: center;
+
+    &.production {
+      background-color: rgba($veryGood, 0.1);
+      color: $veryGood;
+    }
+
+    &.development {
+      background-color: rgba($main, 0.1);
+      color: $main-dark;
+    }
+
+    &.test {
+      background-color: rgba($warning, 0.1);
+      color: $warning;
+    }
+
+    &.notImplemented {
+      background-color: rgba($text-secondary, 0.1);
+      color: $text-secondary;
+    }
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1.5rem;
+  }
+
+  .errorCard {
+    background: $white;
+    border: 1px solid $accent;
+    border-radius: $border-radius;
+    padding: 1.25rem;
+    transition: transform 0.2s ease;
+
+    &:hover {
+      transform: translateY(-2px);
+    }
+  }
+
+  .errorHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 1rem;
+  }
+
+  .errorName {
+    font-size: 1.125rem;
+    color: $text-primary;
+    margin: 0;
+    font-weight: 600;
+  }
+
+  .errorCode {
+    margin-bottom: 1rem;
+    color: $text-secondary;
+    
+    code {
+      background: $background-light;
+      padding: 0.25rem 0.5rem;
+      border-radius: $border-radius;
+      font-family: monospace;
+    }
+  }
+
+  .severity {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+    border-radius: $border-radius;
+    font-weight: 500;
+  }
+
+  .critical {
+    background-color: rgba($error, 0.1);
+    color: $error;
+  }
+
+  .high {
+    background-color: rgba($warning, 0.1);
+    color: $warning;
+  }
+
+  .medium {
+    background-color: rgba($main, 0.1);
+    color: $main-dark;
+  }
+
+  .low {
+    background-color: rgba($good, 0.1);
+    color: $good;
+  }
+
+  .info {
+    background-color: rgba($text-secondary, 0.1);
+    color: $text-secondary;
+  }
+
+  .implementation {
+    margin-top: 1rem;
+  }
+
+  .status {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+    border-radius: $border-radius;
+    font-weight: 500;
+  }
+
+  .production {
+    background-color: rgba($veryGood, 0.1);
+    color: $veryGood;
+  }
+
+  .development {
+    background-color: rgba($main, 0.1);
+    color: $main-dark;
+  }
+
+  .test {
+    background-color: rgba($warning, 0.1);
+    color: $warning;
+  }
+
+  .notImplemented {
+    background-color: rgba($text-secondary, 0.1);
+    color: $text-secondary;
+  }
+}

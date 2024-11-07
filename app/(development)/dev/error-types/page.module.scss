@@ -1,0 +1,105 @@
+@import "@/app/variables";
+
+.main {
+    margin: 50px 0;
+    .header {
+        margin-bottom: 2.5rem;
+        padding-bottom: 1.5rem;
+        border-bottom: 1px solid $accent;
+
+        h1 {
+            font-size: 2rem;
+            color: $text-primary;
+            margin-bottom: 0.5rem;
+        }
+    }
+
+    .titleArea {
+        margin-bottom: 1.5rem;
+    }
+
+    .environment {
+        color: $text-secondary;
+        font-size: 0.875rem;
+        padding: 0.25rem 0.5rem;
+        background-color: $background-light;
+        border-radius: $border-radius;
+        display: inline-block;
+    }
+
+    .statsOverview {
+        .totalErrors {
+            text-align: right;
+            color: $text-secondary;
+            font-size: 1rem;
+            margin-bottom: 1rem;
+
+            strong {
+                color: $text-primary;
+                font-size: 1.25rem;
+                font-weight: 600;
+                margin-left: 0.25rem;
+            }
+        }
+    }
+
+    .statsGrid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 1rem;
+    }
+
+    .statCard {
+        background: $white;
+        border: 1px solid $accent;
+        border-radius: $border-radius;
+        padding: 1rem;
+        text-align: center;
+        transition: transform 0.2s ease;
+
+        &:hover {
+            transform: translateY(-2px);
+        }
+
+        &.production {
+            border-left: 3px solid $veryGood;
+        }
+
+        &.development {
+            border-left: 3px solid $main;
+        }
+
+        &.test {
+            border-left: 3px solid $warning;
+        }
+
+        &.notImplemented {
+            border-left: 3px solid $text-secondary;
+        }
+    }
+
+    .statNumber {
+        display: block;
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: $text-primary;
+        margin-bottom: 0.25rem;
+    }
+
+    .statLabel {
+        color: $text-secondary;
+        font-size: 0.875rem;
+    }
+
+    @media (max-width: 768px) {
+        .statsGrid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+
+    @media (max-width: 480px) {
+        .statsGrid {
+            grid-template-columns: 1fr;
+        }
+    }
+}

@@ -38,6 +38,12 @@ $link-hover: darken($main-dark, 10%);
 $button-primary: $main-dark;
 $button-secondary: $text-secondary;
 
+// Additional Semantic Colors (for error types page)
+$color-border: $accent;
+$color-background-secondary: $background-light;
+$color-success: $veryGood;
+$color-info: $main;
+
 /* Color Contrast Ratios (against white background):
 main: 7.5:1
 main-dark: 4.6:1 (meets WCAG 2.1 AA for all text sizes)

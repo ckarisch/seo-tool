@@ -10,3 +10,24 @@ export const isPreviewEnv = (): boolean => {
   
   return false;
 };
+
+/**
+ * Checks if the current environment is development
+ */
+export const isDevelopmentEnv = (): boolean => {
+  return process.env.NODE_ENV === 'development';
+}
+
+/**
+* Checks if the current environment is production
+*/
+export const isProductionEnv = (): boolean => {
+  return process.env.NODE_ENV === 'production';
+}
+
+/**
+* Checks if the current environment is test
+*/
+export const isTestEnv = (): boolean => {
+  return process.env.NODE_ENV === 'test';
+}
