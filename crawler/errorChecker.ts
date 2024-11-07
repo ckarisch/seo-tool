@@ -12,7 +12,7 @@ const isTest = isDevelopment && (
 
 interface PageCheckParams {
     data: string;               // HTML content from axios
-    domainId: string;          // ID of the domain being checked
+    domainId?: string;          // ID of the domain being checked
     internalLinkId?: string;    // ID of the page/internal link being checked
     domainCrawlId?: string;     // ID of the current crawl
     url: string;               // URL of the page being checked
@@ -137,6 +137,15 @@ export async function runErrorChecks({
     // Check for multiple H1 tags
     const multipleH1Result = await checkMultipleH1(data);
 
+    const results = {
+        multipleH1Result
+    }
+
+    if (!domainId) {
+        // to not create database entries for public requests
+        return results;
+    }
+
     if (multipleH1Result.found) {
         await logError({
             errorCode: 'MULTIPLE_H1',
@@ -149,8 +158,7 @@ export async function runErrorChecks({
             }
         });
     }
-
-    // Add more checks here as needed
+    return results;
 }
 
 export default runErrorChecks;

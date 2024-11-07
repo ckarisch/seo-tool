@@ -88,8 +88,8 @@ export const crawlDomainPublic = async (url: string, depth: number, followLinks:
             maxCrawlTime,
             maxLinkEntries,
             maxRequests,
-            url,
             '',
+            null, //domainCrawl
             true,
             requestStartTime,
             cronLogger);

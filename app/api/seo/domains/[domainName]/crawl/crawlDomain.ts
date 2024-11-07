@@ -219,10 +219,8 @@ export async function* crawlDomain(
             maxCrawlTime,
             maxLinkEntries,
             maxRequests,
-            extractedDomain,
             domain.id,
             domainCrawl,
-            internalLink,
             true,
             requestStartTime, logger);
 

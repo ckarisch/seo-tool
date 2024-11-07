@@ -97,8 +97,8 @@ export async function* crawlDomainPublicGenerator(url: string, depth: number, fo
             maxCrawlTime,
             maxLinkEntries,
             maxRequests,
-            url,
             '',
+            null, //domainCrawl
             false, // do not push links to database in public crawls
             requestStartTime,
             crawlDomainPublicLogger);

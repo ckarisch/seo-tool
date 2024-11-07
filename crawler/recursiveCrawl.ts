@@ -23,10 +23,8 @@ export async function* recursiveCrawl(
     maxCrawlTime: number,
     maxLinkEntries: number,
     maxRequests: number,
-    url: string,
-    domainId: string,
-    domainCrawl: DomainCrawl,
-    internalLink: InternalLink,
+    domainId: string | null,
+    domainCrawl: DomainCrawl | null,
     pushLinksToDomain: boolean,
     requestStartTime: number,
     subLogger: Logger): AsyncGenerator<LogEntry, recursiveCrawlResponse, unknown> {
@@ -134,9 +132,9 @@ export async function* recursiveCrawl(
                                 }
                                 await runErrorChecks({
                                     data,
-                                    domainId,
+                                    domainId: domainId ? domainId : undefined,
                                     internalLinkId,
-                                    domainCrawlId: domainCrawl.id,
+                                    domainCrawlId: domainCrawl ? domainCrawl.id : undefined,
                                     url: requestUrl
                                 });
                             }
