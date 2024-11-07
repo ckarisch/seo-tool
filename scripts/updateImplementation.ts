@@ -9,7 +9,7 @@ interface ErrorType {
   category: string;
 }
 
-type ImplementationStatus = 'NOT_IMPLEMENTED' | 'DEVELOPMENT' | 'PRODUCTION';
+type ImplementationStatus = 'NOT_IMPLEMENTED' | 'TEST' | 'DEVELOPMENT' | 'PRODUCTION';
 
 type GroupedErrorTypes = {
   [K in ImplementationStatus]?: ErrorType[];
@@ -39,7 +39,7 @@ async function getImplementationStatus() {
 
   console.log('\nImplementation Status Summary:');
   console.log('-----------------------------');
-  
+
   Object.entries(grouped).forEach(([status, types]: [string, ErrorType[] | undefined]) => {
     if (types) {
       console.log(`\n${status}: ${types.length} error types`);
@@ -66,7 +66,7 @@ async function main() {
   } else if (command === 'update') {
     const code = process.argv[4];
     const status = process.argv[5] as ImplementationStatus;
-    
+
     if (!code || !status) {
       console.error('Usage: npm run update:implementation update ERROR_CODE STATUS');
       console.error('Example: npm run update:implementation update ERROR_404 PRODUCTION');
