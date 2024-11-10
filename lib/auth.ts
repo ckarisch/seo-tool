@@ -1,13 +1,19 @@
+// lib/auth.ts
 import { PrismaClient } from '@prisma/client';
 import { scryptSync, randomBytes } from 'crypto';
 import { NextAuthOptions } from 'next-auth';
 import CredentialsProvider from "next-auth/providers/credentials";
 import GithubProvider from "next-auth/providers/github";
+import type { UserRole } from "@/types/next-auth";
 
 const prisma = new PrismaClient();
 
 export const authOptions: NextAuthOptions = {
   secret: process.env.SECRET,
+  session: {
+    strategy: 'jwt',
+    maxAge: 30 * 24 * 60 * 60, // 30 days
+  },
   providers: [
     CredentialsProvider({
       name: "Credentials",
@@ -21,17 +27,26 @@ export const authOptions: NextAuthOptions = {
         }
 
         // Admin check
-        if (process.env.ADMIN_EMAIL === credentials.email && 
-            process.env.ADMIN_PASSWORD === credentials.password) {
-          return { 
+        if (process.env.ADMIN_EMAIL === credentials.email &&
+          process.env.ADMIN_PASSWORD === credentials.password) {
+          return {
             id: '-1',
-            email: 'admin@localhost', 
-            name: 'admin'
+            email: 'admin@localhost',
+            name: 'admin',
+            role: 'admin' as UserRole // Add role here
           };
         }
 
-        const user = await prisma.user.findUnique({ 
-          where: { email: credentials.email } 
+        const user = await prisma.user.findUnique({
+          where: { email: credentials.email },
+          select: {
+            id: true,
+            email: true,
+            name: true,
+            password: true,
+            salt: true,
+            role: true
+          }
         });
 
         if (!user?.salt || !user?.password) {
@@ -42,10 +57,11 @@ export const authOptions: NextAuthOptions = {
         const hashedPassword = passwordHash.toString('hex');
 
         if (user.password === hashedPassword) {
-          return { 
+          return {
             id: user.id,
-            email: user.email, 
-            name: user.name 
+            email: user.email,
+            name: user.name,
+            role: user.role as UserRole
           };
         }
 
@@ -55,18 +71,29 @@ export const authOptions: NextAuthOptions = {
     GithubProvider({
       clientId: process.env.GITHUB_ID!,
       clientSecret: process.env.GITHUB_SECRET!,
+      profile(profile) {
+        return {
+          id: profile.id.toString(),
+          name: profile.name || profile.login,
+          email: profile.email,
+          image: profile.avatar_url,
+          role: 'standard' as UserRole // Default role for GitHub users
+        };
+      }
     }),
   ],
   callbacks: {
-    async jwt({ token, user, account }) {
+    async jwt({ token, user }) {
       if (user) {
         token.id = user.id;
+        token.role = user.role;
       }
       return token;
     },
     async session({ session, token }) {
       if (session.user) {
         session.user.id = token.id;
+        session.user.role = token.role as UserRole;
       }
       return session;
     },
@@ -81,10 +108,6 @@ export const authOptions: NextAuthOptions = {
     signOut: '/auth/signout',
     error: '/auth/error',
     newUser: '/app/onboarding'
-  },
-  session: {
-    strategy: 'jwt',
-    maxAge: 30 * 24 * 60 * 60, // 30 days
   },
   cookies: {
     sessionToken: {

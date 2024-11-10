@@ -1,22 +1,144 @@
+// generators/quickAnalysisGenerator.ts
 import { env } from "process";
 import { createLogger } from "../dev/logger";
 import { LogEntry } from "../dev/StreamingLogViewer";
-import {
-  crawlDomain,
-  crawlDomainResponse,
-} from "@/app/api/seo/domains/[domainName]/crawl/crawlDomain";
-import { CronJob, PrismaClient } from "@prisma/client";
+import { crawlDomainResponse } from "@/app/api/seo/domains/[domainName]/crawl/crawlDomain";
+import { CronJob, PrismaClient, Prisma } from "@prisma/client";
 import {
   domainIntervalGenerator,
   domainIntervalResponse,
 } from "./domainInterval";
 import { quickAnalysis } from "@/app/api/seo/domains/[domainName]/crawl/quickAnalysis";
 import { checkTimeout } from "@/app/api/seo/domains/[domainName]/crawl/crawlLinkHelper";
+
 const prisma = new PrismaClient();
 
 const resetCrawlTime = 3600000; // 1h
 const maxDomainCrawls = 5;
 const fallbackInterval = 1420; // nearly a day
+
+interface QuickAnalysisMetrics {
+  loadTime: number;
+  resourceCount: number;
+  errors: number;
+  warnings: number;
+  performanceScore: number | null;
+  seoScore: number | null;
+  accessibility: number | null;
+  bestPractices: number | null;
+}
+
+interface QuickAnalysisIssue {
+  type: string;
+  severity: string;
+  message: string;
+}
+
+interface PerformanceMetrics {
+  loadTime: number;
+  timeToInteractive?: number;
+  firstContentfulPaint?: number;
+  performanceScore?: number;
+  totalResources?: number;
+  totalBytes?: number;
+}
+
+interface MetricLogEntry extends LogEntry {
+  metricType: string;
+  metricValue: number;
+}
+
+interface PerformanceLogEntry extends LogEntry {
+  performance: PerformanceMetrics;
+}
+
+interface IssueLogEntry extends LogEntry {
+  issueType: string;
+  issueSeverity: string;
+  issueMessage: string;
+}
+
+function isMetricLogEntry(entry: LogEntry): entry is MetricLogEntry {
+  return 'metricType' in entry && 'metricValue' in entry;
+}
+
+function isPerformanceLogEntry(entry: LogEntry): entry is PerformanceLogEntry {
+  return 'performance' in entry && entry.performance !== null;
+}
+
+function isIssueLogEntry(entry: LogEntry): entry is IssueLogEntry {
+  return 'issueType' in entry && 'issueSeverity' in entry && 'issueMessage' in entry;
+}
+
+async function storeQuickAnalysisHistory(
+  domainId: string,
+  score: number,
+  metrics: QuickAnalysisMetrics,
+  issues: QuickAnalysisIssue[],
+  crawlTime: number,
+  status: string
+) {
+  try {
+    await prisma.$transaction(async (tx) => {
+      // Store history entry
+      await tx.quickAnalysisHistory.create({
+        data: {
+          domainId,
+          score,
+          metrics: metrics as unknown as Prisma.JsonObject,
+          issues: issues as unknown as Prisma.JsonArray,
+          crawlTime,
+          status,
+        }
+      });
+
+      // Update domain
+      await tx.domain.update({
+        where: { id: domainId },
+        data: {
+          lastQuickAnalysis: new Date(),
+          quickCheckScore: score,
+          performanceScore: metrics.performanceScore || undefined,
+          score: score,
+        }
+      });
+    });
+  } catch (error) {
+    console.error('Error storing quick analysis history:', error);
+    throw error;
+  }
+}
+
+function calculateScore(metrics: QuickAnalysisMetrics): number {
+  let score = 0;
+  let factors = 0;
+
+  if (metrics.performanceScore !== null) {
+    score += metrics.performanceScore;
+    factors++;
+  }
+  if (metrics.seoScore !== null) {
+    score += metrics.seoScore;
+    factors++;
+  }
+  if (metrics.accessibility !== null) {
+    score += metrics.accessibility;
+    factors++;
+  }
+  if (metrics.bestPractices !== null) {
+    score += metrics.bestPractices;
+    factors++;
+  }
+
+  if (factors === 0) {
+    const baseScore = 100;
+    const errorPenalty = metrics.errors * 10;
+    const warningPenalty = metrics.warnings * 2;
+    return Math.max(0, Math.min(100, baseScore - errorPenalty - warningPenalty)) / 100;
+  }
+
+  return score / (factors * 100);
+}
 
 export async function* quickAnalysisGenerator(
   maxExecutionTime: number,
@@ -36,9 +158,16 @@ export async function* quickAnalysisGenerator(
   }
 
   yield* quickAnalysisLogger.log("start auto crawl");
+  
   const domains = await prisma.domain.findMany({
     orderBy: { lastQuickAnalysis: "asc" },
-    include: { user: { select: { role: true } } },
+    include: { 
+      user: { select: { role: true } },
+      quickAnalysisHistory: {
+        orderBy: { timestamp: 'desc' },
+        take: 1,
+      }
+    },
   });
 
   if (!domains || domains.length === 0) {
@@ -49,10 +178,12 @@ export async function* quickAnalysisGenerator(
   for (const domain of domains) {
     timePassed = new Date().getTime() - lighthouseStartTime;
     timeLeft = maxExecutionTime - timePassed;
+    
     if (checkTimeout(timePassed, maxExecutionTime)) {
       yield* quickAnalysisLogger.log(`timeout`);
       return;
     }
+    
     if (domainsCrawled >= maxDomainCrawls) {
       yield* quickAnalysisLogger.log(`stop crawling (crawled = ${domainsCrawled})`);
       break;
@@ -67,7 +198,6 @@ export async function* quickAnalysisGenerator(
 
     let domainInterval = fallbackInterval;
 
-    /* subfunction */
     const generateInterval = domainIntervalGenerator(
       domain.user.role,
       domain,
@@ -75,10 +205,7 @@ export async function* quickAnalysisGenerator(
       fallbackInterval
     );
 
-    let intervalIteratorResult: IteratorResult<
-      LogEntry,
-      domainIntervalResponse
-    >;
+    let intervalIteratorResult: IteratorResult<LogEntry, domainIntervalResponse>;
     do {
       intervalIteratorResult = await generateInterval.next();
       if (!intervalIteratorResult.done) {
@@ -87,14 +214,10 @@ export async function* quickAnalysisGenerator(
     } while (!intervalIteratorResult.done);
 
     domainInterval = intervalIteratorResult.value.domainInterval;
-    /* end subfunction */
 
     let diffMinutes = 0;
     if (domainInterval > 0) {
-      let lastQuickAnalysis = domain.lastQuickAnalysis;
-      if (!lastQuickAnalysis) {
-        lastQuickAnalysis = new Date("01-01-1970");
-      }
+      const lastQuickAnalysis = domain.lastQuickAnalysis || new Date("01-01-1970");
       const now = new Date();
       const diff = now.getTime() - lastQuickAnalysis.getTime();
       diffMinutes = Math.floor(diff / 60000);
@@ -104,6 +227,7 @@ export async function* quickAnalysisGenerator(
       );
       break;
     }
+
     if (!domain.domainVerified) {
       if (domain.user.role === "admin") {
         yield* quickAnalysisLogger.log(
@@ -116,30 +240,24 @@ export async function* quickAnalysisGenerator(
         continue;
       }
     }
+
     yield* quickAnalysisLogger.log(
       `✅ domain ${domain.domainName}: verified (${diffMinutes} / ${domainInterval} m)`
     );
 
-    if (domain.crawlEnabled) {
-      yield* quickAnalysisLogger.log(`➝  domain ${domain.domainName}: crawl enabled`);
+    if (domain.crawlEnabled && diffMinutes >= domainInterval) {
+      const analysisStartTime = new Date().getTime();
 
-      if (diffMinutes >= domainInterval) {
-        yield* quickAnalysisLogger.log(
-          "➝  auto crawl: " +
-            domain.domainName +
-            " last crawl was " +
-            diffMinutes +
-            " / " +
-            domainInterval +
-            " minutes ago"
-        );
+      yield* quickAnalysisLogger.log(
+        `➝  auto crawl: ${domain.domainName} last crawl was ${diffMinutes} / ${domainInterval} minutes ago`
+      );
 
+      try {
         const depth = 2;
         const followLinks = true;
-        // const logger = (text: string) => (yield log(text));
+        
         yield* quickAnalysisLogger.log(`➝  domain ${domain.domainName}: start`);
 
-        /* subfunction */
         const subfunctionGenerator = quickAnalysis(
           domain.domainName,
           depth,
@@ -149,24 +267,91 @@ export async function* quickAnalysisGenerator(
         );
 
         let result: IteratorResult<LogEntry, crawlDomainResponse>;
+        let aggregatedMetrics: QuickAnalysisMetrics = {
+          loadTime: 0,
+          resourceCount: 0,
+          errors: 0,
+          warnings: 0,
+          performanceScore: null,
+          seoScore: null,
+          accessibility: null,
+          bestPractices: null
+        };
+
+        let collectedIssues: QuickAnalysisIssue[] = [];
+        let hasPerformanceData = false;
+
         do {
           result = await subfunctionGenerator.next();
           if (!result.done) {
             yield result.value;
+            
+            if (isMetricLogEntry(result.value)) {
+              switch (result.value.metricType) {
+                case 'loadTime':
+                  aggregatedMetrics.loadTime = result.value.metricValue;
+                  break;
+                case 'resourceCount':
+                  aggregatedMetrics.resourceCount = result.value.metricValue;
+                  break;
+                case 'performanceScore':
+                  aggregatedMetrics.performanceScore = result.value.metricValue;
+                  break;
+                case 'seoScore':
+                  aggregatedMetrics.seoScore = result.value.metricValue;
+                  break;
+                case 'accessibility':
+                  aggregatedMetrics.accessibility = result.value.metricValue;
+                  break;
+                case 'bestPractices':
+                  aggregatedMetrics.bestPractices = result.value.metricValue;
+                  break;
+              }
+            }
+
+            if (isPerformanceLogEntry(result.value) && !hasPerformanceData) {
+              const perf = result.value.performance;
+              hasPerformanceData = true;
+              aggregatedMetrics.loadTime = perf.loadTime;
+              aggregatedMetrics.performanceScore = perf.performanceScore || null;
+              aggregatedMetrics.resourceCount = perf.totalResources || 0;
+            }
+
+            if (isIssueLogEntry(result.value)) {
+              if (result.value.issueSeverity === 'error') {
+                aggregatedMetrics.errors++;
+              } else if (result.value.issueSeverity === 'warning') {
+                aggregatedMetrics.warnings++;
+              }
+
+              collectedIssues.push({
+                type: result.value.issueType,
+                severity: result.value.issueSeverity,
+                message: result.value.issueMessage
+              });
+            }
           }
         } while (!result.done);
 
-        let subfunctionResult: crawlDomainResponse | undefined = undefined;
-        subfunctionResult = result.value;
-        /* end subfunction */
+        const analysisEndTime = new Date().getTime();
+        const finalScore = calculateScore(aggregatedMetrics);
 
-        domainsCrawled += 1;
+        await storeQuickAnalysisHistory(
+          domain.id,
+          finalScore,
+          aggregatedMetrics,
+          collectedIssues,
+          analysisEndTime - analysisStartTime,
+          'completed'
+        );
+
+        domainsCrawled++;
 
         await prisma.adminLog.create({
           data: {
             createdAt: new Date(),
             message: `domain ${domain.domainName} quick analysis (score: ${
-              (domain.score ? domain.score : 0) * 100
+              finalScore * 100
             }), host: ${host}`,
             domainId: domain.id,
             userId: domain.userId,
@@ -176,18 +361,56 @@ export async function* quickAnalysisGenerator(
         yield* quickAnalysisLogger.log(
           `➝  domain ${domain.domainName}: end (crawled = ${domainsCrawled})`
         );
-        continue;
-      } else {
+      } catch (err: unknown) {
+        const error = err as Error;
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+        
         yield* quickAnalysisLogger.log(
-          "➥  skip auto crawl: " +
-            domain.domainName +
-            " last crawl was " +
-            diffMinutes +
-            " / " +
-            domainInterval +
-            " minutes ago"
+          `❌ Error analyzing ${domain.domainName}: ${errorMessage}`
+        );
+        
+        await prisma.adminLog.create({
+          data: {
+            createdAt: new Date(),
+            message: `Error in quick analysis for ${domain.domainName}: ${errorMessage}`,
+            domainId: domain.id,
+            userId: domain.userId,
+          },
+        });
+      
+        // Optionally store failed analysis with error status
+        await storeQuickAnalysisHistory(
+          domain.id,
+          0, // zero score for failed analysis
+          {
+            loadTime: 0,
+            resourceCount: 0,
+            errors: 1,
+            warnings: 0,
+            performanceScore: null,
+            seoScore: null,
+            accessibility: null,
+            bestPractices: null
+          },
+          [{
+            type: 'error',
+            severity: 'critical',
+            message: errorMessage
+          }],
+          0,
+          'failed'
         );
       }
+    } else {
+      yield* quickAnalysisLogger.log(
+        "➥  skip auto crawl: " +
+          domain.domainName +
+          " last crawl was " +
+          diffMinutes +
+          " / " +
+          domainInterval +
+          " minutes ago"
+      );
     }
   }
 }

@@ -1,0 +1,237 @@
+// app/domains/[domain]/errors/page.module.scss
+@import "@/app/variables";
+
+.errorsDashboard {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+.summaryGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  
+  @media (max-width: 768px) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  @media (max-width: 480px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.summaryCard {
+  .summaryContent {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 8px;
+  }
+
+  .summaryInfo {
+    flex: 1;
+  }
+
+  .summaryValue {
+    font-size: 1.75rem;
+    font-weight: 500;
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+
+  .summaryLabel {
+    font-size: 0.9rem;
+    color: $text-secondary;
+  }
+}
+
+.periodSelector {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  margin: 8px 0;
+
+  .periodButton {
+    padding: 8px 16px;
+    border-radius: $border-radius;
+    background: $background-light;
+    border: 1px solid transparent;
+    color: $text-secondary;
+    transition: all 0.2s ease;
+
+    &:hover {
+      background: darken($background-light, 5%);
+    }
+
+    &.active {
+      background: $main;
+      color: white;
+    }
+  }
+}
+
+.breakdownCard {
+  .errorTypesList {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .errorTypeItem {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .errorTypeBar {
+    flex: 1;
+    height: 32px;
+    background: $background-light;
+    border-radius: $border-radius;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .errorTypeProgress {
+    position: absolute;
+    left: 0;
+    top: 0;
+    height: 100%;
+    background: $main;
+    opacity: 0.2;
+    transition: width 0.3s ease;
+  }
+
+  .errorTypeName {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 0.9rem;
+    color: $text-secondary;
+  }
+
+  .errorTypeCount {
+    min-width: 60px;
+    text-align: right;
+    font-weight: 500;
+  }
+}
+
+.topErrorsCard {
+  .topErrorsList {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .errorItem {
+    display: flex;
+    gap: 16px;
+    padding: 16px;
+    border-radius: $border-radius;
+    background: $background-light;
+    transition: transform 0.2s ease;
+
+    &:hover {
+      transform: translateY(-2px);
+    }
+  }
+
+  .errorIcon {
+    color: $text-secondary;
+  }
+
+  .errorInfo {
+    flex: 1;
+  }
+
+  .errorHeader {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 4px;
+  }
+
+  .errorCode {
+    font-family: monospace;
+    font-size: 0.9rem;
+    color: $text-secondary;
+  }
+
+  .errorName {
+    font-weight: 500;
+  }
+
+  .errorMeta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    font-size: 0.9rem;
+    color: $text-secondary;
+  }
+}
+
+.lastUpdate {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: $text-secondary;
+  font-size: 0.9rem;
+}
+
+// Severity colors
+.critical {
+  color: $error;
+}
+
+.high {
+  color: darken($error, 10%);
+}
+
+.medium {
+  color: $warning;
+}
+
+.low {
+  color: darken($warning, 10%);
+}
+
+.info {
+  color: $main;
+}
+
+// Loading and error states
+.loadingState,
+.errorState {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 200px;
+  color: $text-secondary;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@media (max-width: 768px) {
+  .errorItem {
+    .errorMeta {
+      flex-direction: column;
+      gap: 4px;
+    }
+  }
+
+  .periodSelector {
+    .periodButton {
+      flex: 1;
+      padding: 12px 8px;
+      font-size: 0.9rem;
+    }
+  }
+}

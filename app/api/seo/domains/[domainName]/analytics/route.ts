@@ -1,4 +1,4 @@
-// app/api/domains/[id]/analytics/route.ts
+// app/api/seo/domains/[id]/analytics/route.ts
 import { authOptions } from "@/lib/auth";
 import { PrismaClient } from '@prisma/client';
 import { getServerSession } from "next-auth";

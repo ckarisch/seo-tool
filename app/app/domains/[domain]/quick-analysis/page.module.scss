@@ -1,0 +1,135 @@
+// app/domains/[domain]/quick-analysis/page.module.scss
+@import "@/app/variables";
+
+.quickAnalysis {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+.scoreCard {
+  text-align: center;
+  padding: 24px;
+  
+  .scoreValue {
+    font-size: 3rem;
+    font-weight: 500;
+    color: $main;
+    animation: scaleIn 0.5s ease-out;
+  }
+  
+  .lastUpdate {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    color: $text-secondary;
+    font-size: 0.9rem;
+    margin-top: 12px;
+  }
+}
+
+.metricsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 16px;
+  
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.metricItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 16px;
+  
+  .metricLabel {
+    font-size: 0.9rem;
+    color: $text-secondary;
+    margin-bottom: 8px;
+  }
+  
+  .metricValue {
+    font-size: 1.5rem;
+    font-weight: 500;
+    color: $color;
+  }
+}
+
+.issuesCard {
+  .issuesList {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  
+  .issueItem {
+    display: flex;
+    gap: 12px;
+    padding: 16px;
+    border-radius: $border-radius;
+    background-color: $background-light;
+    transition: transform 0.2s ease;
+    
+    &:hover {
+      transform: translateY(-2px);
+    }
+    
+    &.critical {
+      border-left: 4px solid $error;
+      .issueIcon { color: $error; }
+    }
+    
+    &.warning {
+      border-left: 4px solid $warning;
+      .issueIcon { color: $warning; }
+    }
+    
+    &.info {
+      border-left: 4px solid $main;
+      .issueIcon { color: $main; }
+    }
+  }
+  
+  .issueContent {
+    flex: 1;
+  }
+  
+  .issueType {
+    font-weight: 500;
+    margin-bottom: 4px;
+  }
+  
+  .issueMessage {
+    color: $text-secondary;
+    font-size: 0.9rem;
+  }
+}
+
+.loadingState {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 200px;
+  color: $text-secondary;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes scaleIn {
+  from {
+    transform: scale(0.9);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}

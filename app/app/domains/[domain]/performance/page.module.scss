@@ -1,0 +1,134 @@
+// app/domains/[domain]/performance/page.module.scss
+@import "@/app/variables";
+
+.performanceDashboard {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+.scoreCard {
+  .scoreValue {
+    font-size: 3rem;
+    font-weight: 500;
+    color: $main;
+    text-align: center;
+    margin: 16px 0;
+    animation: scaleIn 0.5s ease-out;
+  }
+
+  .lastUpdate {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    color: $text-secondary;
+    font-size: 0.9rem;
+  }
+}
+
+.metricsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 16px;
+
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.metricItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 16px;
+
+  .metricIcon {
+    color: $main;
+    margin-bottom: 12px;
+    
+    svg {
+      width: 24px;
+      height: 24px;
+    }
+  }
+
+  .metricLabel {
+    font-size: 0.9rem;
+    color: $text-secondary;
+    margin-bottom: 8px;
+  }
+
+  .metricValue {
+    font-size: 1.5rem;
+    font-weight: 500;
+    color: $color;
+  }
+
+  .metricSubtext {
+    display: block;
+    font-size: 0.8rem;
+    color: $text-secondary;
+    margin-top: 4px;
+  }
+}
+
+.trendsCard {
+  height: 400px;
+}
+
+.detailedMetrics {
+  .metricsTable {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .metricRow {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px solid $background-light;
+
+    &:last-child {
+      border-bottom: none;
+    }
+  }
+
+  .metricName {
+    color: $text-secondary;
+    font-size: 0.95rem;
+  }
+
+  .metricValue {
+    font-weight: 500;
+  }
+}
+
+.loadingState,
+.errorState {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 200px;
+  color: $text-secondary;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes scaleIn {
+  from {
+    transform: scale(0.9);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}

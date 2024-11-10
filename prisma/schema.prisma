@@ -182,8 +182,49 @@ model Domain {
   badRequestPercentage              Float?
   typeErrorPercentage              Float?
   errorLogs                        ErrorLog[]      @relation("DomainErrors")
+  metrics           DomainMetrics[]
+  quickAnalysisHistory QuickAnalysisHistory[]
+  lastPerformanceCheck DateTime?
+  lastQuickCheck    DateTime?
+  quickCheckScore   Float?
+  errorTypes        Json?  // Array of current error types
+  warningTypes      Json?  // Array of current warning types
+  statusHistory     Json?  // Track status changes over time
 
   @@map("domain")
+}
+
+model QuickAnalysisHistory {
+  id          String    @id @default(auto()) @map("_id") @db.ObjectId
+  domain      Domain    @relation(fields: [domainId], references: [id])
+  domainId    String    @db.ObjectId
+  timestamp   DateTime  @default(now())
+  score       Float
+  metrics     Json      // Store detailed metrics
+  issues      Json?     // Store found issues
+  crawlTime   Int?
+  status      String?
+
+  @@index([domainId, timestamp])
+  @@map("quickanalysishistory")
+}
+
+model DomainMetrics {
+  id               String    @id @default(auto()) @map("_id") @db.ObjectId
+  domain           Domain    @relation(fields: [domainId], references: [id])
+  domainId         String    @db.ObjectId
+  timestamp        DateTime  @default(now())
+  type             MetricType
+  score            Float
+  metadata         Json?     // For storing additional metric-specific data
+
+  @@map("domainmetrics")
+}
+
+enum MetricType {
+  DOMAIN_SCORE
+  PERFORMANCE
+  QUICK_CHECK
 }
 
 model DomainCrawl {

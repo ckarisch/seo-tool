@@ -1,0 +1,57 @@
+// components/ui/card/card.module.scss
+@import "@/app/variables";
+
+.card {
+  border-radius: $border-radius;
+  background: white;
+  border: 1px solid $background-light;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.cardHeader {
+  padding: 24px;
+  border-bottom: 1px solid $background-light;
+  
+  @media (max-width: 768px) {
+    padding: 16px;
+  }
+}
+
+.cardTitle {
+  font-size: 1.25rem;
+  font-weight: 500;
+  color: $color;
+  margin: 0;
+  
+  @media (max-width: 768px) {
+    font-size: 1.1rem;
+  }
+}
+
+.cardDescription {
+  color: $text-secondary;
+  font-size: 0.9rem;
+  margin-top: 4px;
+}
+
+.cardContent {
+  padding: 24px;
+  
+  @media (max-width: 768px) {
+    padding: 16px;
+  }
+}
+
+.cardFooter {
+  padding: 24px;
+  border-top: 1px solid $background-light;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 16px;
+  
+  @media (max-width: 768px) {
+    padding: 16px;
+    gap: 12px;
+  }
+}
