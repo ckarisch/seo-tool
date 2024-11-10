@@ -1,11 +1,12 @@
 "use client";
 
 import React, { useState } from 'react';
-import { defaultDomainState, Domain } from "@/interfaces/domain";
+import { defaultDomainState } from "@/interfaces/domain";
 import styles from "./domainStatusContent.module.scss";
 import { InformationCircleOutline } from "@/icons/information-circle-outline";
 import { Copy, Loader } from "lucide-react";
-import { fetchData, LoadingState } from "@/util/client/fetchData";
+import { fetchData } from "@/util/client/fetchData";
+import { Domain } from '@prisma/client';
 
 interface DomainStatusContentProps {
   domain: Partial<Domain>;
@@ -21,7 +22,34 @@ interface VerificationStatus {
   message?: string;
 }
 
-export default function DomainStatusContent({ 
+const MetricCard = ({
+  value,
+  label,
+  dummyText,
+}: {
+  value?: number | null;
+  label: string;
+  dummyText: boolean;
+}) => {
+  const getScoreClass = (score?: number | null) => {
+    if (dummyText) return styles.dummyText;
+    if (!score) return styles.bad;
+    if (score > 0.8) return styles.veryGood;
+    if (score > 0.5) return styles.good;
+    return styles.bad;
+  };
+
+  return (
+    <div className={styles.metric}>
+      <div className={[styles.metricValue, getScoreClass(value)].join(' ')}>
+        {!dummyText && value !== undefined && Math.round(value ? value * 100 : 0)}
+      </div>
+      <span className={styles.metricLabel}>{label}</span>
+    </div>
+  );
+};
+
+export default function DomainStatusContent({
   domain,
   onVerifyClick,
   onVerificationComplete,
@@ -37,9 +65,9 @@ export default function DomainStatusContent({
   const handleCopyClick = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    
+
     if (!domain.domainVerificationKey) return;
-    
+
     try {
       await navigator.clipboard.writeText(domain.domainVerificationKey);
       setShowCopied(true);
@@ -53,12 +81,12 @@ export default function DomainStatusContent({
 
   const handleVerificationRequest = async (): Promise<void> => {
     setVerificationStatus({ state: 'checking' });
-    
+
     try {
       const endpoint = `${process.env.NEXT_PUBLIC_API_DOMAIN}/api/seo/domains/${domain.domainName}/verify`;
       const response = await fetch(endpoint);
       const jsonData = await response.json();
-      
+
       if (!response.ok) {
         let errorMessage = 'Verification failed. ';
         if (jsonData.error) {
@@ -72,8 +100,8 @@ export default function DomainStatusContent({
         } else {
           errorMessage += 'Please check your DNS settings and try again.';
         }
-        
-        setVerificationStatus({ 
+
+        setVerificationStatus({
           state: 'error',
           message: errorMessage
         });
@@ -83,14 +111,14 @@ export default function DomainStatusContent({
 
       // Successful verification
       await fetchData(`api/seo/domains/${domain.domainName}`, fetchTag, setVerificationResponse, null);
-      setVerificationStatus({ 
+      setVerificationStatus({
         state: 'success',
         message: 'Domain verified successfully!'
       });
       onVerificationComplete(true, 'Domain verified successfully!');
     } catch (error) {
       const errorMessage = 'An error occurred during verification. Please try again.';
-      setVerificationStatus({ 
+      setVerificationStatus({
         state: 'error',
         message: errorMessage
       });
@@ -139,7 +167,7 @@ export default function DomainStatusContent({
           <div className={styles.verificationSection}>
             <span className={styles.verificationLabel}>Verification code:</span>
             <div className={styles.codeContainer}>
-              <div 
+              <div
                 className={styles.verificationCode}
                 onClick={handleCopyClick}
                 onKeyDown={(e) => {
@@ -166,7 +194,7 @@ export default function DomainStatusContent({
             >
               {verificationStatus.state === 'checking' ? (
                 <>
-                  <Loader className="animate-spin" size={16} />
+                  <Loader className={styles.spinner} size={16} />
                   Verifying...
                 </>
               ) : (
@@ -175,26 +203,33 @@ export default function DomainStatusContent({
             </button>
           </div>
         )}
-        
+
         {(domain.domainVerified || dummyText) && (
-          <div className={styles.score}>
-            <div className={[
-              styles.scoreValue,
-              dummyText ? styles.dummyText :
-              domain.score && domain.score > 0.80 ? styles.veryGood : 
-              domain.score && domain.score > 0.50 ? styles.good : 
-              styles.bad
-            ].join(' ')}>
-              {!dummyText && domain.score !== undefined && Math.round(domain.score * 100)}
-            </div>
-            <span className={styles.scoreLabel}>Score</span>
+          <div className={styles.metrics}>
+            <MetricCard
+              value={domain.score}
+              label="Overall Score"
+              dummyText={dummyText}
+            />
+            <MetricCard
+              value={domain.performanceScore}
+              label="Performance"
+              dummyText={dummyText}
+            />
+            <MetricCard
+              value={domain.quickCheckScore}
+              label="Quick Check"
+              dummyText={dummyText}
+            />
           </div>
         )}
       </div>
 
       {domain.disableNotifications && (
-        <div className={[styles.notifications, dummyText ? styles.dummyText : ''].join(' ')} 
-             title="Notifications disabled">
+        <div
+          className={[styles.notifications, dummyText ? styles.dummyText : ''].join(' ')}
+          title="Notifications disabled"
+        >
           <InformationCircleOutline />
         </div>
       )}

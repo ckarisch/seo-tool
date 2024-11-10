@@ -14,7 +14,7 @@ import { checkTimeout } from "@/app/api/seo/domains/[domainName]/crawl/crawlLink
 const prisma = new PrismaClient();
 
 const resetCrawlTime = 3600000; // 1h
-const maxDomainCrawls = 2; // 1h
+const maxDomainCrawls = 6; // 1h
 const fallbackInterval = 1420; // nearly a day
 
 export async function* lighthouseGenerator(

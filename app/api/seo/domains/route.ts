@@ -99,16 +99,17 @@ export async function POST(request: Request) {
   const user = await prisma.user.findUnique({
     where: { email: session!.user!.email! },
   });
+
+  if (!user) {
+    return Response.json({ error: "user not found" }, { status: 500 });
+  }
+
   const existingDomain = await prisma.domain.findUnique({
-    where: { domainName },
+    where: { domainName, userId: user.id },
   });
 
   if (existingDomain) {
     return Response.json({ error: "domain already exists" }, { status: 500 });
-  }
-
-  if (!user) {
-    return Response.json({ error: "user not found" }, { status: 500 });
   }
 
   const domain = await prisma.domain.create({
