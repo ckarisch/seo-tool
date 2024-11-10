@@ -40,7 +40,7 @@ export const initialCrawl = async (
     maxCrawlTime: number,
     crawlStartTime: number,
     sendNotification: boolean,
-    user: User & { notificationContacts: any[] },
+    user: User & { notificationContacts: any[] } | null,
     analyzedUrl: { normalizedLink: string }
 ): Promise<CrawlResponse> => {
     let timePassed = (new Date().getTime() - crawlStartTime);
