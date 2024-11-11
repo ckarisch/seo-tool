@@ -28,7 +28,7 @@ export default function DomainNavigation({ domain }: DomainNavigationProps) {
     { 
       name: 'Overview', 
       path: basePath,
-      feature: 'overview'
+      feature: 'domain-overview'
     },
     { 
       name: 'Performance', 

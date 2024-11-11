@@ -194,7 +194,6 @@ export async function* quickAnalysis(
             targetURL,
             maxCrawlTime,
             crawlStartTime,
-            true,
             user,
             analyzedUrl
         );

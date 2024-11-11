@@ -118,6 +118,7 @@ export async function POST(request: Request) {
       domainName,
       userId: user.id,
       crawlInterval: 24 * 60, // once a day
+      crawlEnabled: true
     },
   });
 

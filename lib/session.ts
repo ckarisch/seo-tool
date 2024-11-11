@@ -25,6 +25,7 @@ export function canAccessFeature(session: Session | null, feature: string): bool
   // Define feature access rules
   const featureAccess: Record<string, UserRole[]> = {
     'crawls': ['admin'],
+    'domain-overview': ['admin', 'premium', 'standard'],
     'performance': ['admin', 'premium', 'standard'],
     'quick-analysis': ['admin', 'premium', 'standard'],
     'errors': ['admin', 'premium', 'standard'],

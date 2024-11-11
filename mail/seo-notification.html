@@ -1,0 +1,211 @@
+import { Domain, DomainCrawl, User } from "@prisma/client";
+import * as nodemailer from "nodemailer";
+import { MailOptions } from "nodemailer/lib/json-transport";
+import Handlebars from 'handlebars';
+import path from 'path';
+import fs from 'fs';
+
+interface NotificationGroup {
+    domain: string;
+    notifications: Array<{
+        type: 'error' | 'warning' | 'success';
+        title: string;
+        message: string;
+        urls?: string[];
+    }>;
+}
+
+export class EnhancedEmailer {
+    private readonly transporter: nodemailer.Transporter;
+    private readonly templatePath: string;
+    private readonly template: HandlebarsTemplateDelegate;
+
+    constructor() {
+        this.transporter = nodemailer.createTransport({
+            host: process.env.MAIL_HOST!,
+            port: parseInt(process.env.MAIL_PORT!),
+            auth: {
+                user: process.env.MAIL_USER!,
+                pass: process.env.MAIL_PASSWORD!
+            }
+        });
+
+        // Register helper for animation delays
+        Handlebars.registerHelper('multiply', function(value: number, multiplier: number) {
+            return value * multiplier;
+        });
+
+        // Load and compile template
+        this.templatePath = path.join(process.cwd(), 'email-template.html');
+        const templateContent = fs.readFileSync(this.templatePath, 'utf8');
+        this.template = Handlebars.compile(templateContent);
+    }
+
+    private async sendEmail(mailOptions: MailOptions) {
+        return await this.transporter.sendMail(mailOptions);
+    }
+
+    public async sendConsolidatedNotification(
+        toEmail: string,
+        toName: string,
+        notifications: NotificationGroup
+    ) {
+        const dashboardUrl = `${process.env.NEXT_PUBLIC_API_DOMAIN}/app/domains/${notifications.domain}`;
+        
+        const htmlContent = this.template({
+            notifications: notifications.notifications,
+            dashboardUrl,
+            currentYear: new Date().getFullYear(),
+            recipientName: toName
+        });
+
+        const subject = this.generateConsolidatedSubject(notifications);
+
+        await this.sendEmail({
+            from: "SEO Notification <notification@formundzeichen.at>",
+            to: [toEmail],
+            subject,
+            html: htmlContent,
+            replyTo: 'notification@formundzeichen.at'
+        });
+    }
+
+    private generateConsolidatedSubject(notifications: NotificationGroup): string {
+        const errorCount = notifications.notifications.filter(n => n.type === 'error').length;
+        const warningCount = notifications.notifications.filter(n => n.type === 'warning').length;
+        const successCount = notifications.notifications.filter(n => n.type === 'success').length;
+
+        const parts = [];
+        if (errorCount > 0) parts.push(`❗${errorCount} Error${errorCount > 1 ? 's' : ''}`);
+        if (warningCount > 0) parts.push(`⚠️${warningCount} Warning${warningCount > 1 ? 's' : ''}`);
+        if (successCount > 0) parts.push(`✅${successCount} Success${successCount > 1 ? 's' : ''}`);
+
+        return `${parts.join(' | ')} - ${notifications.domain}`;
+    }
+}
+
+export const enhancedEmailer = new EnhancedEmailer();
+
+export const consolidatedCrawlNotification = async (
+    userWithNotificationContacts: User & { notificationContacts: any[] },
+    domain: Domain,
+    notifications: Array<{
+        type: crawlNotificationType;
+        errorPresent: boolean;
+        urls: string[];
+        additionalData?: any;
+    }>,
+    isInitialCrawl: boolean
+) => {
+    const notificationContacts = userWithNotificationContacts.notificationContacts.length 
+        ? userWithNotificationContacts.notificationContacts 
+        : [userWithNotificationContacts];
+
+    // Group notifications by type and status
+    const notificationGroup: NotificationGroup = {
+        domain: domain.domainName,
+        notifications: []
+    };
+
+    for (const notification of notifications) {
+        const notificationData = createNotificationData(
+            notification.type,
+            notification.errorPresent,
+            domain.domainName,
+            notification.urls,
+            notification.additionalData,
+            isInitialCrawl
+        );
+
+        if (notificationData) {
+            notificationGroup.notifications.push(notificationData);
+        }
+    }
+
+    // Send consolidated notification to each contact
+    for (const contact of notificationContacts) {
+        try {
+            await enhancedEmailer.sendConsolidatedNotification(
+                contact.email,
+                contact.name,
+                notificationGroup
+            );
+            console.log(`Consolidated notification sent to ${contact.email}`);
+        } catch (e) {
+            console.error(`Error sending notification to ${contact.email}:`, e);
+        }
+    }
+};
+
+function createNotificationData(
+    type: crawlNotificationType,
+    errorPresent: boolean,
+    domain: string,
+    urls: string[],
+    additionalData?: any,
+    isInitialCrawl: boolean = false
+): {
+    type: 'error' | 'warning' | 'success';
+    title: string;
+    message: string;
+    urls: string[];
+} | null {
+    const baseMessage = isInitialCrawl 
+        ? "During the initial crawl of your website, we detected the following:"
+        : "We detected the following changes on your website:";
+
+    switch (type) {
+        case crawlNotificationType.Error503:
+            return {
+                type: errorPresent ? 'error' : 'success',
+                title: errorPresent ? '503 Service Unavailable Error' : '503 Error Resolved',
+                message: errorPresent
+                    ? `${baseMessage} A 503 Service Unavailable error was detected on ${domain}.`
+                    : `Great news! The previously detected 503 Service Unavailable error on ${domain} has been resolved.`,
+                urls
+            };
+
+        case crawlNotificationType.Error404:
+            return {
+                type: errorPresent ? 'error' : 'success',
+                title: errorPresent ? '404 Not Found Error' : '404 Error Resolved',
+                message: errorPresent
+                    ? `${baseMessage} A 404 Not Found error was detected on ${domain}.`
+                    : `Great news! The previously detected 404 Not Found error on ${domain} has been resolved.`,
+                urls
+            };
+
+        case crawlNotificationType.Score:
+            const oldScore = Math.floor((additionalData?.oldScore || 0) * 100);
+            const newScore = Math.floor((additionalData?.newScore || 0) * 100);
+            const scoreDiff = newScore - oldScore;
+
+            return {
+                type: scoreDiff >= 0 ? 'success' : 'warning',
+                title: 'SEO Score Update',
+                message: `${baseMessage} Your SEO score has ${scoreDiff >= 0 ? 'improved' : 'decreased'} from ${oldScore} to ${newScore} (${scoreDiff >= 0 ? '+' : ''}${scoreDiff} points).`,
+                urls
+            };
+
+        case crawlNotificationType.Robots:
+            if (!additionalData?.updatedDomain) return null;
+
+            const changes = [];
+            if (additionalData.updatedDomain.robotsIndex !== domain.robotsIndex) {
+                changes.push(`index → ${additionalData.updatedDomain.robotsIndex ? 'index' : 'noindex'}`);
+            }
+            if (additionalData.updatedDomain.robotsFollow !== domain.robotsFollow) {
+                changes.push(`follow → ${additionalData.updatedDomain.robotsFollow ? 'follow' : 'nofollow'}`);
+            }
+
+            return {
+                type: errorPresent ? 'warning' : 'success',
+                title: 'Robots Meta Tags Updated',
+                message: `${baseMessage} Changes in robots meta tags: ${changes.join(', ')}`,
+                urls
+            };
+
+        default:
+            return null;
+    }
+}

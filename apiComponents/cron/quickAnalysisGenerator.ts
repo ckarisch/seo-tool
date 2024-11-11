@@ -1,18 +1,19 @@
 import { env } from "process";
 import { createLogger } from "../dev/logger";
 import { LogEntry } from "../dev/StreamingLogViewer";
-import { crawlDomainResponse } from "@/app/api/seo/domains/[domainName]/crawl/crawlDomain";
-import { CronJob, PrismaClient, Prisma } from "@prisma/client";
+import { CronJob, PrismaClient, Prisma, Domain, User } from "@prisma/client";
 import { domainIntervalGenerator, domainIntervalResponse } from "./domainInterval";
 import { quickAnalysis, quickAnalysisResponse } from "@/app/api/seo/domains/[domainName]/crawl/quickAnalysis";
 import { checkTimeout } from "@/app/api/seo/domains/[domainName]/crawl/crawlLinkHelper";
 import { CustomLogEntry } from "@/types/logs";
+import { consolidatedCrawlNotification, crawlNotificationType } from "@/mail/EnhancedEmailer";
 
 const prisma = new PrismaClient();
 
 const resetCrawlTime = 3600000; // 1h
 const maxDomainCrawls = 5;
 const fallbackInterval = 1420; // nearly a day
+const scoreDifferenceThreshold = 0.05; // 5% threshold for score notifications
 
 interface QuickAnalysisMetrics {
     loadTime: number;
@@ -21,8 +22,15 @@ interface QuickAnalysisMetrics {
     warnings: number;
     performanceScore: number | null;
     seoScore: number | null;
-    accessibility: number | null;
-    bestPractices: number | null;
+    accessibility: null;
+    bestPractices: null;
+    timeToInteractive: number | null;
+    firstContentfulPaint: number | null;
+    totalBytes: number | null;
+    scriptCount: number | null;
+    styleCount: number | null;
+    imageCount: number | null;
+    totalResources: number | null;
 }
 
 interface QuickAnalysisIssue {
@@ -31,6 +39,12 @@ interface QuickAnalysisIssue {
     message: string;
 }
 
+interface NotificationItem {
+    type: crawlNotificationType;
+    errorPresent: boolean;
+    urls: string[];
+    additionalData?: any;
+}
 
 async function storeQuickAnalysisHistory(
     domainId: string,
@@ -50,6 +64,29 @@ async function storeQuickAnalysisHistory(
                     issues: issues as unknown as Prisma.JsonArray,
                     crawlTime,
                     status,
+                    // Store detailed metrics separately
+                    timeToInteractive: metrics.timeToInteractive || null,
+                    firstContentfulPaint: metrics.firstContentfulPaint || null,
+                    totalBytes: metrics.totalBytes || null,
+                    scriptCount: metrics.scriptCount || null,
+                    styleCount: metrics.styleCount || null,
+                    imageCount: metrics.imageCount || null,
+                    totalResources: metrics.totalResources || null
+                }
+            });
+
+            // Also update the domain with the latest metrics
+            await tx.domain.update({
+                where: { id: domainId },
+                data: {
+                    timeToInteractive: metrics.timeToInteractive || null,
+                    firstContentfulPaint: metrics.firstContentfulPaint || null,
+                    totalBytes: metrics.totalBytes || null,
+                    scriptCount: metrics.scriptCount || null,
+                    styleCount: metrics.styleCount || null,
+                    imageCount: metrics.imageCount || null,
+                    totalResources: metrics.totalResources || null,
+                    lastMetricsUpdate: new Date()
                 }
             });
         });
@@ -63,6 +100,7 @@ function calculateScore(metrics: QuickAnalysisMetrics): number {
     let score = 0;
     let factors = 0;
 
+    // Base metrics
     if (metrics.performanceScore !== null) {
         score += metrics.performanceScore;
         factors++;
@@ -71,12 +109,25 @@ function calculateScore(metrics: QuickAnalysisMetrics): number {
         score += metrics.seoScore;
         factors++;
     }
-    if (metrics.accessibility !== null) {
-        score += metrics.accessibility;
+
+    // Additional performance factors
+    if (metrics.timeToInteractive !== null && metrics.loadTime > 0) {
+        const ttiScore = Math.max(0, 1 - (metrics.timeToInteractive / 5000)); // 5s benchmark
+        score += ttiScore;
         factors++;
     }
-    if (metrics.bestPractices !== null) {
-        score += metrics.bestPractices;
+
+    if (metrics.firstContentfulPaint !== null && metrics.loadTime > 0) {
+        const fcpScore = Math.max(0, 1 - (metrics.firstContentfulPaint / 2000)); // 2s benchmark
+        score += fcpScore;
+        factors++;
+    }
+
+    // Resource optimization score
+    if (metrics.totalResources !== null && metrics.totalBytes !== null) {
+        const resourceScore = Math.max(0, 1 - (metrics.totalResources / 100)) * // 100 resources benchmark
+            Math.max(0, 1 - (metrics.totalBytes / (2 * 1024 * 1024))); // 2MB benchmark
+        score += resourceScore;
         factors++;
     }
 
@@ -87,7 +138,7 @@ function calculateScore(metrics: QuickAnalysisMetrics): number {
         return Math.max(0, Math.min(100, baseScore - errorPenalty - warningPenalty)) / 100;
     }
 
-    return score / (factors);
+    return score / factors;
 }
 
 export async function* quickAnalysisGenerator(
@@ -111,7 +162,11 @@ export async function* quickAnalysisGenerator(
     const domains = await prisma.domain.findMany({
         orderBy: { lastQuickAnalysis: "asc" },
         include: {
-            user: { select: { role: true } },
+            user: {
+                include: {
+                    notificationContacts: true
+                }
+            },
             quickAnalysisHistory: {
                 orderBy: { timestamp: 'desc' },
                 take: 1,
@@ -181,6 +236,7 @@ export async function* quickAnalysisGenerator(
             yield { text: `Starting analysis for domain: ${domain.domainName}` };
 
             try {
+                const notifications: NotificationItem[] = [];
                 const subfunctionGenerator = quickAnalysis(
                     domain.domainName,
                     2, // depth
@@ -197,7 +253,14 @@ export async function* quickAnalysisGenerator(
                     performanceScore: null,
                     seoScore: null,
                     accessibility: null,
-                    bestPractices: null
+                    bestPractices: null,
+                    timeToInteractive: null,
+                    firstContentfulPaint: null,
+                    totalBytes: null,
+                    scriptCount: null,
+                    styleCount: null,
+                    imageCount: null,
+                    totalResources: null
                 };
 
                 const collectedIssues: QuickAnalysisIssue[] = [];
@@ -206,18 +269,49 @@ export async function* quickAnalysisGenerator(
                 do {
                     result = await subfunctionGenerator.next();
                     if (!result.done) {
-                        // Convert CustomLogEntry to LogEntry and yield
                         yield { text: result.value.text };
 
-                        // Process metrics and issues
+                        // Collect metrics and issues
                         if (result.value.type === 'metric' && result.value.performance) {
                             const perf = result.value.performance;
                             aggregatedMetrics.loadTime = perf.loadTime;
                             aggregatedMetrics.performanceScore = perf.performanceScore || null;
                             aggregatedMetrics.resourceCount = perf.totalResources || 0;
+                            aggregatedMetrics.timeToInteractive = perf.timeToInteractive || null;
+                            aggregatedMetrics.firstContentfulPaint = perf.firstContentfulPaint || null;
+                            aggregatedMetrics.totalBytes = perf.totalBytes || null;
+                            aggregatedMetrics.scriptCount = perf.scriptCount || null;
+                            aggregatedMetrics.styleCount = perf.styleCount || null;
+                            aggregatedMetrics.imageCount = perf.imageCount || null;
+                            aggregatedMetrics.totalResources = perf.totalResources || null;
                         } else if (result.value.type === 'issue') {
                             if (result.value.issueSeverity === 'error') {
                                 aggregatedMetrics.errors++;
+
+                                // Add to notifications based on issue type
+                                if (result.value.issueType === 'ERR_BAD_REQUEST' && result.value.text.includes('404')) {
+                                    notifications.push({
+                                        type: crawlNotificationType.Error404,
+                                        errorPresent: true,
+                                        urls: [`https://${domain.domainName}`]
+                                    });
+                                } else if (result.value.issueType === 'ERR_BAD_RESPONSE' && result.value.text.includes('503')) {
+                                    notifications.push({
+                                        type: crawlNotificationType.Error503,
+                                        errorPresent: true,
+                                        urls: [`https://${domain.domainName}`]
+                                    });
+                                } else {
+                                    notifications.push({
+                                        type: crawlNotificationType.GeneralError,
+                                        errorPresent: true,
+                                        urls: [`https://${domain.domainName}`],
+                                        additionalData: {
+                                            errorType: result.value.issueType,
+                                            errorMessage: result.value.issueMessage
+                                        }
+                                    });
+                                }
                             } else if (result.value.issueSeverity === 'warning') {
                                 aggregatedMetrics.warnings++;
                             }
@@ -233,17 +327,20 @@ export async function* quickAnalysisGenerator(
 
                 const analysisEndTime = new Date().getTime();
                 const finalScore = calculateScore(aggregatedMetrics);
+                const oldScore = domain.score || 0;
+                let newScore = 0;
 
                 await prisma.$transaction(async (tx) => {
-                    // First update the scores
+                    // Update quick check score
                     await tx.domain.update({
                         where: { id: domain.id },
                         data: {
                             quickCheckScore: finalScore,
+                            lastQuickAnalysis: new Date()
                         }
                     });
-                
-                    // Then get the domain to calculate score
+
+                    // Calculate and update overall score
                     const updatedDomain = await tx.domain.findUnique({
                         where: { id: domain.id },
                         select: {
@@ -251,17 +348,61 @@ export async function* quickAnalysisGenerator(
                             performanceScore: true
                         }
                     });
-                
+
                     if (!updatedDomain || !updatedDomain.quickCheckScore || !updatedDomain.performanceScore) return;
-                
-                    // Update the score based on the new values
+
+                    newScore = (updatedDomain.quickCheckScore + updatedDomain.performanceScore) / 2;
+
                     await tx.domain.update({
                         where: { id: domain.id },
                         data: {
-                            score: (updatedDomain.quickCheckScore + updatedDomain.performanceScore) / 2
+                            score: newScore
                         }
                     });
                 });
+
+                // Add score change notification if threshold exceeded
+                const scoreDifference = Math.abs(newScore - oldScore);
+                if (scoreDifference >= scoreDifferenceThreshold) {
+                    notifications.push({
+                        type: crawlNotificationType.Score,
+                        errorPresent: false,
+                        urls: [`https://${domain.domainName}`],
+                        additionalData: {
+                            oldScore,
+                            newScore,
+                            metrics: aggregatedMetrics,
+                            issues: collectedIssues
+                        }
+                    });
+                }
+
+                // Send consolidated notifications if any exist
+                if (notifications.length > 0 && domain.user) {
+                    const completeUser = {
+                        id: domain.user.id,
+                        name: domain.user.name,
+                        email: domain.user.email,
+                        role: domain.user.role,
+                        image: null,
+                        password: null,
+                        salt: null,
+                        stripeCustomers: [],
+                        emailVerified: null,
+                        createdAt: null,
+                        updatedAt: null,
+                        notificationContacts: domain.user.notificationContacts || []
+                    };
+
+                    await consolidatedCrawlNotification(
+                        completeUser,
+                        domain,
+                        notifications,
+                        !domain.lastQuickAnalysis
+                    );
+
+                    yield { text: `Sent consolidated notifications for ${notifications.length} issues` };
+                }
 
                 await storeQuickAnalysisHistory(
                     domain.id,
@@ -277,14 +418,15 @@ export async function* quickAnalysisGenerator(
                 await prisma.adminLog.create({
                     data: {
                         createdAt: new Date(),
-                        message: `Quick analysis completed for ${domain.domainName} (score: ${finalScore * 100})`,
+                        message: `Quick analysis completed for ${domain.domainName} (score: ${(finalScore * 100).toFixed(1)}%, overall: ${(newScore * 100).toFixed(1)}%)`,
                         domainId: domain.id,
                         userId: domain.userId,
                     },
                 });
 
-                yield { text: `Analysis completed for domain: ${domain.domainName} (score: ${finalScore * 100})` };
+                yield { text: `Analysis completed for domain: ${domain.domainName} (score: ${(finalScore * 100).toFixed(1)}%, overall: ${(newScore * 100).toFixed(1)}%)` };
 
+                // In the catch block of quickAnalysisGenerator:
             } catch (err) {
                 const error = err as Error;
                 const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
@@ -300,19 +442,29 @@ export async function* quickAnalysisGenerator(
                     },
                 });
 
+                // Create complete metrics object with all required fields set to null/0
+                const errorMetrics: QuickAnalysisMetrics = {
+                    loadTime: 0,
+                    resourceCount: 0,
+                    errors: 1,
+                    warnings: 0,
+                    performanceScore: null,
+                    seoScore: null,
+                    accessibility: null,
+                    bestPractices: null,
+                    timeToInteractive: null,
+                    firstContentfulPaint: null,
+                    totalBytes: null,
+                    scriptCount: null,
+                    styleCount: null,
+                    imageCount: null,
+                    totalResources: null
+                };
+
                 await storeQuickAnalysisHistory(
                     domain.id,
                     0,
-                    {
-                        loadTime: 0,
-                        resourceCount: 0,
-                        errors: 1,
-                        warnings: 0,
-                        performanceScore: null,
-                        seoScore: null,
-                        accessibility: null,
-                        bestPractices: null
-                    },
+                    errorMetrics,
                     [{
                         type: 'error',
                         severity: 'critical',

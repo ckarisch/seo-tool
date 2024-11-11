@@ -92,7 +92,6 @@ model NotificationContact {
   @@map("notificationcontact")
 }
 
-
 enum ImplementationStatus {
   NOT_IMPLEMENTED
   TEST
@@ -100,33 +99,32 @@ enum ImplementationStatus {
   PRODUCTION
 }
 
-
 model ErrorType {
-  id        String     @id @default(auto()) @map("_id") @db.ObjectId
-  code      String     @unique
-  name      String
-  category  String
-  severity  Severity
-  implementation  ImplementationStatus @default(NOT_IMPLEMENTED)
-  errorLogs ErrorLog[]
+  id             String               @id @default(auto()) @map("_id") @db.ObjectId
+  code           String               @unique
+  name           String
+  category       String
+  severity       Severity
+  implementation ImplementationStatus @default(NOT_IMPLEMENTED)
+  errorLogs      ErrorLog[]
 
   @@map("errortype")
 }
 
 model ErrorLog {
-  id            String       @id @default(auto()) @map("_id") @db.ObjectId
-  errorType     ErrorType    @relation(fields: [errorTypeId], references: [id])
-  errorTypeId   String       @db.ObjectId
-  createdAt     DateTime     @default(now())
-  resolvedAt    DateTime?
-  domain        Domain?      @relation("DomainErrors", fields: [domainId], references: [id])
-  domainId      String?      @db.ObjectId
-  internalLink  InternalLink? @relation("PageErrors", fields: [internalLinkId], references: [id])
-  internalLinkId String?     @db.ObjectId
-  domainCrawl   DomainCrawl? @relation("CrawlErrors", fields: [domainCrawlId], references: [id])
-  domainCrawlId String?      @db.ObjectId
-  metadata      Json?
-  occurrence    Int          @default(1)
+  id             String        @id @default(auto()) @map("_id") @db.ObjectId
+  errorType      ErrorType     @relation(fields: [errorTypeId], references: [id])
+  errorTypeId    String        @db.ObjectId
+  createdAt      DateTime      @default(now())
+  resolvedAt     DateTime?
+  domain         Domain?       @relation("DomainErrors", fields: [domainId], references: [id])
+  domainId       String?       @db.ObjectId
+  internalLink   InternalLink? @relation("PageErrors", fields: [internalLinkId], references: [id])
+  internalLinkId String?       @db.ObjectId
+  domainCrawl    DomainCrawl?  @relation("CrawlErrors", fields: [domainCrawlId], references: [id])
+  domainCrawlId  String?       @db.ObjectId
+  metadata       Json?
+  occurrence     Int           @default(1)
 
   @@map("errorlog")
 }
@@ -140,16 +138,16 @@ enum Severity {
 }
 
 model Domain {
-  id                                String         @id @default(auto()) @map("_id") @db.ObjectId
+  id                                String                 @id @default(auto()) @map("_id") @db.ObjectId
   name                              String
-  domainName                        String         @unique
+  domainName                        String                 @unique
   domainVerificationKey             String?
   domainVerified                    Boolean?
   internalLinks                     InternalLink[]
   externalLinks                     ExternalLink[]
-  user                              User           @relation(fields: [userId], references: [id])
+  user                              User                   @relation(fields: [userId], references: [id])
   domainCrawls                      DomainCrawl[]
-  userId                            String         @db.ObjectId
+  userId                            String                 @db.ObjectId
   lastCrawl                         DateTime?
   lastErrorTime                     DateTime?
   lastErrorType                     String?
@@ -180,43 +178,57 @@ model Domain {
   robotsFollow                      Boolean?
   timeoutPercentage                 Float?
   badRequestPercentage              Float?
-  typeErrorPercentage              Float?
-  errorLogs                        ErrorLog[]      @relation("DomainErrors")
-  metrics           DomainMetrics[]
-  quickAnalysisHistory QuickAnalysisHistory[]
-  lastPerformanceCheck DateTime?
-  lastQuickCheck    DateTime?
-  quickCheckScore   Float?
-  errorTypes        Json?  // Array of current error types
-  warningTypes      Json?  // Array of current warning types
-  statusHistory     Json?  // Track status changes over time
+  typeErrorPercentage               Float?
+  errorLogs                         ErrorLog[]             @relation("DomainErrors")
+  metrics                           DomainMetrics[]
+  quickAnalysisHistory              QuickAnalysisHistory[]
+  lastPerformanceCheck              DateTime?
+  lastQuickCheck                    DateTime?
+  quickCheckScore                   Float?
+  errorTypes                        Json? // Array of current error types
+  warningTypes                      Json? // Array of current warning types
+  statusHistory                     Json? // Track status changes over time
+  timeToInteractive                 Float?
+  firstContentfulPaint              Float?
+  totalBytes                        Int?
+  scriptCount                       Int?
+  styleCount                        Int?
+  imageCount                        Int?
+  totalResources                    Int?
+  lastMetricsUpdate                 DateTime?
 
   @@map("domain")
 }
 
 model QuickAnalysisHistory {
-  id          String    @id @default(auto()) @map("_id") @db.ObjectId
-  domain      Domain    @relation(fields: [domainId], references: [id])
-  domainId    String    @db.ObjectId
-  timestamp   DateTime  @default(now())
-  score       Float
-  metrics     Json      // Store detailed metrics
-  issues      Json?     // Store found issues
-  crawlTime   Int?
-  status      String?
+  id                   String   @id @default(auto()) @map("_id") @db.ObjectId
+  domainId             String   @db.ObjectId
+  domain               Domain   @relation(fields: [domainId], references: [id])
+  score                Float
+  metrics              Json
+  issues               Json
+  crawlTime            Int
+  status               String
+  timestamp            DateTime @default(now())
+  timeToInteractive    Float?
+  firstContentfulPaint Float?
+  totalBytes           Int?
+  scriptCount          Int?
+  styleCount           Int?
+  imageCount           Int?
+  totalResources       Int?
 
-  @@index([domainId, timestamp])
   @@map("quickanalysishistory")
 }
 
 model DomainMetrics {
-  id               String    @id @default(auto()) @map("_id") @db.ObjectId
-  domain           Domain    @relation(fields: [domainId], references: [id])
-  domainId         String    @db.ObjectId
-  timestamp        DateTime  @default(now())
-  type             MetricType
-  score            Float
-  metadata         Json?     // For storing additional metric-specific data
+  id        String     @id @default(auto()) @map("_id") @db.ObjectId
+  domain    Domain     @relation(fields: [domainId], references: [id])
+  domainId  String     @db.ObjectId
+  timestamp DateTime   @default(now())
+  type      MetricType
+  score     Float
+  metadata  Json? // For storing additional metric-specific data
 
   @@map("domainmetrics")
 }

@@ -1,7 +1,8 @@
 import axios, { AxiosError, AxiosResponse } from 'axios';
-import { crawlNotification, crawlNotificationType } from '@/app/api/seo/domains/[domainName]/crawl/crawlNotification';
 import { Domain, User } from '@prisma/client';
 import { load } from 'cheerio';
+import { consolidatedCrawlNotification } from '@/mail/EnhancedEmailer';
+import { crawlNotificationType } from '@/mail/EnhancedEmailer';
 
 interface PerformanceMetrics {
     loadTime: number;
@@ -39,7 +40,6 @@ export const initialCrawl = async (
     targetURL: string,
     maxCrawlTime: number,
     crawlStartTime: number,
-    sendNotification: boolean,
     user: User & { notificationContacts: any[] } | null,
     analyzedUrl: { normalizedLink: string }
 ): Promise<CrawlResponse> => {
@@ -131,32 +131,6 @@ export const initialCrawl = async (
                 message: error.message,
                 status: error.response?.status
             };
-
-            if (error.code === 'ERR_BAD_REQUEST' && error.response?.status === 404) {
-                if (sendNotification && user) {
-                    await crawlNotification(
-                        user,
-                        domain,
-                        crawlNotificationType.Error404,
-                        true,
-                        domain.domainName,
-                        [analyzedUrl.normalizedLink],
-                        domain.score ?? 0
-                    );
-                }
-            } else if (error.code === 'ERR_BAD_RESPONSE' && error.response?.status === 503) {
-                if (sendNotification && user) {
-                    await crawlNotification(
-                        user,
-                        domain,
-                        crawlNotificationType.Error503,
-                        true,
-                        domain.domainName,
-                        [analyzedUrl.normalizedLink],
-                        domain.score ?? 0
-                    );
-                }
-            }
         } else {
             errorResponse.error = {
                 code: 'UNKNOWN_ERROR',
@@ -208,14 +182,12 @@ function calculateInitialPerformanceScore(loadTime: number, metrics: ResourceMet
 
 function calculateTimeToInteractive(loadTime: number, metrics: ResourceMetrics): number {
     // Estimate TTI based on load time and script count
-    // This is a simplified estimation; real TTI would require browser metrics
     const scriptDelay = metrics.scriptCount * 50; // Assume 50ms per script
     return loadTime + scriptDelay;
 }
 
 function calculateFirstContentfulPaint(loadTime: number, metrics: ResourceMetrics): number {
     // Estimate FCP based on load time and critical resources
-    // This is a simplified estimation; real FCP would require browser metrics
     const criticalResourceDelay = (metrics.styleCount * 30) + (metrics.imageCount * 20);
     return Math.min(loadTime, loadTime * 0.8 + criticalResourceDelay);
 }
