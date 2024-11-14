@@ -22,17 +22,21 @@ interface VerificationStatus {
   message?: string;
 }
 
+interface MetricCardProps {
+  value?: number | null;
+  label: string;
+  dummyText: boolean;
+  isLoading?: boolean; // New prop for loading state
+}
+
 const MetricCard = ({
   value,
   label,
   dummyText,
-}: {
-  value?: number | null;
-  label: string;
-  dummyText: boolean;
-}) => {
+  isLoading = false, // Default to false
+}: MetricCardProps) => {
   const getScoreClass = (score?: number | null) => {
-    if (dummyText) return styles.dummyText;
+    if (dummyText || isLoading) return styles.dummyText;
     if (!score) return styles.bad;
     if (score > 0.8) return styles.veryGood;
     if (score > 0.5) return styles.good;
@@ -42,9 +46,16 @@ const MetricCard = ({
   return (
     <div className={styles.metric}>
       <div className={[styles.metricValue, getScoreClass(value)].join(' ')}>
-        {!dummyText && value !== undefined && Math.round(value ? value * 100 : 0)}
+        {isLoading ? (
+          <Loader className={styles.loadingSpinner} size={16} />
+        ) : (
+          !dummyText && value !== undefined && Math.round(value ? value * 100 : 0)
+        )}
       </div>
-      <span className={styles.metricLabel}>{label}</span>
+      <span className={styles.metricLabel}>
+        {label}
+        {isLoading && <span className={styles.loadingText}> (Analyzing...)</span>}
+      </span>
     </div>
   );
 };
@@ -210,16 +221,19 @@ export default function DomainStatusContent({
               value={domain.score}
               label="Overall Score"
               dummyText={dummyText}
+              isLoading={!!domain.domainVerified && (!domain.lastCrawlTime || !domain.lastLighthouseAnalysis || !domain.lastQuickAnalysis) && !dummyText}
             />
             <MetricCard
               value={domain.performanceScore}
               label="Performance"
               dummyText={dummyText}
+              isLoading={!!domain.domainVerified && !domain.lastLighthouseAnalysis && !dummyText}
             />
             <MetricCard
               value={domain.quickCheckScore}
               label="Quick Check"
               dummyText={dummyText}
+              isLoading={!!domain.domainVerified && !domain.lastQuickAnalysis && !dummyText}
             />
           </div>
         )}

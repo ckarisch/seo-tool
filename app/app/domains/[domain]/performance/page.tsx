@@ -1,4 +1,3 @@
-// app/domains/[domain]/performance/page.tsx
 "use client";
 
 import React, { useEffect, useState } from 'react';
@@ -11,16 +10,16 @@ import DomainMetrics from '../domainMetrics';
 
 interface PerformanceMetrics {
   timestamp: string;
-  loadTime: number;
-  firstContentfulPaint: number;
-  largestContentfulPaint: number;
-  timeToInteractive: number;
-  totalBlockingTime: number;
-  cumulativeLayoutShift: number;
-  resourceSummary: {
-    totalResources: number;
-    totalBytes: number;
-    coverage: number;
+  loadTime?: number | null;
+  firstContentfulPaint?: number | null;
+  largestContentfulPaint?: number | null;
+  timeToInteractive?: number | null;
+  totalBlockingTime?: number | null;
+  cumulativeLayoutShift?: number | null;
+  resourceSummary?: {
+    totalResources?: number | null;
+    totalBytes?: number | null;
+    coverage?: number | null;
   };
 }
 
@@ -78,12 +77,17 @@ export default function PerformanceDashboard({ params }: { params: { domain: str
     );
   }
 
-  const formatBytes = (bytes: number): string => {
-    if (bytes === 0) return '0 Bytes';
+  const formatBytes = (bytes: number | undefined | null): string => {
+    if (!bytes || bytes === 0) return '0 Bytes';
     const k = 1024;
     const sizes = ['Bytes', 'KB', 'MB', 'GB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  };
+
+  const formatNumber = (value: number | undefined | null, decimals: number = 2, unit: string = ''): string => {
+    if (value === undefined || value === null) return 'N/A';
+    return `${value.toFixed(decimals)}${unit}`;
   };
 
   return (
@@ -96,7 +100,7 @@ export default function PerformanceDashboard({ params }: { params: { domain: str
           </CardHeader>
           <CardContent>
             <div className={styles.scoreValue}>
-              {(performanceData.currentScore * 100).toFixed(0)}
+              {formatNumber(performanceData.currentScore * 100, 0)}
             </div>
             <div className={styles.lastUpdate}>
               <Clock size={16} />
@@ -115,7 +119,7 @@ export default function PerformanceDashboard({ params }: { params: { domain: str
                 </div>
                 <span className={styles.metricLabel}>Load Time</span>
                 <span className={styles.metricValue}>
-                  {performanceData.metrics.loadTime.toFixed(2)}s
+                  {formatNumber(performanceData.metrics.loadTime, 2, 's')}
                 </span>
               </div>
             </CardContent>
@@ -129,7 +133,7 @@ export default function PerformanceDashboard({ params }: { params: { domain: str
                 </div>
                 <span className={styles.metricLabel}>Time to Interactive</span>
                 <span className={styles.metricValue}>
-                  {performanceData.metrics.timeToInteractive.toFixed(2)}s
+                  {formatNumber(performanceData.metrics.timeToInteractive, 2, 's')}
                 </span>
               </div>
             </CardContent>
@@ -143,9 +147,9 @@ export default function PerformanceDashboard({ params }: { params: { domain: str
                 </div>
                 <span className={styles.metricLabel}>Resources</span>
                 <span className={styles.metricValue}>
-                  {performanceData.metrics.resourceSummary.totalResources}
+                  {performanceData.metrics.resourceSummary?.totalResources ?? 'N/A'}
                   <span className={styles.metricSubtext}>
-                    {formatBytes(performanceData.metrics.resourceSummary.totalBytes)}
+                    {formatBytes(performanceData.metrics.resourceSummary?.totalBytes)}
                   </span>
                 </span>
               </div>
@@ -175,25 +179,25 @@ export default function PerformanceDashboard({ params }: { params: { domain: str
               <div className={styles.metricRow}>
                 <span className={styles.metricName}>First Contentful Paint</span>
                 <span className={styles.metricValue}>
-                  {performanceData.metrics.firstContentfulPaint.toFixed(2)}s
+                  {formatNumber(performanceData.metrics.firstContentfulPaint, 2, 's')}
                 </span>
               </div>
               <div className={styles.metricRow}>
                 <span className={styles.metricName}>Largest Contentful Paint</span>
                 <span className={styles.metricValue}>
-                  {performanceData.metrics.largestContentfulPaint.toFixed(2)}s
+                  {formatNumber(performanceData.metrics.largestContentfulPaint, 2, 's')}
                 </span>
               </div>
               <div className={styles.metricRow}>
                 <span className={styles.metricName}>Total Blocking Time</span>
                 <span className={styles.metricValue}>
-                  {performanceData.metrics.totalBlockingTime.toFixed(2)}ms
+                  {formatNumber(performanceData.metrics.totalBlockingTime, 2, 'ms')}
                 </span>
               </div>
               <div className={styles.metricRow}>
                 <span className={styles.metricName}>Cumulative Layout Shift</span>
                 <span className={styles.metricValue}>
-                  {performanceData.metrics.cumulativeLayoutShift.toFixed(3)}
+                  {formatNumber(performanceData.metrics.cumulativeLayoutShift, 3)}
                 </span>
               </div>
             </div>

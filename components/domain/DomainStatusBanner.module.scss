@@ -1,0 +1,80 @@
+// components/domain/DomainStatusBanner.module.scss
+@import "@/app/variables";
+
+.bannerContainer {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    width: 100%;
+    margin-bottom: 24px;
+}
+
+.banner {
+    background-color: rgba($error, 0.1);
+    border: 1px solid rgba($error, 0.2);
+    border-radius: 8px;
+    padding: 16px;
+    width: 100%;
+
+    &.pending {
+        background-color: rgba($warning, 0.1);
+        border-color: rgba($warning, 0.2);
+
+        .icon {
+            color: $warning;
+        }
+    }
+}
+
+.bannerContent {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+}
+
+.icon {
+    flex-shrink: 0;
+    width: 20px;
+    height: 20px;
+    color: $error;
+    margin-top: 2px;
+}
+
+.bannerText {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.bannerTitle {
+    font-weight: 600;
+    font-size: 1rem;
+    color: $text-primary;
+}
+
+.bannerText p {
+    color: $text-secondary;
+    font-size: 0.95rem;
+    line-height: 1.5;
+    margin: 0;
+}
+
+.domainList {
+    font-weight: 500;
+    color: $text-primary;
+}
+
+@media (max-width: 768px) {
+    .banner {
+        padding: 12px;
+    }
+
+    .bannerTitle {
+        font-size: 0.95rem;
+    }
+
+    .bannerText p {
+        font-size: 0.9rem;
+    }
+}

@@ -75,6 +75,39 @@ async function storeQuickAnalysisHistory(
                 }
             });
 
+            // Create domain metrics entries for each score type
+            await tx.domainMetrics.create({
+                data: {
+                    domain: { connect: { id: domainId } },
+                    type: 'DOMAIN_SCORE',
+                    score: score,
+                    timestamp: new Date(),
+                    metadata: { source: 'quick_analysis' }
+                }
+            });
+
+            if (metrics.performanceScore !== null) {
+                await tx.domainMetrics.create({
+                    data: {
+                        domain: { connect: { id: domainId } },
+                        type: 'PERFORMANCE',
+                        score: metrics.performanceScore,
+                        timestamp: new Date(),
+                        metadata: { source: 'quick_analysis' }
+                    }
+                });
+            }
+
+            await tx.domainMetrics.create({
+                data: {
+                    domain: { connect: { id: domainId } },
+                    type: 'QUICK_CHECK',
+                    score: score,
+                    timestamp: new Date(),
+                    metadata: { source: 'quick_analysis' }
+                }
+            });
+
             // Also update the domain with the latest metrics
             await tx.domain.update({
                 where: { id: domainId },

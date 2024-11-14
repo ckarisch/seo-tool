@@ -1,4 +1,6 @@
-export interface Domain {
+import { Domain } from "@prisma/client";
+
+export interface Domain_old {
   id: string;
   name: string;
   domainName: string;

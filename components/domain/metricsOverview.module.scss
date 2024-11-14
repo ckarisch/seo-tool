@@ -1,0 +1,131 @@
+// components/domain/metricsOverview.module.scss
+@import "@/app/variables";
+
+.metricsContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+  width: 100%;
+  background-color: $white;
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.metricsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 24px;
+  width: 100%;
+}
+
+.metricCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  background-color: $white;
+  border-radius: 12px;
+  border: 1px solid $background-light;
+  transition: transform 0.2s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+  }
+}
+
+.metricValue {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 64px;
+  height: 64px;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 1.25rem;
+
+  &.veryGood {
+    background-color: rgba($veryGood, 0.1);
+    color: $veryGood;
+  }
+
+  &.good {
+    background-color: rgba($good, 0.1);
+    color: $good;
+  }
+
+  &.bad {
+    background-color: rgba($error, 0.1);
+    color: $error;
+  }
+}
+
+.metricLabel {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: $text-secondary;
+  text-align: center;
+}
+
+.graphContainer {
+  width: 100%;
+}
+
+.graphTitle {
+  font-size: 1.1rem;
+  font-weight: 500;
+  color: $text-primary;
+  margin-bottom: 16px;
+}
+
+.graph {
+  width: 100%;
+  height: 300px;
+  background-color: $white;
+  border-radius: 12px;
+  padding: 16px;
+  border: 1px solid $background-light;
+}
+
+.errorMessage {
+  padding: 16px;
+  background-color: rgba($error, 0.1);
+  color: $error;
+  border-radius: 8px;
+  text-align: center;
+  font-size: 0.9rem;
+}
+
+.customTooltip {
+  background-color: $white;
+  border: 1px solid $background-light;
+  border-radius: 8px;
+  padding: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.tooltipDate {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: $text-primary;
+  margin-bottom: 8px;
+}
+
+.tooltipScore {
+  font-size: 0.85rem;
+  color: $main;
+  margin-bottom: 4px;
+}
+
+.tooltipCrawl {
+  font-size: 0.85rem;
+  color: $text-secondary;
+  margin-bottom: 4px;
+}
+
+.tooltipStatus {
+  font-size: 0.85rem;
+  color: $text-secondary;
+}

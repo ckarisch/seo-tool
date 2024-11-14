@@ -11,6 +11,8 @@ import Background from "@/components/layout/background";
 import { ConfirmDialog } from '@/components/layout/dialog/ConfirmDialog';
 import { Alert, AlertDescription } from '@/components/layout/alert/Alert';
 import { CheckCircle, AlertCircle } from 'lucide-react';
+import DomainStatusBanner from '@/components/domain/DomainStatusBanner';
+import { useDomainsStore } from '@/store/domains';
 
 interface VerificationDialogState {
   isOpen: boolean;
@@ -27,7 +29,7 @@ export default function DomainsPage() {
     isOpen: false,
     domain: '',
     verificationKey: '',
-    onVerify: async () => {}
+    onVerify: async () => { }
   });
 
   // Method to be passed to DomainStatusContent
@@ -60,6 +62,8 @@ export default function DomainsPage() {
       setAlert(null);
     }, 5000);
   };
+  
+  const { domains, isLoading, fetchDomains } = useDomainsStore();
 
   return (
     <main>
@@ -88,6 +92,25 @@ export default function DomainsPage() {
               <AlertDescription>{alert.message}</AlertDescription>
             </Alert>
           )}
+          <div className={styles.domainsContent}>
+            {alert && (
+              <Alert variant={alert.type === 'success' ? 'success' : 'destructive'}>
+                {alert.type === 'success' ? (
+                  <CheckCircle className="h-4 w-4" />
+                ) : (
+                  <AlertCircle className="h-4 w-4" />
+                )}
+                <AlertDescription>{alert.message}</AlertDescription>
+              </Alert>
+            )}
+
+            <DomainStatusBanner domains={domains} />  {/* Add this line */}
+
+            <div className={styles.domainsHeader}>
+              <h2 className={styles.domainsTitle}>Your Domains</h2>
+              {/* ... rest of the code ... */}
+            </div>
+          </div>
 
           <div className={styles.domainsHeader}>
             <h2 className={styles.domainsTitle}>Your Domains</h2>
@@ -99,7 +122,7 @@ export default function DomainsPage() {
               {showAddForm ? 'Cancel' : 'Add Domain'}
             </button>
           </div>
-          
+
           <DomainList onVerifyClick={openVerificationDialog} onVerificationComplete={handleVerificationComplete} />
         </div>
       </Section>

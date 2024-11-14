@@ -71,5 +71,5 @@ export async function GET(
     typeErrorPercentage: domain.typeErrorPercentage,
   }
 
-  return Response.json(domainResponse, { status: 200 })
+  return Response.json(domain, { status: 200 })
 }

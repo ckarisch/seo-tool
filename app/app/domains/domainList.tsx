@@ -2,10 +2,10 @@
 
 import { useEffect } from "react";
 import { useSession } from "next-auth/react";
-import { Domain } from "@/interfaces/domain";
 import DomainSummary from "./domainSummary";
 import styles from "./domainList.module.scss";
 import { useDomainsStore } from "@/store/domains";
+import { Domain } from "@prisma/client";
 
 interface DomainListProps {
   onVerifyClick: (domain: string, verificationKey: string, onVerify: () => Promise<void>) => void;

@@ -1,12 +1,12 @@
 "use client";
 
-import { Domain } from "@/interfaces/domain";
 import styles from "./domainSummary.module.scss";
 import { WarningOutline } from "@/icons/warning-outline";
 import { Warning } from "@/icons/warning";
 import Link from "next/link";
 import DomainStatusContent from "./domainStatusContent";
 import Image from "next/image";
+import { Domain } from "@prisma/client";
 
 interface DomainSummaryProps {
   domain: Partial<Domain>;

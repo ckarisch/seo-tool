@@ -1,5 +1,5 @@
+import { Domain } from '@prisma/client';
 import { create } from 'zustand';
-import { Domain } from '@/interfaces/domain';
 
 interface DomainsState {
   domains: Domain[];
