@@ -1,19 +1,18 @@
 import { env } from "process";
 import { createLogger } from "../dev/logger";
 import { LogEntry } from "../dev/StreamingLogViewer";
-import { CronJob, PrismaClient, Prisma, Domain, User } from "@prisma/client";
+import { CronJob, Prisma } from "@prisma/client";
 import { domainIntervalGenerator, domainIntervalResponse } from "./domainInterval";
 import { quickAnalysis, quickAnalysisResponse } from "@/app/api/seo/domains/[domainName]/crawl/quickAnalysis";
 import { checkTimeout } from "@/app/api/seo/domains/[domainName]/crawl/crawlLinkHelper";
 import { CustomLogEntry } from "@/types/logs";
 import { consolidatedCrawlNotification, crawlNotificationType } from "@/mail/EnhancedEmailer";
-
-const prisma = new PrismaClient();
+import { prisma } from '@/lib/prisma';
 
 const resetCrawlTime = 3600000; // 1h
-const maxDomainCrawls = 5;
+const maxDomainCrawls = 7;
 const fallbackInterval = 1420; // nearly a day
-const scoreDifferenceThreshold = 0.05; // 5% threshold for score notifications
+const scoreDifferenceThreshold = 0.1; // 10% threshold for score notifications
 
 interface QuickAnalysisMetrics {
     loadTime: number;
@@ -48,7 +47,8 @@ interface NotificationItem {
 
 async function storeQuickAnalysisHistory(
     domainId: string,
-    score: number,
+    domainScore: number,
+    quickAnalysisScore: number,
     metrics: QuickAnalysisMetrics,
     issues: QuickAnalysisIssue[],
     crawlTime: number,
@@ -59,7 +59,7 @@ async function storeQuickAnalysisHistory(
             await tx.quickAnalysisHistory.create({
                 data: {
                     domainId,
-                    score,
+                    score: quickAnalysisScore,
                     metrics: metrics as unknown as Prisma.JsonObject,
                     issues: issues as unknown as Prisma.JsonArray,
                     crawlTime,
@@ -80,29 +80,29 @@ async function storeQuickAnalysisHistory(
                 data: {
                     domain: { connect: { id: domainId } },
                     type: 'DOMAIN_SCORE',
-                    score: score,
+                    score: domainScore,
                     timestamp: new Date(),
                     metadata: { source: 'quick_analysis' }
                 }
             });
 
-            if (metrics.performanceScore !== null) {
-                await tx.domainMetrics.create({
-                    data: {
-                        domain: { connect: { id: domainId } },
-                        type: 'PERFORMANCE',
-                        score: metrics.performanceScore,
-                        timestamp: new Date(),
-                        metadata: { source: 'quick_analysis' }
-                    }
-                });
-            }
+            // if (metrics.performanceScore !== null) {
+            //     await tx.domainMetrics.create({
+            //         data: {
+            //             domain: { connect: { id: domainId } },
+            //             type: 'PERFORMANCE',
+            //             score: metrics.performanceScore,
+            //             timestamp: new Date(),
+            //             metadata: { source: 'quick_analysis' }
+            //         }
+            //     });
+            // }
 
             await tx.domainMetrics.create({
                 data: {
                     domain: { connect: { id: domainId } },
                     type: 'QUICK_CHECK',
-                    score: score,
+                    score: quickAnalysisScore,
                     timestamp: new Date(),
                     metadata: { source: 'quick_analysis' }
                 }
@@ -132,6 +132,7 @@ async function storeQuickAnalysisHistory(
 function calculateScore(metrics: QuickAnalysisMetrics): number {
     let score = 0;
     let factors = 0;
+    const useQuickCheckPerformanceMetrics = false;
 
     // Base metrics
     if (metrics.performanceScore !== null) {
@@ -143,25 +144,27 @@ function calculateScore(metrics: QuickAnalysisMetrics): number {
         factors++;
     }
 
-    // Additional performance factors
-    if (metrics.timeToInteractive !== null && metrics.loadTime > 0) {
-        const ttiScore = Math.max(0, 1 - (metrics.timeToInteractive / 5000)); // 5s benchmark
-        score += ttiScore;
-        factors++;
-    }
+    if (useQuickCheckPerformanceMetrics) {
+        // Additional performance factors
+        if (metrics.timeToInteractive !== null && metrics.loadTime > 0) {
+            const ttiScore = Math.max(0, 1 - (metrics.timeToInteractive / 5000)); // 5s benchmark
+            score += ttiScore;
+            factors++;
+        }
 
-    if (metrics.firstContentfulPaint !== null && metrics.loadTime > 0) {
-        const fcpScore = Math.max(0, 1 - (metrics.firstContentfulPaint / 2000)); // 2s benchmark
-        score += fcpScore;
-        factors++;
-    }
+        if (metrics.firstContentfulPaint !== null && metrics.loadTime > 0) {
+            const fcpScore = Math.max(0, 1 - (metrics.firstContentfulPaint / 2000)); // 2s benchmark
+            score += fcpScore;
+            factors++;
+        }
 
-    // Resource optimization score
-    if (metrics.totalResources !== null && metrics.totalBytes !== null) {
-        const resourceScore = Math.max(0, 1 - (metrics.totalResources / 100)) * // 100 resources benchmark
-            Math.max(0, 1 - (metrics.totalBytes / (2 * 1024 * 1024))); // 2MB benchmark
-        score += resourceScore;
-        factors++;
+        // Resource optimization score
+        if (metrics.totalResources !== null && metrics.totalBytes !== null) {
+            const resourceScore = Math.max(0, 1 - (metrics.totalResources / 100)) * // 100 resources benchmark
+                Math.max(0, 1 - (metrics.totalBytes / (2 * 1024 * 1024))); // 2MB benchmark
+            score += resourceScore;
+            factors++;
+        }
     }
 
     if (factors === 0) {
@@ -284,7 +287,7 @@ export async function* quickAnalysisGenerator(
                     errors: 0,
                     warnings: 0,
                     performanceScore: null,
-                    seoScore: null,
+                    seoScore: 1,
                     accessibility: null,
                     bestPractices: null,
                     timeToInteractive: null,
@@ -349,6 +352,10 @@ export async function* quickAnalysisGenerator(
                                 aggregatedMetrics.warnings++;
                             }
 
+                            if(result.value.issueType === 'ROBOTS_NOINDEX') {
+                                aggregatedMetrics.seoScore = 0;
+                            }
+
                             collectedIssues.push({
                                 type: result.value.issueType,
                                 severity: result.value.issueSeverity,
@@ -396,6 +403,7 @@ export async function* quickAnalysisGenerator(
 
                 // Add score change notification if threshold exceeded
                 const scoreDifference = Math.abs(newScore - oldScore);
+                yield { text: `Score difference: ${scoreDifference} (${oldScore} -> ${newScore})` };
                 if (scoreDifference >= scoreDifferenceThreshold) {
                     notifications.push({
                         type: crawlNotificationType.Score,
@@ -406,6 +414,60 @@ export async function* quickAnalysisGenerator(
                             newScore,
                             metrics: aggregatedMetrics,
                             issues: collectedIssues
+                        }
+                    });
+                }
+
+                // Fetch unnotified error logs
+                const unnotifiedErrors = await prisma.errorLog.findMany({
+                    where: {
+                        domainId: domain.id,
+                        resolvedAt: null,
+                        notified: false
+                    },
+                    include: {
+                        errorType: true
+                    }
+                });
+
+                // Add error log notifications to the notifications array
+                if (unnotifiedErrors.length > 0) {
+                    const errorsByCategory = unnotifiedErrors.reduce((acc, error) => {
+                        if (!acc[error.errorType.category]) {
+                            acc[error.errorType.category] = [];
+                        }
+                        acc[error.errorType.category].push(error);
+                        return acc;
+                    }, {} as Record<string, typeof unnotifiedErrors>);
+
+                    // Add categorized errors to notifications
+                    Object.entries(errorsByCategory).forEach(([category, errors]) => {
+                        notifications.push({
+                            type: crawlNotificationType.GeneralError,
+                            errorPresent: true,
+                            urls: [`https://${domain.domainName}`],
+                            additionalData: {
+                                category,
+                                errors: errors.map(error => ({
+                                    name: error.errorType.name,
+                                    severity: error.errorType.severity,
+                                    metadata: error.metadata
+                                }))
+                            }
+                        });
+                    });
+                }
+
+                // Add initial message notification if this is the first analysis
+                if (!domain.initialMessageSent) {
+                    notifications.push({
+                        type: crawlNotificationType.InitialMessage,
+                        errorPresent: false,
+                        urls: [`https://${domain.domainName}`],
+                        additionalData: {
+                            totalErrors: unnotifiedErrors.length,
+                            quickCheckScore: finalScore,
+                            performanceScore: aggregatedMetrics.performanceScore
                         }
                     });
                 }
@@ -427,18 +489,47 @@ export async function* quickAnalysisGenerator(
                         notificationContacts: domain.user.notificationContacts || []
                     };
 
-                    await consolidatedCrawlNotification(
+                    const notificationResult = await consolidatedCrawlNotification(
                         completeUser,
                         domain,
                         notifications,
-                        !domain.lastQuickAnalysis
+                        !domain.lastQuickAnalysis,
+                        !domain.lastQuickAnalysis || !domain.lastCrawl || !domain.lastLighthouseAnalysis
                     );
 
-                    yield { text: `Sent consolidated notifications for ${notifications.length} issues` };
+                    // Mark error logs as notified
+                    if (unnotifiedErrors.length > 0) {
+                        await prisma.errorLog.updateMany({
+                            where: {
+                                id: {
+                                    in: unnotifiedErrors.map(error => error.id)
+                                }
+                            },
+                            data: {
+                                notified: true
+                            }
+                        });
+                    }
+
+                    // Mark initial message as sent if this was the first analysis
+                    if (!domain.initialMessageSent) {
+                        await prisma.domain.update({
+                            where: { id: domain.id },
+                            data: { initialMessageSent: true }
+                        });
+                    }
+
+                    if (notificationResult.sent) {
+                        yield { text: `Sent consolidated notifications for ${notifications.length} issues` };
+                    }
+                    else {
+                        yield { text: `Nothing sent` };
+                    }
                 }
 
                 await storeQuickAnalysisHistory(
                     domain.id,
+                    newScore,
                     finalScore,
                     aggregatedMetrics,
                     collectedIssues,
@@ -457,7 +548,7 @@ export async function* quickAnalysisGenerator(
                     },
                 });
 
-                yield { text: `Analysis completed for domain: ${domain.domainName} (score: ${(finalScore * 100).toFixed(1)}%, overall: ${(newScore * 100).toFixed(1)}%)` };
+                yield { text: `Quick analysis completed for domain: ${domain.domainName} (score: ${(finalScore * 100).toFixed(1)}%, overall: ${(newScore * 100).toFixed(1)}%)` };
 
                 // In the catch block of quickAnalysisGenerator:
             } catch (err) {
@@ -496,6 +587,7 @@ export async function* quickAnalysisGenerator(
 
                 await storeQuickAnalysisHistory(
                     domain.id,
+                    0,
                     0,
                     errorMetrics,
                     [{

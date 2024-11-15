@@ -1,6 +1,7 @@
 import { Domain, User } from "@prisma/client";
 import * as nodemailer from "nodemailer";
 import { MailOptions } from "nodemailer/lib/json-transport";
+import { prisma } from '@/lib/prisma';
 
 interface NotificationGroup {
     domain: string;
@@ -70,7 +71,7 @@ export class EnhancedEmailer {
             <body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #f8f9fa;">
                 <div style="max-width: 600px; margin: 0 auto; padding: 20px; background-color: #ffffff; border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">
                     <div style="text-align: center; padding: 20px 0; border-bottom: 1px solid #e9ecef;">
-                        <img src="${process.env.NEXT_PUBLIC_API_DOMAIN}/logo.svg" alt="SEO Tool Logo" style="width: 120px; height: auto; margin-bottom: 15px;">
+                        <img src="rankidang.com/logo.svg" alt="Rankidang Logo" style="width: 120px; height: auto; margin-bottom: 15px;">
                         <h1 style="color: #212529; font-size: 24px; margin-bottom: 15px;">SEO Notification Summary</h1>
                     </div>
                     
@@ -84,7 +85,7 @@ export class EnhancedEmailer {
 
                     <div style="text-align: center; padding-top: 20px; border-top: 1px solid #e9ecef; color: #6c757d; font-size: 14px;">
                         <p>This is an automated message from your SEO monitoring tool.</p>
-                        <p>© ${new Date().getFullYear()} SEO Tool. All rights reserved.</p>
+                        <p>© ${new Date().getFullYear()} Rankidang. All rights reserved.</p>
                     </div>
                 </div>
             </body>
@@ -132,7 +133,8 @@ export enum crawlNotificationType {
     ErrorUnknown,
     Score,
     Robots,
-    GeneralError
+    GeneralError,
+    InitialMessage
 }
 
 export const consolidatedCrawlNotification = async (
@@ -144,10 +146,19 @@ export const consolidatedCrawlNotification = async (
         urls: string[];
         additionalData?: any;
     }>,
-    isInitialCrawl: boolean
+    isInitialCrawl: boolean,
+    isAnalysisMissing: boolean
 ) => {
-    const notificationContacts = userWithNotificationContacts.notificationContacts.length 
-        ? userWithNotificationContacts.notificationContacts 
+    const result = {
+        sent: false
+    }
+    if (isAnalysisMissing) {
+        console.log(`analysis are missing - no notification sent`);
+        return result;
+    }
+
+    const notificationContacts = userWithNotificationContacts.notificationContacts.length
+        ? userWithNotificationContacts.notificationContacts
         : [userWithNotificationContacts];
 
     // Group notifications by type and status
@@ -163,7 +174,7 @@ export const consolidatedCrawlNotification = async (
             domain.domainName,
             notification.urls,
             notification.additionalData,
-            isInitialCrawl
+            !domain.initialMessageSent
         );
 
         if (notificationData) {
@@ -179,11 +190,13 @@ export const consolidatedCrawlNotification = async (
                 contact.name,
                 notificationGroup
             );
+            result.sent = true;
             console.log(`Consolidated notification sent to ${contact.email}`);
         } catch (e) {
             console.error(`Error sending notification to ${contact.email}:`, e);
         }
     }
+    return result;
 };
 
 function createNotificationData(
@@ -192,18 +205,32 @@ function createNotificationData(
     domain: string,
     urls: string[],
     additionalData?: any,
-    isInitialCrawl: boolean = false
+    isInitialMessage: boolean = false
 ): {
     type: 'error' | 'warning' | 'success';
     title: string;
     message: string;
     urls: string[];
 } | null {
-    const baseMessage = isInitialCrawl 
-        ? "During the initial crawl of your website, we detected the following:"
+    const baseMessage = isInitialMessage
+        ? "During the initial analysis of your website, we detected the following:"
         : "We detected the following changes on your website:";
 
     switch (type) {
+        case crawlNotificationType.InitialMessage:
+            const scoreInfo = additionalData?.quickCheckScore ?
+                `Initial Quick Check Score: ${Math.floor(additionalData.quickCheckScore * 100)}%` : '';
+            const performanceInfo = additionalData?.performanceScore ?
+                `\nPerformance Score: ${Math.floor(additionalData.performanceScore * 100)}%` : '';
+            const errorInfo = additionalData?.totalErrors ?
+                `\nIdentified Issues: ${additionalData.totalErrors}` : '';
+
+            return {
+                type: 'success',
+                title: 'Domain Successfully Added',
+                message: `Congratulations! Your domain ${domain} has been successfully added to our monitoring system and the initial analysis is complete.\n\n${scoreInfo}${performanceInfo}${errorInfo}\n\nWe'll keep monitoring your domain and notify you of any significant changes or issues that require attention.`,
+                urls
+            };
         case crawlNotificationType.Error503:
             return {
                 type: errorPresent ? 'error' : 'success',
@@ -228,10 +255,10 @@ function createNotificationData(
             const oldScore = Math.floor((additionalData?.oldScore || 0) * 100);
             const newScore = Math.floor((additionalData?.newScore || 0) * 100);
             const scoreDiff = newScore - oldScore;
-            
+
             // Generate detailed score analysis
             let scoreDetails = [];
-            
+
             // Add performance metrics if available
             if (additionalData?.metrics) {
                 const metrics = additionalData.metrics;
@@ -250,7 +277,7 @@ function createNotificationData(
 
             // Build detailed message
             let detailedMessage = `${baseMessage}\n\nYour SEO score has ${scoreDiff >= 0 ? 'improved' : 'decreased'} from ${oldScore}% to ${newScore}% (${scoreDiff >= 0 ? '+' : ''}${scoreDiff}%).`;
-            
+
             if (scoreDetails.length > 0) {
                 detailedMessage += `\n\nDetailed Metrics:\n${scoreDetails.join('\n')}`;
             }
@@ -279,7 +306,7 @@ function createNotificationData(
             const changes = [];
             const oldDomain = additionalData.oldDomain as Domain;
             const updatedDomain = additionalData.updatedDomain as Domain;
-            
+
             if (updatedDomain.robotsIndex !== oldDomain.robotsIndex) {
                 changes.push(`index → ${updatedDomain.robotsIndex ? 'index' : 'noindex'}`);
             }

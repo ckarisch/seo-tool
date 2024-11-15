@@ -1,8 +1,5 @@
-import { Prisma, PrismaClient } from "@prisma/client";
 
 import axios, { AxiosError } from 'axios';
-import cheerio from 'cheerio';
-import { NextResponse } from 'next/server';
 import { analyzeLink } from "../../../../../../apiComponents/crawler/linkTools";
 import { crawlNotification, crawlNotificationType } from "./crawlNotification";
 import { CalculateScore } from "@/apiComponents/domain/calculateScore";
@@ -15,8 +12,7 @@ import { authOptions } from "@/lib/auth";
 import { CrawlResponseYieldType, createLogger, isLogEntry, Logger, LoggerFunctionWithReturn } from "@/apiComponents/dev/logger";
 import { LogEntry } from "@/apiComponents/dev/StreamingLogViewer";
 import { lighthouseAnalysis, lighthouseAnalysisResponse } from "@/crawler/lighthouseAnalysis";
-
-const prisma = new PrismaClient();
+import { prisma } from '@/lib/prisma';
 // export type LoggerFunction = (logger: Logger, url: string, depth: number, followLinks: boolean, maxDuration: number) => AsyncGenerator<boolean | Generator<LogEntry, any, any>, Response, unknown>;
 
 export type crawlDomainResponse = {
@@ -147,7 +143,7 @@ export async function* crawlDomain(
             data,
             finalURL,
             finalURLObject
-        } = await initialCrawl(domain, targetURL, maxCrawlTime, crawlStartTime, true, user, analyzedUrl);
+        } = await initialCrawl(domain, targetURL, maxCrawlTime, crawlStartTime, user, analyzedUrl);
 
 
         // /* subfunction */

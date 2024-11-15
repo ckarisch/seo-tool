@@ -1,7 +1,7 @@
 // app/api/seo/domains/[domain]/metrics/history/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
-import { subDays } from 'date-fns';
+import { subDays, startOfDay, format, addDays } from 'date-fns';
 import { MetricType } from '@prisma/client';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
@@ -17,7 +17,7 @@ export async function GET(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const thirtyDaysAgo = subDays(new Date(), 30);
+    const thirtyDaysAgo = startOfDay(subDays(new Date(), 30));
 
     const metrics = await prisma.domainMetrics.findMany({
       where: {
@@ -36,41 +36,80 @@ export async function GET(
         timestamp: true,
         score: true,
         type: true,
-        metadata: true
       },
     });
 
-    // Group metrics by timestamp for the graph
-    const formattedMetrics = metrics.reduce((acc: any[], metric) => {
-      const date = metric.timestamp.toISOString();
-      const existingEntry = acc.find(entry => entry.date === date);
+    // Create a map of dates to ensure we have entries for all days
+    const dateMap = new Map();
+    
+    // Initialize the date range
+    let currentDate = thirtyDaysAgo;
+    while (currentDate <= new Date()) {
+      const dateKey = format(currentDate, 'yyyy-MM-dd');
+      dateMap.set(dateKey, {
+        date: dateKey,
+        domainScore: null,
+        performanceScore: null,
+        quickCheckScore: null,
+      });
+      currentDate = addDays(currentDate, 1);
+    }
 
-      if (existingEntry) {
-        switch (metric.type) {
-          case 'DOMAIN_SCORE':
-            existingEntry.domainScore = Math.round(metric.score * 100);
-            break;
-          case 'PERFORMANCE':
-            existingEntry.performanceScore = Math.round(metric.score * 100);
-            break;
-          case 'QUICK_CHECK':
-            existingEntry.quickCheckScore = Math.round(metric.score * 100);
-            break;
-        }
-      } else {
-        const newEntry = {
-          date,
-          domainScore: metric.type === 'DOMAIN_SCORE' ? Math.round(metric.score * 100) : null,
-          performanceScore: metric.type === 'PERFORMANCE' ? Math.round(metric.score * 100) : null,
-          quickCheckScore: metric.type === 'QUICK_CHECK' ? Math.round(metric.score * 100) : null,
+    // Process metrics and update the map
+    metrics.forEach(metric => {
+      const dateKey = format(metric.timestamp, 'yyyy-MM-dd');
+      let entry = dateMap.get(dateKey);
+      
+      if (!entry) {
+        entry = {
+          date: dateKey,
+          domainScore: null,
+          performanceScore: null,
+          quickCheckScore: null,
         };
-        acc.push(newEntry);
+        dateMap.set(dateKey, entry);
       }
 
-      return acc;
-    }, []);
+      // Update the appropriate score
+      const score = Math.round(metric.score * 100);
+      switch (metric.type) {
+        case 'DOMAIN_SCORE':
+          entry.domainScore = score;
+          break;
+        case 'PERFORMANCE':
+          entry.performanceScore = score;
+          break;
+        case 'QUICK_CHECK':
+          entry.quickCheckScore = score;
+          break;
+      }
+    });
 
-    return NextResponse.json(formattedMetrics);
+    // Convert map to array and sort by date
+    const formattedMetrics = Array.from(dateMap.values())
+      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
+    // Remove trailing days with no data
+    let lastDataIndex = formattedMetrics.length - 1;
+    while (lastDataIndex >= 0 && 
+           !formattedMetrics[lastDataIndex].domainScore && 
+           !formattedMetrics[lastDataIndex].performanceScore && 
+           !formattedMetrics[lastDataIndex].quickCheckScore) {
+      lastDataIndex--;
+    }
+
+    // Remove leading days with no data
+    let firstDataIndex = 0;
+    while (firstDataIndex < formattedMetrics.length && 
+           !formattedMetrics[firstDataIndex].domainScore && 
+           !formattedMetrics[firstDataIndex].performanceScore && 
+           !formattedMetrics[firstDataIndex].quickCheckScore) {
+      firstDataIndex++;
+    }
+
+    const trimmedMetrics = formattedMetrics.slice(firstDataIndex, lastDataIndex + 1);
+
+    return NextResponse.json(trimmedMetrics);
   } catch (error) {
     console.error('Error fetching metrics history:', error);
     return NextResponse.json(

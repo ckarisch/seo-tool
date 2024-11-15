@@ -1,10 +1,8 @@
 // app/api/seo/domains/[domainName]/performance/route.ts
 import { authOptions } from '@/lib/auth';
-import { PrismaClient } from '@prisma/client';
 import { getServerSession } from 'next-auth';
 import { NextResponse } from 'next/server';
-
-const prisma = new PrismaClient();
+import { prisma } from '@/lib/prisma';
 
 export async function GET(
   request: Request,

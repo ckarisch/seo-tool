@@ -112,12 +112,12 @@ export async function* lighthouseGenerator(
       if (diffMinutes >= domainInterval) {
         yield* lighthouseLogger.log(
           "➝  auto crawl: " +
-            domain.domainName +
-            " last crawl was " +
-            diffMinutes +
-            " / " +
-            domainInterval +
-            " minutes ago"
+          domain.domainName +
+          " last crawl was " +
+          diffMinutes +
+          " / " +
+          domainInterval +
+          " minutes ago"
         );
         yield* lighthouseLogger.log(`➝  domain ${domain.domainName}: start`);
 
@@ -156,11 +156,9 @@ export async function* lighthouseGenerator(
         await prisma.adminLog.create({
           data: {
             createdAt: new Date(),
-            message: `domain ${
-              domain.domainName
-            } lighthoues (performanceScore: ${
-              lighthouseScore * 100
-            }), host: ${host}`,
+            message: `domain ${domain.domainName
+              } lighthouse (performanceScore: ${lighthouseScore * 100
+              }), host: ${host}`,
             domainId: domain.id,
             userId: domain.userId,
           },
@@ -173,12 +171,12 @@ export async function* lighthouseGenerator(
       } else {
         yield* lighthouseLogger.log(
           "➥  skip auto crawl: " +
-            domain.domainName +
-            " last crawl was " +
-            diffMinutes +
-            " / " +
-            domainInterval +
-            " minutes ago"
+          domain.domainName +
+          " last crawl was " +
+          diffMinutes +
+          " / " +
+          domainInterval +
+          " minutes ago"
         );
       }
     }

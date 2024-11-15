@@ -1,8 +1,7 @@
-// components/domain/DomainMetrics.tsx
-import React from 'react';
+import React, { useEffect } from 'react';
 import { format } from 'date-fns';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 
 interface MetricsDataPoint {
   date: string;
@@ -36,8 +35,8 @@ const DomainMetrics: React.FC<DomainMetricsProps> = ({
     }
 
     return (
-      <div className="bg-white p-4 rounded-lg shadow border border-gray-100">
-        <p className="font-medium text-sm text-gray-900">
+      <div className="bg-white p-4 rounded-lg shadow-lg border border-gray-200">
+        <p className="font-medium text-gray-900">
           {format(new Date(label), 'MMM d, yyyy')}
         </p>
         {payload.map((entry, index) => (
@@ -52,52 +51,61 @@ const DomainMetrics: React.FC<DomainMetricsProps> = ({
       </div>
     );
   };
-
+  
   return (
     <Card className={`w-full ${className}`}>
+      {JSON.stringify(domainScores)}
       <CardHeader>
-        <CardTitle>Domain Performance Metrics</CardTitle>
+        <CardTitle>Domain Metrics History (Last 30 Days)</CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="h-[300px] w-full">
+        <div className="h-96">
           <ResponsiveContainer width="100%" height="100%">
-            <LineChart
+            <LineChart 
               data={domainScores}
-              margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+              margin={{ top: 20, right: 30, left: 20, bottom: 20 }}
             >
-              <CartesianGrid strokeDasharray="3 3" />
+              <CartesianGrid strokeDasharray="3 3" className="opacity-50" />
               <XAxis 
                 dataKey="date" 
                 tickFormatter={(date: string) => format(new Date(date), 'MMM d')}
+                interval="preserveStartEnd"
               />
-              <YAxis domain={[0, 100]} />
+              <YAxis 
+                domain={[0, 100]}
+                ticks={[0, 25, 50, 75, 100]}
+              />
               <Tooltip content={<CustomTooltip />} />
+              <Legend />
               <Line
-                type="monotone"
+                type="linear"
                 dataKey="domainScore"
-                name="Domain Score"
-                stroke="#0466c8"
+                name="Overall Score"
+                stroke="#0ea5e9"
                 strokeWidth={2}
-                dot={{ r: 4 }}
+                dot={{ r: 4, fill: "#0ea5e9" }}
                 activeDot={{ r: 6 }}
+                connectNulls={true}
               />
               <Line
-                type="monotone"
+                type="linear"
                 dataKey="performanceScore"
                 name="Performance"
-                stroke="#16a34a"
+                stroke="#22c55e"
                 strokeWidth={2}
-                dot={{ r: 4 }}
+                dot={{ r: 4, fill: "#22c55e" }}
                 activeDot={{ r: 6 }}
+                connectNulls={true}
               />
               <Line
-                type="monotone"
+                type="linear"
                 dataKey="quickCheckScore"
                 name="Quick Check"
-                stroke="#d97706"
+                stroke="#f59e0b"
                 strokeWidth={2}
-                dot={{ r: 4 }}
+                dot={{ r: 4, fill: "#f59e0b" }}
                 activeDot={{ r: 6 }}
+                connectNulls={true}
               />
             </LineChart>
           </ResponsiveContainer>

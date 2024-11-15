@@ -47,7 +47,7 @@ export async function* lighthouseAnalysis(
     domain: Domain
 ): AsyncGenerator<LogEntry, lighthouseAnalysisResponse, unknown> {
 
-    const logger = createLogger('Lighthoues ' + domain.domainName);
+    const logger = createLogger('Lighthouse ' + domain.domainName);
 
     yield* logger.log('Lighthouse started');
     const requestStartTime = new Date().getTime();
@@ -68,7 +68,18 @@ export async function* lighthouseAnalysis(
 
     const insights = await getPageSpeedInsights(normalizedHttpsLink);
     const image = insights.lighthouseResult.fullPageScreenshot.screenshot.data;
-    const performanceScore = insights.lighthouseResult.categories.performance.score;
+
+    // calculate performanceScore and average it
+    let performanceScore = (
+        insights.lighthouseResult.categories.performance.score +
+        (domain.performanceScore ?? insights.lighthouseResult.categories.performance.score)
+    ) / 2;
+
+    if(performanceScore === 0.005){
+        // if performanceScore falls from 1% to 0%, set it to 0%
+        performanceScore = 0;
+    }
+
     yield* logger.log(`PerformanceScore: ${performanceScore}`);
     if (image && performanceScore) {
         await prisma.domain.update({ where: { id: domain.id }, data: { image, performanceScore, lastLighthouseAnalysis: new Date() } });
@@ -81,5 +92,6 @@ export async function* lighthouseAnalysis(
 
     yield* logger.log(`Lighthouse stopped: ${new Date().getTime() - requestStartTime}`);
 
+    response.insights = insights;
     return response;
 }

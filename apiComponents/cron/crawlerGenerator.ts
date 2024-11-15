@@ -5,12 +5,12 @@ import {
   crawlDomain,
   crawlDomainResponse,
 } from "@/app/api/seo/domains/[domainName]/crawl/crawlDomain";
-import { CronJob, PrismaClient } from "@prisma/client";
+import { CronJob } from "@prisma/client";
 import {
   domainIntervalGenerator,
   domainIntervalResponse,
 } from "./domainInterval";
-const prisma = new PrismaClient();
+import { prisma } from '@/lib/prisma';
 
 const resetCrawlTime = 3600000; // 1h
 const maxDomainCrawls = 2;

@@ -222,7 +222,7 @@ export async function* quickAnalysis(
                 metricType: 'performance',
                 performance: crawlResult.performanceMetrics,
                 timestamp: new Date().toISOString(),
-                text: String(crawlResult.performanceMetrics)
+                text: String('Performance metrics: '+ JSON.stringify(crawlResult.performanceMetrics))
             };
             yield metricEntry;
         }
@@ -264,7 +264,7 @@ export async function* quickAnalysis(
                 metricType: 'domainHealth',
                 metrics: domainHealth,
                 timestamp: new Date().toISOString(),
-                text: String(domainHealth)
+                text: JSON.stringify(domainHealth)
             };
             yield healthEntry;
 
@@ -301,7 +301,7 @@ export async function* quickAnalysis(
         metricType: 'finalMetrics',
         metrics,
         timestamp: new Date().toISOString(),
-        text: String(metrics)
+        text: JSON.stringify(metrics)
     };
     yield finalMetricEntry;
 

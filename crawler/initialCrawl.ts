@@ -1,8 +1,6 @@
 import axios, { AxiosError, AxiosResponse } from 'axios';
 import { Domain, User } from '@prisma/client';
 import { load } from 'cheerio';
-import { consolidatedCrawlNotification } from '@/mail/EnhancedEmailer';
-import { crawlNotificationType } from '@/mail/EnhancedEmailer';
 
 interface PerformanceMetrics {
     loadTime: number;
@@ -137,6 +135,9 @@ export const initialCrawl = async (
                 message: error instanceof Error ? error.message : 'Unknown error occurred'
             };
         }
+
+        console.log('errorResponse in initialCrawl:');
+        console.log(JSON.stringify(errorResponse));
 
         return errorResponse;
     }
