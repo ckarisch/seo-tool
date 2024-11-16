@@ -4,7 +4,7 @@ import styles from './MinimizableContainer.module.css';
 import Card from './card';
 
 interface MinimizableContainerProps {
-  title?: string;
+  title?: React.ReactNode; // Changed from string to ReactNode
   children: React.ReactNode;
   initiallyMinimized?: boolean;
 }
@@ -24,7 +24,7 @@ const MinimizableContainer: React.FC<MinimizableContainerProps> = ({
     <Card nopadding>
       <div className={`${styles.container} ${isMinimized ? styles.minimized : ''}`}>
         <div className={styles.header}>
-          {title && <h2 className={styles.title}>{title}</h2>}
+          {title && <div className={styles.title}>{title}</div>} {/* Changed from h2 to div to better handle custom content */}
           <button className={styles.minimizeButton} onClick={toggleMinimize}>
             {isMinimized ? <ChevronDown size={20} /> : <ChevronUp size={20} />}
           </button>

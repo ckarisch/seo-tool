@@ -191,10 +191,10 @@ export const consolidatedCrawlNotification = async (
         
         if (initialNotification?.additionalData) {
             const metrics = {
-                quickCheckScore: Math.floor((initialNotification.additionalData.quickCheckScore || 0) * 100),
-                performanceScore: Math.floor((initialNotification.additionalData.performanceScore || 0) * 100),
-                seoScore: Math.floor((initialNotification.additionalData.seoScore || 0) * 100),
-                accessibility: Math.floor((initialNotification.additionalData.accessibility || 0) * 100),
+                quickCheckScore: Math.round((initialNotification.additionalData.quickCheckScore || 0) * 100),
+                performanceScore: Math.round((initialNotification.additionalData.performanceScore || 0) * 100),
+                seoScore: Math.round((initialNotification.additionalData.seoScore || 0) * 100),
+                accessibility: Math.round((initialNotification.additionalData.accessibility || 0) * 100),
                 totalIssues: initialNotification.additionalData.totalErrors || 0
             };
 

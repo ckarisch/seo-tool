@@ -16,6 +16,7 @@ import DomainActions from "./domainActions";
 import { Load } from "@/components/layout/load";
 import Image from "next/image";
 import RetinaScrollableImage from "@/components/layout/RetinaScrollableImage";
+import { canAccessFeature } from "@/lib/session";
 
 export default function DomainStatus({ params, domainFetchTag, linksFetchTag }: { params: { domain: string }, domainFetchTag: string, linksFetchTag: string }) {
     const { data: session, status } = useSession({
@@ -31,6 +32,7 @@ export default function DomainStatus({ params, domainFetchTag, linksFetchTag }: 
     const [crawlStatus, setcrawlStatus] = useState('idle');
     const noCrawling = domain.crawlStatus !== 'crawling' && crawlStatus !== 'crawling';
     const noLoading = status !== 'loading' && domain.id && domain.id !== '-1';
+    const canAccessDomainActions = canAccessFeature(session, 'domain-actions');
 
     useEffect(() => {
         console.log('status', status);
@@ -248,12 +250,14 @@ export default function DomainStatus({ params, domainFetchTag, linksFetchTag }: 
                 </div>
             </Card>
     
-            <DomainActions
-                crawlStatus={crawlStatus}
-                domainJson={domain}
-                handleCrawl={handleCrawl}
-                handleResetLinks={handleResetLinks}
-            />
+            {canAccessDomainActions && (
+                <DomainActions
+                    crawlStatus={crawlStatus}
+                    domainJson={domain}
+                    handleCrawl={handleCrawl}
+                    handleResetLinks={handleResetLinks}
+                />
+            )}
         </div>
     );
 }

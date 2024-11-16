@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import styles from './metricsOverview.module.scss';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { format } from 'date-fns';
+import Card from '../layout/card';
 
 interface MetricsOverviewProps {
   domain: {
@@ -75,78 +76,80 @@ export default function MetricsOverview({ domain, loading = false }: MetricsOver
   };
 
   return (
-    <div className={styles.metricsContainer}>
-      <div className={styles.metricsGrid}>
-        {metrics.map((metric, index) => (
-          <div key={index} className={styles.metricCard}>
-            <div className={`${styles.metricValue} ${getScoreClass(metric.value)}`}>
-              {loading ? '-' : metric.value ? Math.round(metric.value * 100) : '0'}
+    <Card>
+      <div className={styles.metricsContainer}>
+        <div className={styles.metricsGrid}>
+          {metrics.map((metric, index) => (
+            <div key={index} className={styles.metricCard}>
+              <div className={`${styles.metricValue} ${getScoreClass(metric.value)}`}>
+                {loading ? '-' : metric.value ? Math.round(metric.value * 100) : '0'}
+              </div>
+              <div className={styles.metricLabel}>{metric.label}</div>
             </div>
-            <div className={styles.metricLabel}>{metric.label}</div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
 
-      <div className={styles.graphContainer}>
-        <h3 className={styles.graphTitle}>Domain Metrics History (Last 30 Days)</h3>
-        {isLoading ? (
-          <div className={styles.errorMessage}>Loading...</div>
-        ) : error ? (
-          <div className={styles.errorMessage}>{error}</div>
-        ) : historicalData.length === 0 ? (
-          <div className={styles.errorMessage}>No historical data available</div>
-        ) : (
-          <div className={styles.graph}>
-            <ResponsiveContainer width="100%" height={300} key={historicalData.length}>
-              <LineChart
-                data={historicalData}
-                margin={{ top: 10, right: 30, left: 10, bottom: 10 }}
-              >
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis
-                  dataKey="date"
-                  tickFormatter={(date) => format(new Date(date), 'MMM d')}
-                  interval="preserveStartEnd"
-                  minTickGap={20}
-                />
-                <YAxis domain={[0, 100]} />
-                <Tooltip content={<CustomTooltip />} />
-                <Legend verticalAlign="top" height={36} />
-                <Line
-                  type="linear"
-                  dataKey="domainScore"
-                  name="Overall Score"
-                  stroke="#0ea5e9"
-                  strokeWidth={2}
-                  dot={{ fill: "#0ea5e9", r: 4 }}
-                  activeDot={{ r: 6 }}
-                  connectNulls
-                />
-                <Line
-                  type="linear"
-                  dataKey="performanceScore"
-                  name="Performance"
-                  stroke="#22c55e"
-                  strokeWidth={2}
-                  dot={{ fill: "#22c55e", r: 4 }}
-                  activeDot={{ r: 6 }}
-                  connectNulls
-                />
-                <Line
-                  type="linear"
-                  dataKey="quickCheckScore"
-                  name="Quick Check"
-                  stroke="#f59e0b"
-                  strokeWidth={2}
-                  dot={{ fill: "#f59e0b", r: 4 }}
-                  activeDot={{ r: 6 }}
-                  connectNulls
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
-        )}
+        <div className={styles.graphContainer}>
+          <h3 className={styles.graphTitle}>Domain Metrics History (Last 30 Days)</h3>
+          {isLoading ? (
+            <div className={styles.errorMessage}>Loading...</div>
+          ) : error ? (
+            <div className={styles.errorMessage}>{error}</div>
+          ) : historicalData.length === 0 ? (
+            <div className={styles.errorMessage}>No historical data available</div>
+          ) : (
+            <div className={styles.graph}>
+              <ResponsiveContainer width="100%" height={300} key={historicalData.length}>
+                <LineChart
+                  data={historicalData}
+                  margin={{ top: 10, right: 30, left: 10, bottom: 10 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis
+                    dataKey="date"
+                    tickFormatter={(date) => format(new Date(date), 'MMM d')}
+                    interval="preserveStartEnd"
+                    minTickGap={20}
+                  />
+                  <YAxis domain={[0, 100]} />
+                  <Tooltip content={<CustomTooltip />} />
+                  <Legend verticalAlign="top" height={36} />
+                  <Line
+                    type="linear"
+                    dataKey="domainScore"
+                    name="Overall Score"
+                    stroke="#0ea5e9"
+                    strokeWidth={2}
+                    dot={{ fill: "#0ea5e9", r: 4 }}
+                    activeDot={{ r: 6 }}
+                    connectNulls
+                  />
+                  <Line
+                    type="linear"
+                    dataKey="performanceScore"
+                    name="Performance"
+                    stroke="#22c55e"
+                    strokeWidth={2}
+                    dot={{ fill: "#22c55e", r: 4 }}
+                    activeDot={{ r: 6 }}
+                    connectNulls
+                  />
+                  <Line
+                    type="linear"
+                    dataKey="quickCheckScore"
+                    name="Quick Check"
+                    stroke="#f59e0b"
+                    strokeWidth={2}
+                    dot={{ fill: "#f59e0b", r: 4 }}
+                    activeDot={{ r: 6 }}
+                    connectNulls
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          )}
+        </div>
       </div>
-    </div>
+    </Card>
   );
 }

@@ -20,7 +20,14 @@ const DomainActions: React.FC<DomainActionsProps> = ({
     const isCrawling = domainJson.crawlStatus === 'crawling' || crawlStatus === 'crawling';
 
     return (
-        <MinimizableContainer title="Domain Actions">
+        <MinimizableContainer 
+            title={
+                <div className={styles.titleContainer}>
+                    <span>Domain Actions</span>
+                    <span className={styles.adminBadge}>Admin</span>
+                </div>
+            }
+        >
             <div className={styles.actionItem}>
                 <h3 className={styles.actionTitle}>Request Crawl</h3>
                 <p className={styles.actionDescription}>

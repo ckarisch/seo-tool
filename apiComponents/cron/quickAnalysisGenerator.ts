@@ -422,9 +422,9 @@ export async function* quickAnalysisGenerator(
                 const unnotifiedErrors = await prisma.errorLog.findMany({
                     where: {
                         domainId: domain.id,
-                        resolvedAt: {
-                            not: { not: null } // This is how to check for null in MongoDB with Prisma
-                        },
+                        // resolvedAt: {
+                        //     not: { not: null } // This is how to check for null in MongoDB with Prisma
+                        // },
                         notified: {
                             equals: false
                         }

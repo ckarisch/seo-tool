@@ -30,6 +30,7 @@ export function canAccessFeature(session: Session | null, feature: string): bool
     'quick-analysis': ['admin', 'premium', 'standard'],
     'errors': ['admin', 'premium', 'standard'],
     'settings': ['admin', 'premium', 'standard'],
+    'domain-actions': ['admin'], // Only admins can access domain actions
   };
 
   const allowedRoles = featureAccess[feature] || ['admin'];
