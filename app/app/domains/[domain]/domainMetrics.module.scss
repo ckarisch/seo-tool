@@ -1,0 +1,50 @@
+@import "@/app/variables";
+
+.trendsCard {
+  width: 100%;
+  background: white;
+  border-radius: $border-radius;
+  box-shadow: $box-shadow;
+  padding: 1rem;
+
+  :global {
+    .recharts-responsive-container {
+      min-height: 400px;
+    }
+
+    .recharts-default-tooltip {
+      background-color: white !important;
+      border: 1px solid $border-color !important;
+      border-radius: $border-radius !important;
+      box-shadow: $box-shadow !important;
+    }
+
+    .recharts-tooltip-label {
+      color: $text-primary !important;
+      margin-bottom: 8px;
+      font-weight: 500;
+    }
+
+    .recharts-legend-item {
+      cursor: pointer;
+    }
+
+    .recharts-cartesian-grid-horizontal line,
+    .recharts-cartesian-grid-vertical line {
+      stroke: $border-color;
+      opacity: 0.5;
+    }
+
+    .recharts-xAxis .recharts-cartesian-axis-line,
+    .recharts-yAxis .recharts-cartesian-axis-line {
+      stroke: $border-color;
+    }
+  }
+}
+
+.chartWrapper {
+  width: 100%;
+  height: 400px;
+  position: relative;
+  margin-top: 1rem;
+}

@@ -22,7 +22,7 @@ export default function DomainSummary({
   onVerificationComplete 
 }: DomainSummaryProps) {
   return (
-    <Link href={'/app/domains/' + domain.domainName}>
+    <Link href={dummyText ? '' : '/app/domains/' + domain.domainName}>
       <div className={styles.card}>
         <div className={styles.header}>
           <div className={styles.image}>

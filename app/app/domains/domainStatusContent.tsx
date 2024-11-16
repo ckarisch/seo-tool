@@ -231,7 +231,7 @@ export default function DomainStatusContent({
             />
             <MetricCard
               value={domain.quickCheckScore}
-              label="Quick Check"
+              label="SEO Check"
               dummyText={dummyText}
               isLoading={!!domain.domainVerified && !domain.lastQuickAnalysis && !dummyText}
             />

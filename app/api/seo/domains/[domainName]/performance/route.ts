@@ -1,8 +1,8 @@
-// app/api/seo/domains/[domainName]/performance/route.ts
 import { authOptions } from '@/lib/auth';
 import { getServerSession } from 'next-auth';
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { MetricType } from '@prisma/client';
 
 export async function GET(
   request: Request,
@@ -49,6 +49,7 @@ export async function GET(
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
+    // Fetch all metric types together
     const historicalMetrics = await prisma.domainMetrics.findMany({
       where: {
         domainId: domain.id,
@@ -61,18 +62,22 @@ export async function GET(
       }
     });
 
-    // Process historical data to include all three score types
-    const historicalData = historicalMetrics.reduce((acc, metric) => {
+    console.log('Raw metrics:', historicalMetrics); // Debug log
+
+    // Process historical data with better date handling
+    const historicalData = historicalMetrics.reduce((acc: Record<string, any>, metric) => {
       const date = metric.timestamp.toISOString().split('T')[0];
+      
       if (!acc[date]) {
         acc[date] = {
           date,
-          domainScore: 0,
-          performanceScore: 0,
-          quickCheckScore: 0
+          domainScore: null,
+          performanceScore: null,
+          quickCheckScore: null
         };
       }
       
+      // Map the metric type to the corresponding score field
       switch (metric.type) {
         case 'DOMAIN_SCORE':
           acc[date].domainScore = metric.score;
@@ -86,7 +91,23 @@ export async function GET(
       }
       
       return acc;
-    }, {} as Record<string, any>);
+    }, {});
+
+    // Filter out incomplete data points and ensure proper number formatting
+    const processedData = Object.values(historicalData)
+      .filter((dataPoint: any) => {
+        return dataPoint.domainScore !== null || 
+               dataPoint.performanceScore !== null || 
+               dataPoint.quickCheckScore !== null;
+      })
+      .map((dataPoint: any) => ({
+        date: dataPoint.date,
+        domainScore: dataPoint.domainScore ?? 0,
+        performanceScore: dataPoint.performanceScore ?? 0,
+        quickCheckScore: dataPoint.quickCheckScore ?? 0
+      }));
+
+    console.log('Processed data:', processedData); // Debug log
 
     // Extract the last performance metrics
     const latestMetrics = domain.metrics[0]?.metadata as any || {
@@ -103,12 +124,16 @@ export async function GET(
       }
     };
 
-    return NextResponse.json({
+    const response = {
       currentScore: domain.performanceScore || 0,
       lastCheck: domain.lastPerformanceCheck || new Date().toISOString(),
       metrics: latestMetrics,
-      historicalData: Object.values(historicalData)
-    });
+      historicalData: processedData
+    };
+
+    console.log('Final response:', response); // Debug log
+
+    return NextResponse.json(response);
 
   } catch (error) {
     console.error('Error fetching performance data:', error);
