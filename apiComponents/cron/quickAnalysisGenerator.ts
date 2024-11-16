@@ -352,7 +352,7 @@ export async function* quickAnalysisGenerator(
                                 aggregatedMetrics.warnings++;
                             }
 
-                            if(result.value.issueType === 'ROBOTS_NOINDEX') {
+                            if (result.value.issueType === 'ROBOTS_NOINDEX') {
                                 aggregatedMetrics.seoScore = 0;
                             }
 
@@ -422,8 +422,12 @@ export async function* quickAnalysisGenerator(
                 const unnotifiedErrors = await prisma.errorLog.findMany({
                     where: {
                         domainId: domain.id,
-                        resolvedAt: null,
-                        notified: false
+                        resolvedAt: {
+                            not: { not: null } // This is how to check for null in MongoDB with Prisma
+                        },
+                        notified: {
+                            equals: false
+                        }
                     },
                     include: {
                         errorType: true
@@ -467,7 +471,9 @@ export async function* quickAnalysisGenerator(
                         additionalData: {
                             totalErrors: unnotifiedErrors.length,
                             quickCheckScore: finalScore,
-                            performanceScore: aggregatedMetrics.performanceScore
+                            performanceScore: domain.performanceScore,
+                            seoScore: 0,
+                            accessibility: 0,
                         }
                     });
                 }
@@ -493,7 +499,7 @@ export async function* quickAnalysisGenerator(
                         completeUser,
                         domain,
                         notifications,
-                        !domain.lastQuickAnalysis,
+                        !domain.initialMessageSent,
                         !domain.lastQuickAnalysis || !domain.lastCrawl || !domain.lastLighthouseAnalysis
                     );
 
@@ -511,16 +517,16 @@ export async function* quickAnalysisGenerator(
                         });
                     }
 
-                    // Mark initial message as sent if this was the first analysis
-                    if (!domain.initialMessageSent) {
-                        await prisma.domain.update({
-                            where: { id: domain.id },
-                            data: { initialMessageSent: true }
-                        });
-                    }
-
                     if (notificationResult.sent) {
                         yield { text: `Sent consolidated notifications for ${notifications.length} issues` };
+
+                        // Mark initial message as sent if this was the first analysis
+                        if (!domain.initialMessageSent) {
+                            await prisma.domain.update({
+                                where: { id: domain.id },
+                                data: { initialMessageSent: true }
+                            });
+                        }
                     }
                     else {
                         yield { text: `Nothing sent` };

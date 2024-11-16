@@ -83,7 +83,7 @@ export async function* crawlDomainPublicGenerator(url: string, depth: number, fo
 
         requestStartTime = new Date().getTime();
         let data;
-        data = (await initialCrawl(domain, targetURL, maxCrawlTime, crawlStartTime, true, null, analyzedUrl)).data;
+        data = (await initialCrawl(domain, targetURL, maxCrawlTime, crawlStartTime, null, analyzedUrl)).data;
 
         links.push(...extractLinks(data, url, targetURL));
 

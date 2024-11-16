@@ -70,7 +70,7 @@ export const crawlDomainPublic = async (url: string, depth: number, followLinks:
 
         requestStartTime = new Date().getTime();
         let data;
-        data = await initialCrawl(domain, targetURL, maxCrawlTime, crawlStartTime, true, null, analyzedUrl);
+        data = await initialCrawl(domain, targetURL, maxCrawlTime, crawlStartTime, null, analyzedUrl);
 
 
         links.push(...extractLinks(data, url, targetURL));

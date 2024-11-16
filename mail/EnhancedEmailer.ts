@@ -2,6 +2,8 @@ import { Domain, User } from "@prisma/client";
 import * as nodemailer from "nodemailer";
 import { MailOptions } from "nodemailer/lib/json-transport";
 import { prisma } from '@/lib/prisma';
+import { renderWelcomeEmail } from "@/util/emailRenderer";
+import { generateWelcomeEmailHTML } from "./generateWelcomeEmailHTML";
 
 interface NotificationGroup {
     domain: string;
@@ -29,6 +31,28 @@ export class EnhancedEmailer {
 
     private async sendEmail(mailOptions: MailOptions) {
         return await this.transporter.sendMail(mailOptions);
+    }
+
+    public async sendWelcomeEmail(
+        toEmail: string,
+        domain: string,
+        metrics: {
+            quickCheckScore: number;
+            performanceScore: number;
+            seoScore: number;
+            accessibility: number;
+            totalIssues: number;
+        }
+    ) {
+        const htmlContent = generateWelcomeEmailHTML(domain, metrics);
+        
+        await this.sendEmail({
+            from: "SEO Notification <notification@formundzeichen.at>",
+            to: [toEmail],
+            subject: `Welcome to Rankidang - ${domain} Successfully Added`,
+            html: htmlContent,
+            replyTo: 'notification@formundzeichen.at'
+        });
     }
 
     private generateEmailHTML(notifications: NotificationGroup, recipientName: string): string {
@@ -161,7 +185,38 @@ export const consolidatedCrawlNotification = async (
         ? userWithNotificationContacts.notificationContacts
         : [userWithNotificationContacts];
 
-    // Group notifications by type and status
+    if (isInitialCrawl) {
+        // Find initial message notification to get metrics
+        const initialNotification = notifications.find(n => n.type === crawlNotificationType.InitialMessage);
+        
+        if (initialNotification?.additionalData) {
+            const metrics = {
+                quickCheckScore: Math.floor((initialNotification.additionalData.quickCheckScore || 0) * 100),
+                performanceScore: Math.floor((initialNotification.additionalData.performanceScore || 0) * 100),
+                seoScore: Math.floor((initialNotification.additionalData.seoScore || 0) * 100),
+                accessibility: Math.floor((initialNotification.additionalData.accessibility || 0) * 100),
+                totalIssues: initialNotification.additionalData.totalErrors || 0
+            };
+
+            // Send welcome email to each contact
+            for (const contact of notificationContacts) {
+                try {
+                    await enhancedEmailer.sendWelcomeEmail(
+                        contact.email,
+                        domain.domainName,
+                        metrics
+                    );
+                    result.sent = true;
+                    console.log(`Welcome email sent to ${contact.email}`);
+                } catch (e) {
+                    console.error(`Error sending welcome email to ${contact.email}:`, e);
+                }
+            }
+            return result;
+        }
+    }
+
+    // Rest of the function remains the same...
     const notificationGroup: NotificationGroup = {
         domain: domain.domainName,
         notifications: []

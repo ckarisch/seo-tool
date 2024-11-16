@@ -1,8 +1,7 @@
 
 import { authOptions } from '@/lib/auth';
-import { Domain } from '@/interfaces/domain';
 import { DnsLookupError, performDnsLookup } from '@/util/api/dnsLookup';
-import { PrismaClient } from '@prisma/client'
+import { Domain, PrismaClient } from '@prisma/client'
 import { getServerSession } from 'next-auth';
 
 const prisma = new PrismaClient();

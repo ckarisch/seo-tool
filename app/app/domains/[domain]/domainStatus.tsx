@@ -1,21 +1,16 @@
 "use client";
 
-import Link from "next/link";
 import styles from "./domainStatus.module.scss";
 import { useSession } from "next-auth/react";
-import { Dispatch, useEffect, useState } from "react";
-import { revalidateTag } from "next/cache";
-import { Domain, defaultDomainState } from "@/interfaces/domain"
+import { useEffect, useState } from "react";
+import { defaultDomainState } from "@/interfaces/domain"
 import Card from "@/components/layout/card";
 import { fetchData } from "@/util/client/fetchData";
-import Section from "@/components/layout/section";
 import { defaultUserState } from "@/interfaces/user";
 import { Loading } from "@/icons/loading";
 import { Check } from "@/icons/checkmark";
 import { Cross } from "@/icons/cross";
 import { Warning } from "@/icons/warningAnimated";
-import { formatDate } from "date-fns";
-import { Alert, AlertDescription } from "@/components/layout/alert/Alert";
 import { AlertCircle } from "lucide-react";
 import DomainActions from "./domainActions";
 import { Load } from "@/components/layout/load";

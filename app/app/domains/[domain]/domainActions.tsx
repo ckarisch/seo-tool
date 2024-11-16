@@ -2,10 +2,7 @@ import React from 'react';
 import styles from './domainActions.module.scss';
 import MinimizableContainer from '@/components/layout/MinimizableContainer';
 import { Play, RotateCcw } from 'lucide-react';
-
-interface Domain {
-    crawlStatus?: string;
-}
+import { Domain } from '@prisma/client';
 
 interface DomainActionsProps {
     domainJson: Partial<Domain>;

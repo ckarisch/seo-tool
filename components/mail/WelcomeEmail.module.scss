@@ -1,0 +1,137 @@
+// app/components/WelcomeEmail/WelcomeEmail.module.scss
+
+.container {
+    @apply max-w-2xl mx-auto p-8 bg-white rounded-lg shadow-lg;
+  }
+  
+  .header {
+    @apply text-center pb-6 border-b border-gray-200;
+  
+    .iconWrapper {
+      @apply flex justify-center mb-4;
+    }
+  
+    .successIcon {
+      @apply w-16 h-16 text-green-500;
+    }
+  
+    .title {
+      @apply text-3xl font-bold text-gray-800 mb-2;
+    }
+  
+    .domain {
+      @apply text-lg text-gray-600;
+    }
+  }
+  
+  .content {
+    @apply py-8;
+  }
+  
+  .congratsMessage {
+    @apply bg-green-50 border-l-4 border-green-500 p-4 rounded-r mb-8;
+  
+    p {
+      @apply text-green-700;
+    }
+  }
+  
+  .metricsGrid {
+    @apply grid grid-cols-2 gap-4 mb-8;
+  }
+  
+  .metricCard {
+    @apply p-4 rounded-lg;
+  
+    .metricHeader {
+      @apply flex items-center mb-2;
+  
+      .metricIcon {
+        @apply w-5 h-5 mr-2;
+      }
+  
+      h3 {
+        @apply font-semibold;
+      }
+    }
+  
+    .metricValue {
+      @apply text-2xl font-bold;
+    }
+  
+    &.quickCheck {
+      @apply bg-blue-50;
+      .metricIcon { @apply text-blue-600; }
+      h3 { @apply text-blue-800; }
+      .metricValue { @apply text-blue-600; }
+    }
+  
+    &.performance {
+      @apply bg-purple-50;
+      .metricIcon { @apply text-purple-600; }
+      h3 { @apply text-purple-800; }
+      .metricValue { @apply text-purple-600; }
+    }
+  
+    &.seo {
+      @apply bg-indigo-50;
+      .metricIcon { @apply text-indigo-600; }
+      h3 { @apply text-indigo-800; }
+      .metricValue { @apply text-indigo-600; }
+    }
+  
+    &.accessibility {
+      @apply bg-teal-50;
+      .metricIcon { @apply text-teal-600; }
+      h3 { @apply text-teal-800; }
+      .metricValue { @apply text-teal-600; }
+    }
+  }
+  
+  .issuesCard {
+    @apply bg-orange-50 p-4 rounded-lg mb-8;
+  
+    .issuesHeader {
+      @apply flex items-center mb-2;
+  
+      .alertIcon {
+        @apply w-5 h-5 text-orange-500 mr-2;
+      }
+  
+      h3 {
+        @apply font-semibold text-orange-800;
+      }
+    }
+  
+    .issuesValue {
+      @apply text-2xl font-bold text-orange-600;
+    }
+  }
+  
+  .nextSteps {
+    @apply bg-gray-50 p-6 rounded-lg;
+  
+    h3 {
+      @apply text-lg font-semibold text-gray-800 mb-4;
+    }
+  
+    ul {
+      @apply space-y-3;
+  
+      li {
+        @apply flex items-start text-gray-700;
+  
+        svg {
+          @apply w-5 h-5 text-green-500 mr-2 mt-1 flex-shrink-0;
+        }
+      }
+    }
+  }
+  
+  .footer {
+    @apply text-center pt-6 border-t border-gray-200;
+  
+    p {
+      @apply text-sm text-gray-600;
+    }
+  }
