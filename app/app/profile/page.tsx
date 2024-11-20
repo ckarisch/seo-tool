@@ -338,7 +338,7 @@ export default function ProfilePage() {
                 cancelLabel="Cancel"
                 onConfirm={handleConfirmDelete}
                 onCancel={() => setDeleteContactId(null)}
-                variant="danger"
+                variant="destructive"
             />
         </main>
     )
