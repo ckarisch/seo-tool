@@ -8,6 +8,7 @@ import { checkTimeout } from "@/app/api/seo/domains/[domainName]/crawl/crawlLink
 import { CustomLogEntry } from "@/types/logs";
 import { consolidatedCrawlNotification, crawlNotificationType } from "@/mail/EnhancedEmailer";
 import { prisma } from '@/lib/prisma';
+import { calculateOverallScore } from "@/util/calculateOverallScore";
 
 const resetCrawlTime = 3600000; // 1h
 const maxDomainCrawls = 7;
@@ -380,8 +381,8 @@ export async function* quickAnalysisGenerator(
                         }
                     });
 
-                    // Calculate and update overall score
-                    const updatedDomain = await tx.domain.findUnique({
+                    // Get current domain data
+                    const domainData = await tx.domain.findUnique({
                         where: { id: domain.id },
                         select: {
                             quickCheckScore: true,
@@ -389,16 +390,20 @@ export async function* quickAnalysisGenerator(
                         }
                     });
 
-                    if (!updatedDomain || !updatedDomain.quickCheckScore || !updatedDomain.performanceScore) return;
-
-                    newScore = (updatedDomain.quickCheckScore + updatedDomain.performanceScore) / 2;
-
-                    await tx.domain.update({
-                        where: { id: domain.id },
-                        data: {
-                            score: newScore
-                        }
+                    // Calculate overall score
+                    const overallScore = calculateOverallScore({
+                        quickCheckScore: finalScore,
+                        performanceScore: domainData?.performanceScore
                     });
+
+                    if (overallScore !== null) {
+                        await tx.domain.update({
+                            where: { id: domain.id },
+                            data: {
+                                score: overallScore
+                            }
+                        });
+                    }
                 });
 
                 // Add score change notification if threshold exceeded

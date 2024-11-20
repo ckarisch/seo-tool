@@ -10,6 +10,7 @@ import { Domain } from "@prisma/client";
 interface DomainListProps {
   onVerifyClick: (domain: string, verificationKey: string, onVerify: () => Promise<void>) => void;
   onVerificationComplete: (success: boolean, message: string) => void;
+  onDeleteClick: (domain: Partial<Domain>) => void;
 }
 
 const dummyDomains: Partial<Domain>[] = [0, 1, 2, 3, 4, 5].map(i => ({
@@ -22,7 +23,11 @@ const dummyDomains: Partial<Domain>[] = [0, 1, 2, 3, 4, 5].map(i => ({
   score: 0
 }));
 
-export default function DomainList({ onVerifyClick, onVerificationComplete }: DomainListProps) {
+export default function DomainList({ 
+  onVerifyClick, 
+  onVerificationComplete,
+  onDeleteClick 
+}: DomainListProps) {
   const { status } = useSession({
     required: true,
     onUnauthenticated() {
@@ -48,6 +53,7 @@ export default function DomainList({ onVerifyClick, onVerificationComplete }: Do
             dummyText={true}
             onVerifyClick={onVerifyClick}
             onVerificationComplete={onVerificationComplete}
+            onDeleteClick={onDeleteClick}
           />
         ))}
       </div>
@@ -63,6 +69,7 @@ export default function DomainList({ onVerifyClick, onVerificationComplete }: Do
           dummyText={false}
           onVerifyClick={onVerifyClick}
           onVerificationComplete={onVerificationComplete}
+          onDeleteClick={onDeleteClick}
         />
       ))}
     </div>

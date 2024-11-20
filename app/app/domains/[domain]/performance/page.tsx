@@ -110,7 +110,7 @@ export default function PerformanceDashboard({ params }: { params: { domain: str
         </Card>
 
         {/* Key Metrics Grid */}
-        <div className={styles.metricsGrid}>
+        {/* <div className={styles.metricsGrid}>
           <Card>
             <CardContent>
               <div className={styles.metricItem}>
@@ -155,7 +155,7 @@ export default function PerformanceDashboard({ params }: { params: { domain: str
               </div>
             </CardContent>
           </Card>
-        </div>
+        </div> */}
 
         {/* Historical Trends */}
         <Card className={styles.trendsCard}>
@@ -170,7 +170,7 @@ export default function PerformanceDashboard({ params }: { params: { domain: str
         </Card>
 
         {/* Detailed Metrics */}
-        <Card className={styles.detailedMetrics}>
+        {/* <Card className={styles.detailedMetrics}>
           <CardHeader>
             <CardTitle>Core Web Vitals</CardTitle>
           </CardHeader>
@@ -202,7 +202,7 @@ export default function PerformanceDashboard({ params }: { params: { domain: str
               </div>
             </div>
           </CardContent>
-        </Card>
+        </Card> */}
       </div>
     </Section>
   );

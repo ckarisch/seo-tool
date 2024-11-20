@@ -117,7 +117,7 @@ model ErrorLog {
   errorTypeId    String        @db.ObjectId
   createdAt      DateTime      @default(now())
   resolvedAt     DateTime?
-  domain         Domain?       @relation("DomainErrors", fields: [domainId], references: [id])
+  domain         Domain?       @relation("DomainErrors", fields: [domainId], references: [id], onDelete: Cascade)
   domainId       String?       @db.ObjectId
   internalLink   InternalLink? @relation("PageErrors", fields: [internalLinkId], references: [id])
   internalLinkId String?       @db.ObjectId
@@ -205,7 +205,7 @@ model Domain {
 model QuickAnalysisHistory {
   id                   String   @id @default(auto()) @map("_id") @db.ObjectId
   domainId             String   @db.ObjectId
-  domain               Domain   @relation(fields: [domainId], references: [id])
+  domain               Domain   @relation(fields: [domainId], references: [id], onDelete: Cascade)
   score                Float
   metrics              Json
   issues               Json
@@ -225,7 +225,7 @@ model QuickAnalysisHistory {
 
 model DomainMetrics {
   id        String     @id @default(auto()) @map("_id") @db.ObjectId
-  domain    Domain     @relation(fields: [domainId], references: [id])
+  domain    Domain     @relation(fields: [domainId], references: [id], onDelete: Cascade)
   domainId  String     @db.ObjectId
   timestamp DateTime   @default(now())
   type      MetricType
@@ -243,7 +243,7 @@ enum MetricType {
 
 model DomainCrawl {
   id                 String     @id @default(auto()) @map("_id") @db.ObjectId
-  domain             Domain     @relation(fields: [domainId], references: [id])
+  domain             Domain     @relation(fields: [domainId], references: [id], onDelete: Cascade)
   domainId           String     @db.ObjectId
   crawlType          String?
   startTime          DateTime
@@ -285,7 +285,7 @@ model InternalLink {
   lastLoadTime       Int
   seoData            SeoData?
   seoDataId          String?
-  domain             Domain     @relation(fields: [domainId], references: [id])
+  domain             Domain     @relation(fields: [domainId], references: [id], onDelete: Cascade)
   domainId           String     @db.ObjectId
   type               String?
   errorCode          Int?
@@ -311,7 +311,7 @@ model SeoData {
 model ExternalLink {
   id          String   @id @default(auto()) @map("_id") @db.ObjectId
   url         String
-  domain      Domain   @relation(fields: [domainId], references: [id])
+  domain      Domain   @relation(fields: [domainId], references: [id], onDelete: Cascade)
   domainId    String   @db.ObjectId
   lastCheck   DateTime
   foundOnPath String?
@@ -324,7 +324,7 @@ model AdminLog {
   id        String   @id @default(auto()) @map("_id") @db.ObjectId
   message   String
   createdAt DateTime
-  domain    Domain?  @relation(fields: [domainId], references: [id])
+  domain    Domain?  @relation(fields: [domainId], references: [id], onDelete: Cascade)
   domainId  String?  @db.ObjectId
   user      User?    @relation(fields: [userId], references: [id])
   userId    String?  @db.ObjectId

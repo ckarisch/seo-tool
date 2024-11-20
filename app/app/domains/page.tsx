@@ -13,12 +13,19 @@ import { Alert, AlertDescription } from '@/components/layout/alert/Alert';
 import { CheckCircle, AlertCircle } from 'lucide-react';
 import DomainStatusBanner from '@/components/domain/DomainStatusBanner';
 import { useDomainsStore } from '@/store/domains';
+import { useRouter } from 'next/navigation';
+import { Domain } from '@prisma/client';
 
 interface VerificationDialogState {
   isOpen: boolean;
   domain: string;
   verificationKey: string;
   onVerify: () => Promise<void>;
+}
+
+interface DeleteDialogState {
+  isOpen: boolean;
+  domain: Partial<Domain> | null;
 }
 
 export default function DomainsPage() {
@@ -30,6 +37,10 @@ export default function DomainsPage() {
     domain: '',
     verificationKey: '',
     onVerify: async () => { }
+  });
+  const [deleteDialog, setDeleteDialog] = useState<DeleteDialogState>({
+    isOpen: false,
+    domain: null,
   });
 
   // Method to be passed to DomainStatusContent
@@ -62,8 +73,49 @@ export default function DomainsPage() {
       setAlert(null);
     }, 5000);
   };
-  
+
   const { domains, isLoading, fetchDomains } = useDomainsStore();
+  const router = useRouter();
+
+  const handleDeleteClick = (domain: Partial<Domain>) => {
+    setDeleteDialog({
+      isOpen: true,
+      domain,
+    });
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!deleteDialog.domain?.domainName) return;
+
+    try {
+      const response = await fetch(`/api/seo/domains/${deleteDialog.domain.domainName}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to delete domain');
+      }
+
+      setAlert({
+        type: 'success',
+        message: 'Domain deleted successfully'
+      });
+
+      // Refresh the domains list
+      fetchDomains();
+
+      // Close the dialog
+      setDeleteDialog({ isOpen: false, domain: null });
+
+      // Refresh the page to update the UI
+      router.refresh();
+    } catch (error) {
+      setAlert({
+        type: 'error',
+        message: 'Failed to delete domain. Please try again.'
+      });
+    }
+  };
 
   return (
     <main>
@@ -92,25 +144,8 @@ export default function DomainsPage() {
               <AlertDescription>{alert.message}</AlertDescription>
             </Alert>
           )}
-          <div className={styles.domainsContent}>
-            {alert && (
-              <Alert variant={alert.type === 'success' ? 'success' : 'destructive'}>
-                {alert.type === 'success' ? (
-                  <CheckCircle className="h-4 w-4" />
-                ) : (
-                  <AlertCircle className="h-4 w-4" />
-                )}
-                <AlertDescription>{alert.message}</AlertDescription>
-              </Alert>
-            )}
 
-            <DomainStatusBanner domains={domains} />  {/* Add this line */}
-
-            <div className={styles.domainsHeader}>
-              <h2 className={styles.domainsTitle}>Your Domains</h2>
-              {/* ... rest of the code ... */}
-            </div>
-          </div>
+          <DomainStatusBanner domains={domains} />  {/* Add this line */}
 
           <div className={styles.domainsHeader}>
             <h2 className={styles.domainsTitle}>Your Domains</h2>
@@ -123,7 +158,9 @@ export default function DomainsPage() {
             </button>
           </div>
 
-          <DomainList onVerifyClick={openVerificationDialog} onVerificationComplete={handleVerificationComplete} />
+          <DomainList onVerifyClick={openVerificationDialog}
+            onVerificationComplete={handleVerificationComplete}
+            onDeleteClick={handleDeleteClick} />
         </div>
       </Section>
 
@@ -136,6 +173,17 @@ export default function DomainsPage() {
           </Section>
         </Background>
       )}
+
+      <ConfirmDialog
+        isOpen={deleteDialog.isOpen}
+        title="Delete Domain"
+        description={`Are you sure you want to delete the domain "${deleteDialog.domain?.name}"? This action cannot be undone.`}
+        confirmLabel="Delete"
+        cancelLabel="Cancel"
+        onConfirm={handleDeleteConfirm}
+        onCancel={() => setDeleteDialog({ isOpen: false, domain: null })}
+        variant="destructive"
+      />
 
       <ConfirmDialog
         isOpen={verificationDialog.isOpen}

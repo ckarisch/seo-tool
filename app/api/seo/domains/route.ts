@@ -86,9 +86,8 @@ export async function POST(request: Request) {
   const session = await getServerSession(authOptions);
 
   if (!session || !session!.user) {
-    console.log("error: no session");
     return Response.json(
-      { error: "Not authenticated", domains: [] },
+      { error: "Not authenticated" },
       { status: 401 }
     );
   }
@@ -98,10 +97,21 @@ export async function POST(request: Request) {
 
   const user = await prisma.user.findUnique({
     where: { email: session!.user!.email! },
+    include: {
+      domains: true // Include domains to check count
+    }
   });
 
   if (!user) {
-    return Response.json({ error: "user not found" }, { status: 500 });
+    return Response.json({ error: "User not found" }, { status: 500 });
+  }
+
+  // Check domain limit for non-premium/non-admin users
+  if (user.role !== 'admin' && user.role !== 'premium' && user.domains.length >= 5) {
+    return Response.json({ 
+      error: "Free users can only add up to 5 domains. Please upgrade to Premium to add more domains.",
+      code: "DOMAIN_LIMIT_EXCEEDED"
+    }, { status: 403 });
   }
 
   const existingDomain = await prisma.domain.findUnique({
@@ -109,7 +119,7 @@ export async function POST(request: Request) {
   });
 
   if (existingDomain) {
-    return Response.json({ error: "domain already exists" }, { status: 500 });
+    return Response.json({ error: "Domain already exists" }, { status: 500 });
   }
 
   const domain = await prisma.domain.create({

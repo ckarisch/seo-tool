@@ -73,14 +73,14 @@ export default function Settings({ params }: { params: { domain: string } }) {
         body: JSON.stringify({ value: newValue })
       });
 
-      if (!response.ok) throw new Error('Failed to update crawl setting');
+      if (!response.ok) throw new Error('Failed to update analysis setting');
 
       setDomainJson(prev => ({
         ...prev,
         crawlEnabled: newValue
       }));
     } catch (error) {
-      console.error('Error updating crawl setting:', error);
+      console.error('Error updating analysis setting:', error);
     } finally {
       setCrawlLoading(false);
     }
@@ -153,7 +153,7 @@ export default function Settings({ params }: { params: { domain: string } }) {
                         <Play size={16} />
                       )}
                       <span>
-                        {domainJson.crawlEnabled ? 'Disable crawling' : 'Enable crawling'}
+                        {domainJson.crawlEnabled ? 'Disable analysis' : 'Enable analysis'}
                       </span>
                     </>
                   ) : (

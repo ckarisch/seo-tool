@@ -13,6 +13,7 @@ export default function AddDomainForm({ onClose }: AddDomainFormProps) {
     const [url, setUrl] = useState('');
     const [isUrlValid, setIsUrlValid] = useState(false);
     const [isError, setIsError] = useState(false);
+    const [errorMessage, setErrorMessage] = useState('');
 
     const addDomain = useDomainsStore(state => state.addDomain);
 
@@ -35,13 +36,18 @@ export default function AddDomainForm({ onClose }: AddDomainFormProps) {
         const result = await addDomain(data);
 
         if (!result.success) {
-            alert(result.error); // We'll replace this with banner notification
+            if (result.code === 'DOMAIN_LIMIT_EXCEEDED') {
+                setErrorMessage('Free users can only add up to 5 domains. Please upgrade to Premium to add more domains.');
+            } else {
+                setErrorMessage(result.error || 'An error occurred while adding the domain.');
+            }
             return;
         }
 
         // Clear form and close
         (event.target as HTMLFormElement).reset();
         setUrl('');
+        setErrorMessage('');
         if (onClose) {
             onClose();
         }
@@ -54,6 +60,12 @@ export default function AddDomainForm({ onClose }: AddDomainFormProps) {
     return (
         <div className={styles.formContainer}>
             <form onSubmit={handleSubmit}>
+                {errorMessage && (
+                    <div className={styles.errorMessage}>
+                        {errorMessage}
+                    </div>
+                )}
+                
                 <div className={styles.inputGroup}>
                     <h3>Website Name</h3>
                     <input type="text" id="name" name="name" placeholder="Name of the website" required />

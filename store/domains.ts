@@ -1,12 +1,18 @@
 import { Domain } from '@prisma/client';
 import { create } from 'zustand';
 
+interface DomainResponse {
+  success: boolean;
+  error?: string;
+  code?: string;
+}
+
 interface DomainsState {
   domains: Domain[];
   isLoading: boolean;
   error: string | null;
   fetchDomains: () => Promise<void>;
-  addDomain: (domain: Partial<Domain>) => Promise<{ success: boolean; error?: string }>;
+  addDomain: (domain: Partial<Domain>) => Promise<DomainResponse>;
 }
 
 export const useDomainsStore = create<DomainsState>((set, get) => ({
@@ -40,16 +46,19 @@ export const useDomainsStore = create<DomainsState>((set, get) => ({
       if (result.error) {
         return {
           success: false,
-          error: result.error === 'domain_already_exists'
-            ? 'This domain already exists'
-            : 'Unknown error occurred'
+          error: result.error,
+          code: result.code
         };
       }
 
       await get().fetchDomains();
       return { success: true };
     } catch (error) {
-      return { success: false, error: 'Failed to add domain' };
+      return { 
+        success: false, 
+        error: 'Failed to add domain',
+        code: 'UNKNOWN_ERROR'
+      };
     }
   },
 }));

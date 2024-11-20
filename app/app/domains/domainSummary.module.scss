@@ -300,3 +300,36 @@
     opacity: 1;
   }
 }
+
+.actions {
+  display: flex;
+  gap: 8px;
+  margin-left: auto;
+  
+  @media (min-width: 768px) {
+    gap: 12px;
+  }
+}
+
+.deleteButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+  border-radius: 50%;
+  background-color: $background-light;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: $error;
+  
+  &:hover {
+    background-color: rgba($error, 0.1);
+    transform: scale(1.1);
+  }
+
+  &:focus {
+    outline: 2px solid $error;
+    outline-offset: 2px;
+  }
+}

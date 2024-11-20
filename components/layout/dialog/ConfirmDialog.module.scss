@@ -1,34 +1,35 @@
+// ConfirmDialog.module.scss
 @import "@/app/variables";
 
 .backdrop {
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  inset: 0;
   background-color: rgba(0, 0, 0, 0.5);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 50;
+  padding: 16px;
   animation: fadeIn 0.2s ease-out;
 }
 
 .dialog {
   background: white;
   border-radius: $border-radius;
-  width: 90%;
+  width: 100%;
   max-width: 500px;
   animation: slideUp 0.3s ease-out;
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  position: relative;
+  margin: auto;
 
-  @media (prefers-color-scheme: dark) {
-    background-color: $background-light-dark;
+  @media (min-width: 640px) {
+    width: 90%;
   }
 }
 
 .header {
-  padding: 16px 24px;
+  padding: 20px 24px;
   display: flex;
   align-items: center;
   gap: 12px;
@@ -36,9 +37,10 @@
 }
 
 .icon {
-  color: #ef4444;
+  color: $error;
   width: 24px;
   height: 24px;
+  flex-shrink: 0;
 }
 
 .title {
@@ -46,39 +48,49 @@
   margin: 0;
   font-size: 1.25rem;
   font-weight: 500;
-
-  @media (prefers-color-scheme: dark) {
-    color: $color-dark;
-  }
+  color: $color;
+  line-height: 1.2;
 }
 
 .closeButton {
   padding: 8px;
   border: none;
   background: transparent;
-  border-radius: 100%;
+  border-radius: 50%;
   cursor: pointer;
   color: $text-secondary;
   transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 
   &:hover {
     background-color: $background-light;
     color: $color;
+  }
 
-    @media (prefers-color-scheme: dark) {
-      background-color: $background-light-dark;
-      color: $color-dark;
-    }
+  &:focus-visible {
+    outline: 2px solid $color;
+    outline-offset: 2px;
   }
 }
 
 .content {
   padding: 24px;
-}
 
-.description {
-  margin: 0;
-  line-height: 1.5;
+  .description {
+    margin: 0;
+    color: $text-secondary;
+    line-height: 1.6;
+    white-space: pre-line;
+
+    p {
+      margin: 0 0 1em;
+      &:last-child {
+        margin-bottom: 0;
+      }
+    }
+  }
 }
 
 .footer {
@@ -87,16 +99,35 @@
   justify-content: flex-end;
   gap: 12px;
   border-top: 1px solid $background-light;
+
+  @media (max-width: 480px) {
+    flex-direction: column-reverse;
+  }
 }
 
 .cancelButton,
 .confirmButton {
-  padding: 8px 16px;
+  padding: 10px 20px;
   border-radius: $border-radius;
   font-size: 0.9rem;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
+  min-width: 100px;
+
+  @media (max-width: 480px) {
+    width: 100%;
+  }
+
+  &:focus-visible {
+    outline: 2px solid $color;
+    outline-offset: 2px;
+  }
+
+  &:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+  }
 }
 
 .cancelButton {
@@ -104,42 +135,7 @@
   border: 1px solid $background-light;
   color: $text-secondary;
 
-  &:hover {
+  &:hover:not(:disabled) {
     background: $background-light;
-  }
-}
-
-.confirmButton {
-  background: $color;
-  border: none;
-  color: white;
-
-  &:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  }
-
-  &.danger {
-    background: #ef4444;
-  }
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-@keyframes slideUp {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
   }
 }

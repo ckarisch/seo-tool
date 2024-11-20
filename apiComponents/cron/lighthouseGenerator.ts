@@ -11,6 +11,7 @@ import {
   domainIntervalResponse,
 } from "./domainInterval";
 import { checkTimeout } from "@/app/api/seo/domains/[domainName]/crawl/crawlLinkHelper";
+import { calculateOverallScore } from "@/util/calculateOverallScore";
 const prisma = new PrismaClient();
 
 const resetCrawlTime = 3600000; // 1h
@@ -145,12 +146,63 @@ export async function* lighthouseGenerator(
 
         let lighthouseScore = 0;
         if (
-          lighthouseResult.insights &&
-          lighthouseResult.insights.lighthouseResult.categories.performance
+          lighthouseResult?.insights?.lighthouseResult?.categories?.performance?.score !== undefined &&
+          typeof lighthouseResult.insights.lighthouseResult.categories.performance.score === 'number'
         ) {
           lighthouseScore =
             lighthouseResult.insights.lighthouseResult.categories.performance
               .score;
+
+          try {
+            await prisma.$transaction(async (tx) => {
+              // Create performance metric entry
+              await tx.domainMetrics.create({
+                data: {
+                  domain: { connect: { id: domain.id } },
+                  type: 'PERFORMANCE',
+                  score: lighthouseScore,
+                  timestamp: new Date(),
+                  metadata: {
+                    source: 'lighthouse_analysis',
+                    categories: lighthouseResult.insights?.lighthouseResult.categories
+                  }
+                }
+              });
+
+              // Get current domain data
+              const domainData = await tx.domain.findUnique({
+                where: { id: domain.id },
+                select: {
+                  quickCheckScore: true,
+                  performanceScore: true
+                }
+              });
+
+              // Calculate overall score
+              const overallScore = calculateOverallScore({
+                quickCheckScore: domainData?.quickCheckScore,
+                performanceScore: lighthouseScore
+              });
+
+              // Update domain with new scores
+              await tx.domain.update({
+                where: { id: domain.id },
+                data: {
+                  performanceScore: lighthouseScore,
+                  lastLighthouseAnalysis: new Date(),
+                  ...(overallScore !== null && { score: overallScore })
+                }
+              });
+            });
+          } catch (error) {
+            yield* lighthouseLogger.log(
+              `❌ Error storing performance metrics for ${domain.domainName}: ${error instanceof Error ? error.message : 'Unknown error'}`
+            );
+          }
+        } else {
+          yield* lighthouseLogger.log(
+            `⚠️ No valid performance score available for ${domain.domainName}`
+          );
         }
 
         await prisma.adminLog.create({

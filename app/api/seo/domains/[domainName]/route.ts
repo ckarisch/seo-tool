@@ -73,3 +73,45 @@ export async function GET(
 
   return Response.json(domain, { status: 200 })
 }
+
+export async function DELETE(
+  request: Request,
+  { params }: { params: { domainName: string } }
+) {
+  const session = await getServerSession(authOptions);
+
+  if (!session?.user) {
+    return Response.json(
+      { error: "Not authenticated" },
+      { status: 401 }
+    );
+  }
+
+  const user = await prisma.user.findUnique({
+    where: { email: session.user.email! },
+  });
+
+  if (!user) {
+    return Response.json({ error: "User not found" }, { status: 404 });
+  }
+
+  const domain = await prisma.domain.findFirst({
+    where: {
+      domainName: params.domainName,
+      userId: user.id,
+    },
+  });
+
+  if (!domain) {
+    return Response.json({ error: "Domain not found" }, { status: 404 });
+  }
+
+  // Delete the domain
+  await prisma.domain.delete({
+    where: {
+      id: domain.id,
+    },
+  });
+
+  return Response.json({ success: true }, { status: 200 });
+}
