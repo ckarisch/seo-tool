@@ -1,4 +1,4 @@
-import { Prisma, Severity } from '@prisma/client';
+import { ErrorLog, Prisma, Severity } from '@prisma/client';
 import { consolidatedCrawlNotification, crawlNotificationType } from '@/mail/EnhancedEmailer';
 import { prisma } from '@/lib/prisma';
 
@@ -44,49 +44,24 @@ interface ErrorLogWithDetails {
 }
 
 // Helper function to aggregate errors by type and page
-async function aggregateErrorLogs(domainId: string) {
-    console.log('Querying errors for domainId:', domainId);
+async function aggregateErrorLogs(domainId: string, onlyNotNotified = false) {
+    const where: {
+        domainId: string,
+        notified?: boolean
+    } = {
+        domainId: domainId
+    }
 
-    // Try different query approaches to debug
-    const approach1 = await prisma.errorLog.findMany({
-        where: {
-            domainId: domainId,
-            resolvedAt: null,
-        },
-        include: {
-            errorType: true,
-            internalLink: true,
-        },
-    });
-    console.log('Approach 1 results:', approach1.length);
-
-    // Try with explicit null check
-    const approach2 = await prisma.errorLog.findMany({
-        where: {
-            domainId: domainId,
-            resolvedAt: {
-                equals: null
-            },
-        },
-        include: {
-            errorType: true,
-            internalLink: true,
-        },
-    });
-    console.log('Approach 2 results:', approach2.length);
-
-    // Try without the resolvedAt filter to see all errors
+    if (onlyNotNotified) {
+        where.notified = false;
+    }
     const approach3 = await prisma.errorLog.findMany({
-        where: {
-            domainId: domainId,
-        },
+        where,
         include: {
             errorType: true,
             internalLink: true,
         },
     });
-    console.log('Approach 3 results:', approach3.length);
-
     // If we find errors, use approach 3 and filter in memory
     const errors = approach3.filter(error => error.resolvedAt === null);
     console.log('Filtered results:', errors.length);
@@ -98,7 +73,7 @@ async function aggregateErrorLogs(domainId: string) {
 
     // Create a map using composite key of errorType.code + page path
     const errorMap = new Map<string, typeof errors[0]>();
-    
+
     errors.forEach(error => {
         if (!error.errorType) {
             console.log('Error without errorType:', error.id);
@@ -107,7 +82,7 @@ async function aggregateErrorLogs(domainId: string) {
 
         const pagePath = error.internalLink?.path || 'unknown';
         const key = `${error.errorType.code}_${pagePath}`;
-        
+
         // Log each error being processed
         console.log('Processing error:', {
             id: error.id,
@@ -116,16 +91,16 @@ async function aggregateErrorLogs(domainId: string) {
             path: pagePath,
             key: key
         });
-        
+
         // Only keep the most recent error of each type per page
         if (!errorMap.has(key)) {
-            errorMap.set(key, {...error});
+            errorMap.set(key, { ...error });
         }
     });
 
     const result = Array.from(errorMap.values());
     console.log('Final result count:', result.length);
-    
+
     return result;
 }
 
@@ -219,8 +194,8 @@ async function prepareErrorNotifications(
     domain: DomainWithDetails,
     notifications: NotificationItem[]
 ): Promise<NotificationItem[]> {
-    const aggregatedErrors = await aggregateErrorLogs(domainId);
-    
+    const aggregatedErrors = await aggregateErrorLogs(domainId, true);
+
     // Group errors by severity for notification
     const errorsBySeverity = aggregatedErrors.reduce((acc, error) => {
         const severity = error.errorType.severity;
@@ -291,10 +266,13 @@ interface ErrorChange {
     }>;
 }
 
-export async function checkErrorChanges(domainId: string, domain: any): Promise<ErrorChange> {
-    // Get the current errors
-    const currentErrors = await aggregateErrorLogs(domainId);
-    
+export async function checkErrorChanges(
+    currentErrors: Prisma.ErrorLogGetPayload<{
+        include: {
+            errorType: true,
+            internalLink: true
+        }
+    }>[], domainId: string, domain: any): Promise<ErrorChange> {
     // Get the previous errors from the last check
     const previousErrors = await prisma.quickAnalysisHistory.findFirst({
         where: {
@@ -341,9 +319,9 @@ export async function checkErrorChanges(domainId: string, domain: any): Promise<
     const previousErrorMap = new Map(
         (previousErrors?.issues as any[] || []).map(issue => {
             // Handle both possible URL formats in previous issues
-            const url = issue.url || 
-                       (issue.path ? formatUrl(issue.path, domain.domainName) : 
-                       `https://${domain.domainName}`);
+            const url = issue.url ||
+                (issue.path ? formatUrl(issue.path, domain.domainName) :
+                    `https://${domain.domainName}`);
             return [
                 `${issue.type}_${url}`,
                 {
@@ -377,8 +355,6 @@ export async function checkErrorChanges(domainId: string, domain: any): Promise<
 }
 
 export async function sendErrorChangeNotification(
-    domain: any,
-    user: any,
     changes: ErrorChange
 ) {
     if (changes.added.length === 0 && changes.resolved.length === 0) {
@@ -441,13 +417,7 @@ export async function sendErrorChangeNotification(
         console.log(`Sending error change notifications: ${notifications.length} notifications`);
         console.log('New errors:', changes.added.length);
         console.log('Resolved errors:', changes.resolved.length);
-        
-        await consolidatedCrawlNotification(
-            user,
-            domain,
-            notifications,
-            false,
-            false
-        );
+
     }
+    return notifications;
 }

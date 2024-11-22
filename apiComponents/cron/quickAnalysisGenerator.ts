@@ -9,7 +9,7 @@ import { CustomLogEntry } from "@/types/logs";
 import { consolidatedCrawlNotification, crawlNotificationType } from "@/mail/EnhancedEmailer";
 import { prisma } from '@/lib/prisma';
 import { calculateOverallScore } from "@/util/calculateOverallScore";
-import { aggregateErrorLogs, calculateErrorScore, calculateScore, checkErrorChanges, NotificationItem, QuickAnalysisMetrics, sendErrorChangeNotification } from "@/crawler/scoreCalculator";
+import { aggregateErrorLogs, calculateErrorScore, calculateScore, checkErrorChanges, NotificationItem, QuickAnalysisMetrics, sendErrorChangeNotification as getErrorChangeNotifications } from "@/crawler/scoreCalculator";
 import { storeQuickAnalysisHistory } from "@/crawler/scoreData";
 
 const resetCrawlTime = 3600000; // 1h
@@ -210,7 +210,7 @@ export async function* quickAnalysisGenerator(
                     type: e.errorType.code
                 })));
                 aggregatedMetrics.errors = aggregatedErrors.length;  // Update error count based on actual errors
-
+                console.log('aggregatedErrors.length', aggregatedErrors.length)
                 const finalScore = calculateScore(aggregatedMetrics, aggregatedErrors);
                 const oldScore = domain.score || 0;
                 let newScore = finalScore;
@@ -267,71 +267,6 @@ export async function* quickAnalysisGenerator(
                     });
                 }
 
-                // Group aggregated errors by severity for notifications
-                const errorsBySeverity = aggregatedErrors.reduce((acc, error) => {
-                    const severity = error.errorType.severity;
-                    if (!acc[severity]) {
-                        acc[severity] = [];
-                    }
-
-                    // Fix URL construction - strip domain from path if present
-                    let path = error.internalLink?.path || '';
-                    if (path.startsWith(domain.domainName)) {
-                        path = path.substring(domain.domainName.length);
-                    }
-                    if (!path.startsWith('/')) {
-                        path = '/' + path;
-                    }
-
-                    const url = `https://${domain.domainName}${path}`;
-
-                    acc[severity].push({
-                        type: error.errorType.code,
-                        message: error.errorType.name,
-                        url: url, // Now properly formatted
-                        category: error.errorType.category,
-                        metadata: error.metadata
-                    });
-                    return acc;
-                }, {} as Record<Severity, Array<{
-                    type: string;
-                    message: string;
-                    url: string;
-                    category: string;
-                    metadata: Prisma.JsonValue;
-                }>>);
-
-                // Log the final errorsBySeverity structure
-                Object.entries(errorsBySeverity).forEach(([severity, errors]) => {
-                    console.log(`Severity ${severity} has ${errors.length} errors with URLs:`,
-                        errors.map(e => e.url)
-                    );
-                });
-
-                // Add consolidated error notifications
-                Object.entries(errorsBySeverity).forEach(([severity, errors]) => {
-                    // Extract URLs directly from errors array
-                    const urls = errors.map(e => e.url);
-
-                    console.log(`Creating notification for severity ${severity} with ${urls.length} URLs`);
-
-                    notifications.push({
-                        type: crawlNotificationType.GeneralError,
-                        errorPresent: true,
-                        urls: urls, // Pass the actual URLs array
-                        additionalData: {
-                            severity,
-                            errors: errors.map(e => ({
-                                type: e.type,
-                                message: e.message,
-                                category: e.category,
-                                metadata: e.metadata,
-                                url: e.url
-                            }))
-                        }
-                    });
-                });
-
                 // Add initial message notification if this is the first analysis
                 if (!domain.initialMessageSent) {
                     notifications.push({
@@ -349,8 +284,7 @@ export async function* quickAnalysisGenerator(
                 }
                 console.log('notifications', notifications);
 
-                // Send consolidated notifications if any exist
-                if (notifications.length > 0 && domain.user) {
+                if (domain.user) {
                     const completeUser = {
                         id: domain.user.id,
                         name: domain.user.name,
@@ -366,26 +300,20 @@ export async function* quickAnalysisGenerator(
                         notificationContacts: domain.user.notificationContacts || []
                     };
 
-                    const errorChanges = await checkErrorChanges(domain.id, domain);
-                    await sendErrorChangeNotification(domain, completeUser, errorChanges);
+                    // Get the current errors
+                    const currentErrors = await aggregateErrorLogs(domain.id, true);
+                    const errorChanges = await checkErrorChanges(currentErrors, domain.id, domain);
+                    const errorChangeNotifications = await getErrorChangeNotifications(errorChanges);
+                    if (errorChangeNotifications)
+                        notifications.push(...errorChangeNotifications);
 
-                    const notificationResult = {
-                        sent: true
-                    }
-                    // const notificationResult = await consolidatedCrawlNotification(
-                    //     completeUser,
-                    //     domain,
-                    //     notifications,
-                    //     !domain.initialMessageSent,
-                    //     !domain.lastQuickAnalysis || !domain.lastCrawl || !domain.lastLighthouseAnalysis
-                    // );
 
                     // Mark all reported errors as notified
-                    if (aggregatedErrors.length > 0) {
+                    if (currentErrors.length > 0) {
                         await prisma.errorLog.updateMany({
                             where: {
                                 id: {
-                                    in: aggregatedErrors.map(error => error.id)
+                                    in: currentErrors.map(error => error.id)
                                 }
                             },
                             data: {
@@ -394,19 +322,30 @@ export async function* quickAnalysisGenerator(
                         });
                     }
 
-                    if (notificationResult.sent) {
-                        yield { text: `Sent consolidated notifications for ${notifications.length} issues` };
+                    // Send consolidated notifications if any exist
+                    if (notifications.length > 0) {
+                        const notificationResult = await consolidatedCrawlNotification(
+                            completeUser,
+                            domain,
+                            notifications,
+                            !domain.initialMessageSent,
+                            !domain.lastQuickAnalysis || !domain.lastCrawl || !domain.lastLighthouseAnalysis
+                        );
 
-                        // Mark initial message as sent if this was the first analysis
-                        if (!domain.initialMessageSent) {
-                            await prisma.domain.update({
-                                where: { id: domain.id },
-                                data: { initialMessageSent: true }
-                            });
+                        if (notificationResult.sent) {
+                            yield { text: `Sent consolidated notifications for ${notifications.length} issues` };
+
+                            // Mark initial message as sent if this was the first analysis
+                            if (!domain.initialMessageSent) {
+                                await prisma.domain.update({
+                                    where: { id: domain.id },
+                                    data: { initialMessageSent: true }
+                                });
+                            }
                         }
-                    }
-                    else {
-                        yield { text: `Nothing sent` };
+                        else {
+                            yield { text: `Nothing sent` };
+                        }
                     }
                 }
 
