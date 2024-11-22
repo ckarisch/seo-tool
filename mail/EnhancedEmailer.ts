@@ -1,4 +1,5 @@
-import { Domain, User } from "@prisma/client";
+import _ from 'lodash';
+import { Domain, ErrorLog, ErrorType, Severity, User } from "@prisma/client";
 import * as nodemailer from "nodemailer";
 import { MailOptions } from "nodemailer/lib/json-transport";
 import { prisma } from '@/lib/prisma';
@@ -45,7 +46,7 @@ export class EnhancedEmailer {
         }
     ) {
         const htmlContent = generateWelcomeEmailHTML(domain, metrics);
-        
+
         await this.sendEmail({
             from: "SEO Notification <notification@formundzeichen.at>",
             to: [toEmail],
@@ -139,7 +140,7 @@ export class EnhancedEmailer {
         const warningCount = notifications.notifications.filter(n => n.type === 'warning').length;
         const successCount = notifications.notifications.filter(n => n.type === 'success').length;
 
-        const parts = [];
+        const parts: string[] = [];
         if (errorCount > 0) parts.push(`❗${errorCount} Error${errorCount > 1 ? 's' : ''}`);
         if (warningCount > 0) parts.push(`⚠️${warningCount} Warning${warningCount > 1 ? 's' : ''}`);
         if (successCount > 0) parts.push(`✅${successCount} Success${successCount > 1 ? 's' : ''}`);
@@ -158,7 +159,9 @@ export enum crawlNotificationType {
     Score,
     Robots,
     GeneralError,
-    InitialMessage
+    InitialMessage,
+    NewError,
+    ErrorResolved
 }
 
 export const consolidatedCrawlNotification = async (
@@ -188,7 +191,7 @@ export const consolidatedCrawlNotification = async (
     if (isInitialCrawl) {
         // Find initial message notification to get metrics
         const initialNotification = notifications.find(n => n.type === crawlNotificationType.InitialMessage);
-        
+
         if (initialNotification?.additionalData) {
             const metrics = {
                 quickCheckScore: Math.round((initialNotification.additionalData.quickCheckScore || 0) * 100),
@@ -312,20 +315,11 @@ function createNotificationData(
             const scoreDiff = newScore - oldScore;
 
             // Generate detailed score analysis
-            let scoreDetails = [];
+            let scoreDetails: string[] = [];
 
             // Add performance metrics if available
             if (additionalData?.metrics) {
                 const metrics = additionalData.metrics;
-                if (metrics.performanceScore !== null) {
-                    scoreDetails.push(`Performance: ${Math.floor(metrics.performanceScore * 100)}%`);
-                }
-                if (metrics.seoScore !== null) {
-                    scoreDetails.push(`SEO: ${Math.floor(metrics.seoScore * 100)}%`);
-                }
-                if (metrics.accessibility !== null) {
-                    scoreDetails.push(`Accessibility: ${Math.floor(metrics.accessibility * 100)}%`);
-                }
                 scoreDetails.push(`Errors: ${metrics.errors}`);
                 scoreDetails.push(`Warnings: ${metrics.warnings}`);
             }
@@ -358,7 +352,7 @@ function createNotificationData(
         case crawlNotificationType.Robots:
             if (!additionalData?.updatedDomain) return null;
 
-            const changes = [];
+            const changes: string[] = [];
             const oldDomain = additionalData.oldDomain as Domain;
             const updatedDomain = additionalData.updatedDomain as Domain;
 
@@ -375,6 +369,155 @@ function createNotificationData(
                 message: `${baseMessage}\nChanges in robots meta tags: ${changes.join(', ')}`,
                 urls
             };
+
+        case crawlNotificationType.NewError:
+            if (!additionalData?.errors || additionalData.errors.length === 0) return null;
+
+            // Group errors by type and URL
+            const groupedErrors = additionalData.errors.reduce((acc: any, error: any) => {
+                const key = `${error.type}_${error.category}`;
+                if (!acc[key]) {
+                    acc[key] = {
+                        type: error.type,
+                        category: error.category,
+                        message: error.message,
+                        occurrences: [],
+                    };
+                }
+
+                // Add occurrence with URL and metadata
+                acc[key].occurrences.push({
+                    url: error.url,
+                    metadata: error.metadata
+                });
+
+                return acc;
+            }, {});
+
+            // Format the error list
+            const errorSummary = Object.values(groupedErrors).map((group: any) => {
+                const count = group.occurrences.length;
+                let summary = `- ${group.message} (${group.category})\n`;
+                summary += `  Found on ${count} ${count === 1 ? 'page' : 'pages'}\n`;
+
+                // Add detailed breakdown for each occurrence
+                group.occurrences.forEach((occurrence: any) => {
+                    if (occurrence.metadata) {
+                        const meta = occurrence.metadata;
+                        summary += `  • ${occurrence.url}\n`;
+                        if (meta.count) summary += `    Count: ${meta.count}\n`;
+                        if (meta.locations) summary += `    Details: ${meta.locations.join(", ")}\n`;
+                        if (meta.message) summary += `    Info: ${meta.message}\n`;
+                    }
+                });
+
+                return summary;
+            }).join('\n');
+
+            // Properly type the URLs array
+            const affectedUrls = Object.values(groupedErrors).reduce((urls: string[], group: any) => {
+                group.occurrences.forEach((occurrence: any) => {
+                    if (occurrence.url && typeof occurrence.url === 'string') {
+                        urls.push(occurrence.url);
+                    }
+                });
+                return urls;
+            }, []);
+
+            // Remove duplicates and filter out any non-string values
+            const uniqueUrls = [...new Set(affectedUrls)].filter((url): url is string =>
+                typeof url === 'string' && url.length > 0
+            );
+
+            return {
+                type: 'error',
+                title: `New ${additionalData.severity.toLowerCase()} Errors Detected`,
+                message: `${baseMessage}\n\nSummary of new errors:\n${errorSummary}`,
+                urls: uniqueUrls
+            };
+
+        case crawlNotificationType.ErrorResolved:
+            if (!additionalData?.errors || additionalData.errors.length === 0) return null;
+
+            const resolvedList = additionalData.errors.map((error: any) =>
+                `- ${error.message} (${error.category})`
+            ).join('\n');
+
+            return {
+                type: 'success',
+                title: 'Errors Resolved',
+                message: `Great news! The following errors have been resolved:\n${resolvedList}`,
+                urls: additionalData.errors.map((e: any) => e.url)
+            };
+
+        case crawlNotificationType.GeneralError:
+            if (!additionalData?.errors || additionalData.errors.length === 0) return null;
+
+            let messageTitle = 'General Error';
+            let messageType: 'error' | 'warning' = 'error';
+
+            // Determine severity level for title and type
+            if (additionalData.severity) {
+                switch (additionalData.severity) {
+                    case 'CRITICAL':
+                        messageTitle = 'Critical Error';
+                        messageType = 'error';
+                        break;
+                    case 'HIGH':
+                        messageTitle = 'High Priority Error';
+                        messageType = 'error';
+                        break;
+                    case 'MEDIUM':
+                        messageTitle = 'Medium Priority Issue';
+                        messageType = 'warning';
+                        break;
+                    case 'LOW':
+                        messageTitle = 'Low Priority Issue';
+                        messageType = 'warning';
+                        break;
+                }
+            }
+
+            const errorCategoryUrls = [];
+
+            if (additionalData.erros && additionalData.erros.length) {
+                const errorsbyCategory = additionalData.erros.reduce(function (obj, error) {
+                    if (!obj[error.category]) {
+                        obj[error.category] = [error];
+                        // errorCategoryUrls[error.category] = error.u
+                    } else {
+                        obj[error.category].push(error);
+                    }
+                    return obj;
+                })
+
+                const errorDetails = errorsbyCategory.map((category: any) => {
+                    const error = category[0];
+                    let details = `- ${error.message}`;
+                    if (error.category) {
+                        details += ` (${error.category})`;
+                    }
+                    if (error.metadata) {
+                        // Add any relevant metadata
+                        const meta: string[] = [];
+                        if (error.metadata.count) meta.push(`Occurrences: ${category.length}`);
+                        if (error.metadata.firstSeen) meta.push(`First seen: ${new Date(error.metadata.firstSeen).toLocaleString()}`);
+                        meta.push(`URLs: ` + urls.join(', '));
+                        if (meta.length > 0) {
+                            details += `\n  ${meta.join(' | ')}`;
+                        }
+                    }
+                    return details;
+                }).join('\n');
+
+
+                return {
+                    type: messageType,
+                    title: messageTitle,
+                    message: `${baseMessage}\n\nThe following issues were detected:\n${errorDetails}`,
+                    urls
+                };
+            }
 
         default:
             return null;
