@@ -21,13 +21,13 @@ export function hasRequiredRole(session: Session | null, requiredRoles: UserRole
 
 export function canAccessFeature(session: Session | null, feature: string): boolean {
   const userRole = getUserRole(session);
-  
+
   // Define feature access rules
   const featureAccess: Record<string, UserRole[]> = {
     'crawls': ['admin'],
     'domain-overview': ['admin', 'premium', 'standard'],
-    'performance': ['admin', 'premium', 'standard'],
-    'quick-analysis': ['admin', 'premium', 'standard'],
+    'performance': ['admin'],
+    'quick-analysis': ['admin'],
     'errors': ['admin', 'premium', 'standard'],
     'settings': ['admin', 'premium', 'standard'],
     'domain-actions': ['admin'], // Only admins can access domain actions

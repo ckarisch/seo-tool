@@ -33,12 +33,14 @@ export default function DomainNavigation({ domain }: DomainNavigationProps) {
     { 
       name: 'Performance', 
       path: `${basePath}/performance`,
-      feature: 'performance'
+      feature: 'performance',
+      roles: ['admin']
     },
     { 
       name: 'Quick Analysis', 
       path: `${basePath}/quick-analysis`,
-      feature: 'quick-analysis'
+      feature: 'quick-analysis',
+      roles: ['admin']
     },
     { 
       name: 'Errors', 
