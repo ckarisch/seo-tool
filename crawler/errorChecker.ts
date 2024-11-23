@@ -176,8 +176,7 @@ export async function runErrorChecks({
                 data: {
                     occurrence: {
                         increment: 1
-                    },
-                    notified: true
+                    }
                 }
             });
         } else {
