@@ -4,7 +4,7 @@ import { checkRequests, checkTimeout, createPushLinkInput, getStrongestErrorCode
 import axios, { AxiosError } from "axios";
 import { load } from "cheerio";
 import runErrorChecks from "./errorChecker";
-import { DomainCrawl, InternalLink } from "@prisma/client";
+import { DomainCrawl, InternalLink, Prisma } from "@prisma/client";
 
 export interface recursiveCrawlResponse {
     timeout: boolean,
@@ -38,8 +38,8 @@ export async function* recursiveCrawl(
     let warningDoubleSlashOccured = false;
     let error404Occured = false;
     let error503Occured = false;
-    const error404Links = [];
-    const pushLinkInputs = [];
+    const error404Links: string[] = [];
+    const pushLinkInputs: Prisma.InternalLinkUpsertArgs[] = [];
 
     const protocol = 'https://';
 
@@ -124,7 +124,7 @@ export async function* recursiveCrawl(
                                 requestStartTime = new Date().getTime();
                                 data = (await axios.get(requestUrl, { timeout: maxCrawlTime - timePassed })).data;
                                 requestTime = new Date().getTime() - requestStartTime;
-                                let internalLinkId = undefined;
+                                let internalLinkId: string | undefined = undefined;
 
                                 if (pushLinksToDomain && domainId) {
                                     const internalLink = await pushLink(prisma, '', normalizedLink, false, domainId, linkType.page, requestTime, null);

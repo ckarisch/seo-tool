@@ -366,25 +366,6 @@ export async function* crawlDomain(
             }
         });
 
-        const score = await CalculateScore(domain.id);
-
-        if (!domain.disableNotifications && !errorUnknownOccured) {
-            if (domain.error503 !== error503Occured) {
-                // error 503 status change
-                await crawlNotification(user, domain, crawlNotificationType.Error503, error503Occured, domain.domainName, [analyzedUrl.normalizedLink], score);
-            }
-
-            if (domain.error404 !== error404Occured) {
-                // error 503 status change
-                await crawlNotification(user, domain, crawlNotificationType.Error404, error503Occured, domain.domainName, error404Links.length ? error404Links : [analyzedUrl.normalizedLink], score);
-            }
-
-            if (domain.score !== score) {
-                // score change
-                await crawlNotification(user, domain, crawlNotificationType.Score, error, domain.domainName, [analyzedUrl.normalizedLink], score);
-            }
-        }
-
         yield* logger.log('crawling done: ' + timePassed);
         return { error: null, domains: [] };
     }

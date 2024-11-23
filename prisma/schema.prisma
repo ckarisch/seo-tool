@@ -281,6 +281,7 @@ model AnonymousCrawl {
 model InternalLink {
   id                 String     @id @default(auto()) @map("_id") @db.ObjectId
   path               String
+  createdAt          DateTime?   @default(now())
   lastCheck          DateTime
   lastLoadTime       Int
   seoData            SeoData?

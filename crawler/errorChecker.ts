@@ -147,17 +147,104 @@ export async function runErrorChecks({
     }
 
     if (multipleH1Result.found) {
-        await logError({
-            errorCode: 'MULTIPLE_H1',
-            domainId,
-            internalLinkId,
-            domainCrawlId,
-            metadata: {
-                url,
-                ...multipleH1Result.details
+        // First check if this exact error already exists
+        const existingError = await prisma.errorLog.findFirst({
+            where: {
+                domainId,
+                internalLinkId,
+                errorType: {
+                    code: 'MULTIPLE_H1'
+                },
+                // metadata: {
+                //     equals: {
+                //         url,
+                //         // ...multipleH1Result.details
+                //     }
+                // }
+            },
+            include: {
+                errorType: true
             }
         });
+
+        if (existingError) {
+            // If the error exists, update occurrence count and ensure notified is true
+            await prisma.errorLog.update({
+                where: {
+                    id: existingError.id
+                },
+                data: {
+                    occurrence: {
+                        increment: 1
+                    },
+                    notified: true
+                }
+            });
+        } else {
+            // Check if error type exists and is properly implemented
+            const errorType = await prisma.errorType.findUnique({
+                where: { code: 'MULTIPLE_H1' }
+            });
+
+            if (!errorType) return results;
+
+            // Check implementation status based on environment
+            if (isTest) {
+                // In test mode, accept TEST, DEVELOPMENT, and PRODUCTION implementations
+                if (errorType.implementation !== 'TEST' &&
+                    errorType.implementation !== 'DEVELOPMENT' &&
+                    errorType.implementation !== 'PRODUCTION') {
+                    return results;
+                }
+            } else if (isDevelopment) {
+                // In development, accept both DEVELOPMENT and PRODUCTION implementations
+                if (errorType.implementation !== 'DEVELOPMENT' &&
+                    errorType.implementation !== 'PRODUCTION') {
+                    return results;
+                }
+            } else {
+                // In production, only accept PRODUCTION implementations
+                if (errorType.implementation !== 'PRODUCTION') {
+                    return results;
+                }
+            }
+
+            // Build the create data object conditionally
+            const createData: any = {
+                errorType: { connect: { id: errorType.id } },
+                domain: { connect: { id: domainId } },
+                occurrence: 1,
+                notified: false // New errors start as not notified
+            };
+
+            // Only add internalLink connection if ID is provided
+            if (internalLinkId) {
+                createData.internalLink = { connect: { id: internalLinkId } };
+            }
+
+            // Only add domainCrawl connection if ID is provided
+            if (domainCrawlId) {
+                createData.domainCrawl = { connect: { id: domainCrawlId } };
+            }
+
+            // Add metadata
+            createData.metadata = {
+                url,
+                ...multipleH1Result.details
+            };
+
+            // Create new error log
+            await prisma.errorLog.create({
+                data: createData
+            });
+
+            // Log to console in development environment
+            if (isDevelopment) {
+                console.log(`[${errorType.implementation}] Logged error: ${errorType.code}`);
+            }
+        }
     }
+
     return results;
 }
 
