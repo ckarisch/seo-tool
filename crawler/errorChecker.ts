@@ -136,6 +136,7 @@ export async function runErrorChecks({
 }: PageCheckParams) {
     // Check for multiple H1 tags
     const multipleH1Result = await checkMultipleH1(data);
+    const now = new Date();
 
     const results = {
         multipleH1Result
@@ -155,12 +156,6 @@ export async function runErrorChecks({
                 errorType: {
                     code: 'MULTIPLE_H1'
                 },
-                // metadata: {
-                //     equals: {
-                //         url,
-                //         // ...multipleH1Result.details
-                //     }
-                // }
             },
             include: {
                 errorType: true
@@ -176,7 +171,8 @@ export async function runErrorChecks({
                 data: {
                     occurrence: {
                         increment: 1
-                    }
+                    },
+                    lastOccurrence: now
                 }
             });
         } else {

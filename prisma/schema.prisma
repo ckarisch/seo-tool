@@ -112,20 +112,22 @@ model ErrorType {
 }
 
 model ErrorLog {
-  id             String        @id @default(auto()) @map("_id") @db.ObjectId
-  errorType      ErrorType     @relation(fields: [errorTypeId], references: [id])
-  errorTypeId    String        @db.ObjectId
-  createdAt      DateTime      @default(now())
-  resolvedAt     DateTime?
-  domain         Domain?       @relation("DomainErrors", fields: [domainId], references: [id], onDelete: Cascade)
-  domainId       String?       @db.ObjectId
-  internalLink   InternalLink? @relation("PageErrors", fields: [internalLinkId], references: [id])
-  internalLinkId String?       @db.ObjectId
-  domainCrawl    DomainCrawl?  @relation("CrawlErrors", fields: [domainCrawlId], references: [id])
-  domainCrawlId  String?       @db.ObjectId
-  metadata       Json?
-  occurrence     Int           @default(1)
-  notified       Boolean       @default(false)
+  id                 String        @id @default(auto()) @map("_id") @db.ObjectId
+  errorType          ErrorType     @relation(fields: [errorTypeId], references: [id])
+  errorTypeId        String        @db.ObjectId
+  createdAt          DateTime      @default(now())
+  resolvedAt         DateTime?
+  domain             Domain?       @relation("DomainErrors", fields: [domainId], references: [id], onDelete: Cascade)
+  domainId           String?       @db.ObjectId
+  internalLink       InternalLink? @relation("PageErrors", fields: [internalLinkId], references: [id])
+  internalLinkId     String?       @db.ObjectId
+  domainCrawl        DomainCrawl?  @relation("CrawlErrors", fields: [domainCrawlId], references: [id])
+  domainCrawlId      String?       @db.ObjectId
+  metadata           Json?
+  occurrence         Int           @default(1)
+  lastOccurrence     DateTime?     @default(now())
+  notified           Boolean       @default(false)
+  resolutionNotified Boolean?
 
   @@map("errorlog")
 }
@@ -281,7 +283,7 @@ model AnonymousCrawl {
 model InternalLink {
   id                 String     @id @default(auto()) @map("_id") @db.ObjectId
   path               String
-  createdAt          DateTime?   @default(now())
+  createdAt          DateTime?  @default(now())
   lastCheck          DateTime
   lastLoadTime       Int
   seoData            SeoData?

@@ -66,11 +66,6 @@ async function aggregateErrorLogs(domainId: string, onlyNotNotified = false) {
     const errors = approach3.filter(error => error.resolvedAt === null);
     console.log('Filtered results:', errors.length);
 
-    // Debug one complete error object to see its structure
-    if (errors.length > 0) {
-        console.log('Sample error object:', JSON.stringify(errors[0], null, 2));
-    }
-
     // Create a map using composite key of errorType.code + page path
     const errorMap = new Map<string, typeof errors[0]>();
 
@@ -82,15 +77,6 @@ async function aggregateErrorLogs(domainId: string, onlyNotNotified = false) {
 
         const pagePath = error.internalLink?.path || 'unknown';
         const key = `${error.errorType.code}_${pagePath}`;
-
-        // Log each error being processed
-        console.log('Processing error:', {
-            id: error.id,
-            errorTypeId: error.errorType.id,
-            type: error.errorType.code,
-            path: pagePath,
-            key: key
-        });
 
         // Only keep the most recent error of each type per page
         if (!errorMap.has(key)) {
@@ -251,6 +237,7 @@ export {
 
 interface ErrorChange {
     added: Array<{
+        id: string;
         type: string;
         message: string;
         url: string;
@@ -258,6 +245,7 @@ interface ErrorChange {
         category: string;
     }>;
     resolved: Array<{
+        id: string;
         type: string;
         message: string;
         url: string;
@@ -273,18 +261,24 @@ export async function checkErrorChanges(
             internalLink: true
         }
     }>[], domainId: string, domain: any): Promise<ErrorChange> {
-    // Get the previous errors from the last check
-    const previousErrors = await prisma.quickAnalysisHistory.findFirst({
+
+    // Get resolved errors that need notification
+    const resolvedErrorLogs = await prisma.errorLog.findMany({
         where: {
             domainId: domainId,
+            notified: true,
         },
-        orderBy: {
-            timestamp: 'desc'
-        },
-        select: {
-            issues: true
+        include: {
+            errorType: true,
+            internalLink: true
         }
     });
+
+    // Filter resolved errors in JavaScript
+    const filteredResolvedErrors = resolvedErrorLogs.filter(error => 
+        !!error.resolvedAt && 
+        !error.resolutionNotified
+    );
 
     // Helper function to clean and format URLs
     const formatUrl = (path: string | undefined, domainName: string): string => {
@@ -305,6 +299,7 @@ export async function checkErrorChanges(
             return [
                 `${error.errorType.code}_${url}`,
                 {
+                    id: error.id,
                     type: error.errorType.code,
                     message: error.errorType.name,
                     url: url,
@@ -315,36 +310,21 @@ export async function checkErrorChanges(
         })
     );
 
-    // Convert previous errors to a comparable format with proper URL handling
-    const previousErrorMap = new Map(
-        (previousErrors?.issues as any[] || []).map(issue => {
-            // Handle both possible URL formats in previous issues
-            const url = issue.url ||
-                (issue.path ? formatUrl(issue.path, domain.domainName) :
-                    `https://${domain.domainName}`);
-            return [
-                `${issue.type}_${url}`,
-                {
-                    ...issue,
-                    url: url // Ensure consistent URL format
-                }
-            ];
-        })
-    );
-
-    console.log('Current errors:', currentErrorMap.size);
-    console.log('Previous errors:', previousErrorMap.size);
-
     // Find new errors (present in current but not in previous)
     const newErrors = Array.from(currentErrorMap.entries())
-        .filter(([key]) => !previousErrorMap.has(key))
         .map(([_, error]) => error);
 
-    // Find resolved errors (present in previous but not in current)
-    const resolvedErrors = Array.from(previousErrorMap.entries())
-        .filter(([key]) => !currentErrorMap.has(key))
-        .map(([_, error]) => error);
+    // Format resolved errors
+    const resolvedErrors = filteredResolvedErrors.map(error => ({
+        id: error.id,
+        type: error.errorType.code,
+        message: error.errorType.name,
+        url: formatUrl(error.internalLink?.path, domain.domainName),
+        severity: error.errorType.severity,
+        category: error.errorType.category
+    }));
 
+    console.log('Current errors:', currentErrorMap.size);
     console.log('New errors:', newErrors.length);
     console.log('Resolved errors:', resolvedErrors.length);
 
@@ -408,6 +388,19 @@ export async function sendErrorChangeNotification(
                     severity: e.severity,
                     url: e.url // Include URL in resolved error details
                 }))
+            }
+        });
+        const resolvedErrorIds = changes.resolved.map(error => error.id);
+        
+        // Update all resolved errors to set resolutionNotified to true
+        await prisma.errorLog.updateMany({
+            where: {
+                id: {
+                    in: resolvedErrorIds
+                }
+            },
+            data: {
+                resolutionNotified: true
             }
         });
     }
