@@ -2,7 +2,7 @@ import { analyzeLink } from "@/apiComponents/crawler/linkTools";
 import { load } from "cheerio";
 
 export const extractLinks = (data: any, url: string, targetURL: string) => {
-    const links = [];
+    const links: { path: string, foundOnPath: string }[] = [];
     let startTime: number;
     console.log('extracting links');
     const $ = load(data);

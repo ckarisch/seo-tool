@@ -56,7 +56,7 @@ export function analyzeLink(link: string, currentDomain: string) {
 
     const warningDoubleSlash = normalizedLink.includes('//');
 
-    let normalizedHttpsLink = null;
+    let normalizedHttpsLink: string | null = null;
     if (!isPageLink) {
         normalizedHttpsLink = 'https://' + normalizedLink;
     }
