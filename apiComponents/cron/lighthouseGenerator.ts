@@ -35,7 +35,7 @@ export async function* lighthouseGenerator(
     yield* lighthouseLogger.log(`cron in dev mode`);
   }
 
-  yield* lighthouseLogger.log("start lighthoues");
+  yield* lighthouseLogger.log("start lighthouse");
   const domains = await prisma.domain.findMany({
     orderBy: { lastLighthouseAnalysis: "asc" },
     include: { user: { select: { role: true } } },

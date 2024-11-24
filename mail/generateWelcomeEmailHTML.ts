@@ -70,10 +70,9 @@ export function generateWelcomeEmailHTML(domain: string, metrics: {
 
           <!-- Metrics Grid -->
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 2rem;">
-            ${getMetricCardHtml('Quick Check Score', metrics.quickCheckScore, '#3b82f6', '📊')}
+            ${getMetricCardHtml('SEO Score', metrics.quickCheckScore, '#3b82f6', '🎯')}
             ${getMetricCardHtml('Performance', metrics.performanceScore, '#8b5cf6', '⚡')}
-            ${getMetricCardHtml('SEO Score', metrics.seoScore, '#6366f1', '🎯')}
-            ${getMetricCardHtml('Accessibility', metrics.accessibility, '#14b8a6', '♿')}
+            ${false && getMetricCardHtml('Accessibility', metrics.accessibility, '#14b8a6', '♿')}
           </div>
 
           <!-- Issues Summary -->

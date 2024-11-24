@@ -13,6 +13,7 @@ import { CrawlResponseYieldType, createLogger, isLogEntry, Logger, LoggerFunctio
 import { LogEntry } from "@/apiComponents/dev/StreamingLogViewer";
 import { lighthouseAnalysis, lighthouseAnalysisResponse } from "@/crawler/lighthouseAnalysis";
 import { prisma } from '@/lib/prisma';
+import { Domain } from '@prisma/client';
 // export type LoggerFunction = (logger: Logger, url: string, depth: number, followLinks: boolean, maxDuration: number) => AsyncGenerator<boolean | Generator<LogEntry, any, any>, Response, unknown>;
 
 export type crawlDomainResponse = {
@@ -22,7 +23,7 @@ export type crawlDomainResponse = {
 }
 
 export async function* crawlDomain(
-    url: string,
+    domain: Domain,
     depth: number,
     followLinks: boolean,
     maxDuration: number,
@@ -34,6 +35,8 @@ export async function* crawlDomain(
     const seconds = 30; // min seconds between crawls
     const maxRequests = 100;
     const maxLinkEntries = 300; // with documents and images
+
+    const url = domain.domainName;
 
     const logger = createLogger('CRAWL ' + url);
 
@@ -53,7 +56,7 @@ export async function* crawlDomain(
     let error404Links: string[] = [];
 
 
-    const domain = await prisma.domain.findFirst({ where: { domainName: extractedDomain } });
+    // const domain = await prisma.domain.findFirst({ where: { domainName: extractedDomain } });
     const user = await prisma.user.findFirst({ where: { id: domain?.userId }, include: { notificationContacts: true } });
 
     if (!domain) {

@@ -17,8 +17,17 @@ export async function GET(
     return Response.json({ error: 'Not authenticated', domains: [] }, { status: 401 })
   }
   const user = await prisma.user.findUnique({ where: { email: session!.user!.email! } });
+  if (!user) {
+    console.log('user not found');
+    return Response.json({ error: 'user not found' }, { status: 404 })
+  }
 
-  let domain = await prisma.domain.findFirst({ where: { domainName: params.domainName } });
+  let domain = await prisma.domain.findFirst({
+    where: {
+      domainName: params.domainName,
+      userId: user.id
+    }
+  });
 
   if (!domain) {
     console.log('domain not found');
@@ -35,7 +44,7 @@ export async function GET(
     await prisma.domain.update({ where: { id: domain.id }, data: { domainVerificationKey: verificationKey } });
     domain = await prisma.domain.findFirst({ where: { domainName: params.domainName } });
   }
-  
+
   if (!domain) {
     return Response.json({ error: 'domain update error' }, { status: 404 })
   }

@@ -16,7 +16,18 @@ export async function GET(
   }
 
   const user = await prisma.user.findFirst({ where: { email: session.user.email! } })
-  const domain = await prisma.domain.findFirst({ where: { domainName: params.domainName } })
+
+  if (!user) {
+    console.log('user not found');
+    return Response.json({ error: 'user not found' }, { status: 404 })
+  }
+
+  let domain = await prisma.domain.findFirst({
+    where: {
+      domainName: params.domainName,
+      userId: user.id
+    }
+  });
 
   if (!domain || domain.userId != user?.id) {
     return Response.json({ error: 'domain not found' }, { status: 404 })
@@ -32,17 +43,17 @@ export async function GET(
       }
     }
   });
-  
+
   const externalLinks = await prisma.externalLink.findMany({ where: { domainId: domain.id } })
 
-  return Response.json({ 
-    links, 
-    externalLinks, 
-    crawlingStatus: domain.crawlStatus, 
-    lastErrorTime: domain.lastErrorTime, 
-    lastErrorType: domain.lastErrorType, 
-    lastErrorMessage: domain.lastErrorMessage, 
-    loaded: true 
+  return Response.json({
+    links,
+    externalLinks,
+    crawlingStatus: domain.crawlStatus,
+    lastErrorTime: domain.lastErrorTime,
+    lastErrorType: domain.lastErrorType,
+    lastErrorMessage: domain.lastErrorMessage,
+    loaded: true
   }, { status: 200 })
 }
 

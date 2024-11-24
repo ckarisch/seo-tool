@@ -151,10 +151,11 @@ export async function* crawlerGenerator(
         timePassed = new Date().getTime() - crawlerStartTime;
         timeLeft = maxExecutionTime - timePassed;
         yield* mainLogger.log(`➝  domain ${domain.domainName}: start (${timeLeft}ms left)`);
+        yield* mainLogger.log(`➝  name ${domain.name}`);
 
         /* subfunction */
         const subfunctionGenerator = crawlDomain(
-          domain.domainName,
+          domain,
           depth,
           followLinks,
           timeLeft,
