@@ -1,3 +1,4 @@
+import { analyzeLink } from '@/apiComponents/crawler/linkTools';
 import dns from 'dns';
 import { promisify } from 'util';
 
@@ -36,58 +37,70 @@ export class DnsLookupError extends Error {
 }
 
 /**
- * Performs a DNS lookup for the given domain.
- * @param domain The domain to look up.
- * @param options Options for the DNS lookup.
- * @returns A promise that resolves to the DNS lookup result.
- * @throws {DnsLookupError} If the DNS lookup fails.
+ * Performs a DNS lookup for a domain using only the root domain
+ * @param domain The domain to look up
+ * @param options Options for the DNS lookup
+ * @returns A promise that resolves to the DNS lookup result
+ * @throws {DnsLookupError} If the DNS lookup fails
  */
 export async function performDnsLookup(domain: string, options: DnsLookupOptions = {}): Promise<DnsResult> {
+  // Use linkTools to analyze and get the root domain
+  const analyzedDomain = analyzeLink(domain, domain);
+  const rootDomain = analyzedDomain.linkDomain.replace(/^www\./, '');
+  
+  if (!rootDomain) {
+    throw new DnsLookupError('Invalid domain format');
+  }
+
   try {
     if (options.txtOnly) {
-      const txt = await dnsResolveTxt(domain);
+      const txt = await dnsResolveTxt(rootDomain);
       return { txt };
     } else {
       const [a, aaaa, mx, txt, ns, cname] = await Promise.all([
-        dnsResolve4(domain).catch(() => []),
-        dnsResolve6(domain).catch(() => []),
-        dnsResolveMx(domain).catch(() => []),
-        dnsResolveTxt(domain).catch(() => []),
-        dnsResolveNs(domain).catch(() => []),
-        dnsResolveCname(domain).catch(() => []),
+        dnsResolve4(rootDomain).catch(() => []),
+        dnsResolve6(rootDomain).catch(() => []),
+        dnsResolveMx(rootDomain).catch(() => []),
+        dnsResolveTxt(rootDomain).catch(() => []),
+        dnsResolveNs(rootDomain).catch(() => []),
+        dnsResolveCname(rootDomain).catch(() => []),
       ]);
+
       return { a, aaaa, mx, txt, ns, cname };
     }
-  } catch (error: unknown) {
+  } catch (error) {
     if (error instanceof Error) {
-      throw new DnsLookupError(`DNS lookup failed for ${domain}: ${error.message}`);
+      throw new DnsLookupError(`DNS lookup failed for ${rootDomain}: ${error.message}`);
     } else {
-      throw new DnsLookupError(`DNS lookup failed for ${domain}: Unknown error`);
+      throw new DnsLookupError(`DNS lookup failed for ${rootDomain}: Unknown error`);
     }
   }
 }
 
-// Example usage (can be commented out or removed when using as a module)
-// async function main() {
-//   try {
-//     const domain = 'example.com';
+// Example usage (commented out)
+/*
+async function main() {
+  try {
+    const domains = [
+      'example.com',
+      'www.example.com',
+      'https://www.example.com/',
+      'http://example.com'
+    ];
     
-//     // Comprehensive lookup
-//     console.log('Comprehensive DNS lookup:');
-//     const comprehensiveResult = await performDnsLookup(domain);
-//     console.log(JSON.stringify(comprehensiveResult, null, 2));
+    for (const domain of domains) {
+      console.log(`\nLooking up DNS for: ${domain}`);
+      const result = await performDnsLookup(domain);
+      console.log(JSON.stringify(result, null, 2));
+    }
+  } catch (error) {
+    if (error instanceof DnsLookupError) {
+      console.error('DNS Lookup Error:', error.message);
+    } else {
+      console.error('Unexpected error:', error);
+    }
+  }
+}
 
-//     // TXT-only lookup
-//     console.log('\nTXT-only DNS lookup:');
-//     const txtOnlyResult = await performDnsLookup(domain, { txtOnly: true });
-//     console.log(JSON.stringify(txtOnlyResult, null, 2));
-//   } catch (error) {
-//     if (error instanceof DnsLookupError) {
-//       console.error('DNS Lookup Error:', error.message);
-//     } else {
-//       console.error('Unexpected error:', error);
-//     }
-//   }
-// }
-
-// main();
+main();
+*/

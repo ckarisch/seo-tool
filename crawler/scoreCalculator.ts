@@ -295,14 +295,14 @@ export async function checkErrorChanges(
     // Convert current errors to a comparable format
     const currentErrorMap = new Map(
         currentErrors.map(error => {
-            const url = formatUrl(error.internalLink?.path, domain.domainName);
+            const url = error.internalLink?.path; // internalLink.path includes domain
             return [
                 `${error.errorType.code}_${url}`,
                 {
                     id: error.id,
                     type: error.errorType.code,
                     message: error.errorType.name,
-                    url: url,
+                    url: url ?? '',
                     severity: error.errorType.severity,
                     category: error.errorType.category
                 }
@@ -319,7 +319,7 @@ export async function checkErrorChanges(
         id: error.id,
         type: error.errorType.code,
         message: error.errorType.name,
-        url: formatUrl(error.internalLink?.path, domain.domainName),
+        url: error.internalLink?.path ?? '',
         severity: error.errorType.severity,
         category: error.errorType.category
     }));

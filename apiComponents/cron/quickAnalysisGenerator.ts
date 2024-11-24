@@ -11,6 +11,7 @@ import { prisma } from '@/lib/prisma';
 import { calculateOverallScore } from "@/util/calculateOverallScore";
 import { aggregateErrorLogs, calculateErrorScore, calculateScore, checkErrorChanges, NotificationItem, QuickAnalysisMetrics, sendErrorChangeNotification as getErrorChangeNotifications } from "@/crawler/scoreCalculator";
 import { storeQuickAnalysisHistory } from "@/crawler/scoreData";
+import { VerifyDomain } from "../domain/verifyDomain";
 
 const resetCrawlTime = 3600000; // 1h
 const maxDomainCrawls = 7;
@@ -107,9 +108,18 @@ export async function* quickAnalysisGenerator(
         const diff = now.getTime() - lastQuickAnalysis.getTime();
         const diffMinutes = Math.floor(diff / 60000);
 
-        if (!domain.domainVerified && domain.user.role !== "admin") {
-            yield { text: `Domain not verified: ${domain.domainName}` };
-            continue;
+        // if (domain.user.role !== "admin") {
+        if (true) {
+            let isVerified = false;
+
+            if (!domain.domainVerified) {
+                isVerified = await VerifyDomain(domain);
+
+                if (!isVerified) {
+                    yield { text: `Domain not verified: ${domain.domainName}` };
+                    continue;
+                }
+            }
         }
 
         if (domain.crawlEnabled && diffMinutes >= domainInterval) {

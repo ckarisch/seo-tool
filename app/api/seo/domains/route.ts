@@ -114,7 +114,7 @@ export async function POST(request: Request) {
     }, { status: 403 });
   }
 
-  const existingDomain = await prisma.domain.findUnique({
+  const existingDomain = await prisma.domain.findFirst({
     where: { domainName, userId: user.id },
   });
 

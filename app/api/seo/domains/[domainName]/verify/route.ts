@@ -1,4 +1,5 @@
 
+import { VerifyDomain } from '@/apiComponents/domain/verifyDomain';
 import { authOptions } from '@/lib/auth';
 import { DnsLookupError, performDnsLookup } from '@/util/api/dnsLookup';
 import { Domain, PrismaClient } from '@prisma/client'
@@ -24,13 +25,7 @@ export async function GET(
     return Response.json({ error: 'domain not found' }, { status: 404 })
   }
 
-  // const links = await prisma.internalLink.findMany({ where: { domainId: domain.id } })
-  // const externalLinks = await prisma.externalLink.findMany({ where: { domainId: domain.id } })
-
-
   try {
-    console.log('lookup', domain.domainName);
-
     if (!domain.domainVerificationKey) {
       return new Response(JSON.stringify({ error: 'No verification key present' }), {
         status: 500,
@@ -38,17 +33,8 @@ export async function GET(
       })
     }
 
-    const dnsRecords = await performDnsLookup(domain.domainName, { txtOnly: true });
-    console.log(JSON.stringify(dnsRecords, null, 2));
+    const isVerified = await VerifyDomain(domain);
 
-    let isVerified = false;
-
-    for (const entry of dnsRecords.txt) {
-      if (entry.includes(domain.domainVerificationKey)) {
-        await prisma.domain.update({ where: { id: domain.id }, data: { domainVerified: true } })
-        isVerified = true;
-      }
-    }
     const result: Partial<Domain> = {
       id: domain.id,
       domainName: domain.name,

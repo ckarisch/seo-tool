@@ -27,6 +27,20 @@ export async function GET(request: Request) {
   let timeLeft = maxExecutionTime - timePassed;
 
   const cronJobs = await prisma.cronJob.findMany();
+  const sortedCronJobs = cronJobs.sort((a, b) => {
+    const order = {
+      'crawl': 1,
+      'lighthouse': 2,
+      'quick': 3,
+      'user': 4
+    };
+    
+    // Get order value, default to 999 for unknown types
+    const orderA = order[a.type] || 999;
+    const orderB = order[b.type] || 999;
+    
+    return orderA - orderB;
+  });
 
   const encoder = new TextEncoder();
   const stream = new ReadableStream({
@@ -51,10 +65,10 @@ export async function GET(request: Request) {
 
       async function* cronJobGenerator(): AsyncGenerator<LogEntry> {
         yield* cronLogger.log(`start cron jobs`);
-        if (!cronJobs.length) {
+        if (!sortedCronJobs.length) {
           yield* cronLogger.log(`no cron jobs available`);
         }
-        for (const cron of cronJobs) {
+        for (const cron of sortedCronJobs) {
           timePassed = new Date().getTime() - cronStartTime;
           timeLeft = maxExecutionTime - timePassed;
           yield* cronLogger.log(`${cron.name}: time left: ${timeLeft}`);

@@ -35,15 +35,15 @@ export async function* lighthouseGenerator(
     yield* lighthouseLogger.log(`cron in dev mode`);
   }
 
-  yield* lighthouseLogger.log("start auto crawl");
+  yield* lighthouseLogger.log("start lighthoues");
   const domains = await prisma.domain.findMany({
     orderBy: { lastLighthouseAnalysis: "asc" },
     include: { user: { select: { role: true } } },
   });
 
   if (!domains || domains.length === 0) {
-    yield* lighthouseLogger.log("no auto crawls found");
-    return Response.json({ error: "no auto crawls found" }, { status: 404 });
+    yield* lighthouseLogger.log("no domains found");
+    return;
   }
 
   for (const domain of domains) {
@@ -222,9 +222,9 @@ export async function* lighthouseGenerator(
         continue;
       } else {
         yield* lighthouseLogger.log(
-          "➥  skip auto crawl: " +
+          "➥  skip lighthouse: " +
           domain.domainName +
-          " last crawl was " +
+          " last lighthouse check was " +
           diffMinutes +
           " / " +
           domainInterval +
