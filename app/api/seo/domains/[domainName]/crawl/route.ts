@@ -4,6 +4,7 @@ import { authOptions } from '@/lib/auth';
 import { createLogger } from '@/apiComponents/dev/logger';
 import { LogEntry, streamLogs } from '@/apiComponents/dev/StreamingLogViewer';
 import { NextResponse } from 'next/server';
+import { prisma } from '@/lib/prisma';
 
 export const maxDuration = 200; // in seconds
 
@@ -17,7 +18,25 @@ export async function POST(
 
   if (!session || !session!.user) {
     console.log('error: no session')
-    return Response.json({ error: 'Not authenticated', domains: [] }, { status: 401 })
+    return
+  }
+
+  const user = await prisma.user.findFirst({ where: { email: session.user.email! } })
+
+  if (!user) {
+    console.log('user not found');
+    return
+  }
+  let domain = await prisma.domain.findFirst({
+    where: {
+      domainName: params.domainName,
+      userId: user.id
+    }
+  });
+
+  if (!domain || domain.userId != user?.id) {
+    console.log('domain not found');
+    return 
   }
 
   const depth = 1;
@@ -35,10 +54,14 @@ export async function POST(
         const crawlRequestLogger = createLogger('Crawl Request');
         yield* crawlRequestLogger.log('crawl request');
 
-
+        if (!domain || domain.userId != user?.id) {
+          console.log('domain not found');
+          return 
+        }
+        
         /* subfunction */
         const subfunctionGenerator = crawlDomain(
-          params.domainName,
+          domain,
           depth,
           followLinks,
           maxExecutionTime
@@ -59,7 +82,7 @@ export async function POST(
 
         controller.close();
       }
-      
+
       for await (const logEntry of generateLogs()) {
         const encodedChunk = encoder.encode(JSON.stringify(logEntry) + '\n');
         controller.enqueue(encodedChunk);
