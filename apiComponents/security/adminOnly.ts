@@ -1,5 +1,5 @@
 import { authOptions } from "@/lib/auth";
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient, UserRole } from "@prisma/client";
 import { getServerSession } from "next-auth";
 
 const prisma = new PrismaClient();
@@ -14,7 +14,7 @@ export const adminOnly = async () => {
     }
     const user = await prisma.user.findUnique({ where: { email: session!.user!.email! } });
 
-    if (!user || user.role !== 'admin') {
+    if (!user || user.role !== UserRole.ADMIN) {
         console.log('not allowed');
         return false;
     }

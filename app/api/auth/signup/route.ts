@@ -1,6 +1,6 @@
 // app/api/auth/signup/route.ts
 import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, UserRole } from '@prisma/client';
 import { scryptSync, randomBytes } from 'crypto';
 import { z } from 'zod';
 
@@ -10,8 +10,7 @@ const prisma = new PrismaClient();
 const signupSchema = z.object({
   email: z.string().email('Invalid email address'),
   password: z.string().min(8, 'Password must be at least 8 characters'),
-  name: z.string().min(2, 'Name must be at least 2 characters'),
-  role: z.string().default('user'),
+  name: z.string().min(2, 'Name must be at least 2 characters')
 });
 
 export async function POST(req: NextRequest) {
@@ -45,7 +44,7 @@ export async function POST(req: NextRequest) {
         name: validatedData.name,
         password: hashedPassword,
         salt: salt,
-        role: validatedData.role,
+        role: UserRole.STANDARD,
         // Additional required fields with defaults
         stripeCustomers: [],
         emailVerified: null,

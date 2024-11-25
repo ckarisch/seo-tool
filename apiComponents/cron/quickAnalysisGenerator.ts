@@ -108,7 +108,7 @@ export async function* quickAnalysisGenerator(
         const diff = now.getTime() - lastQuickAnalysis.getTime();
         const diffMinutes = Math.floor(diff / 60000);
 
-        // if (domain.user.role !== "admin") {
+        // if (domain.user.role !== UserRole.ADMIN) {
         if (true) {
             let isVerified = false;
 

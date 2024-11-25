@@ -1,7 +1,7 @@
 import { env } from "process";
 import { createLogger } from "../dev/logger";
 import { LogEntry } from "../dev/StreamingLogViewer";
-import { CronJob, PrismaClient } from "@prisma/client";
+import { CronJob, PrismaClient, UserRole } from "@prisma/client";
 import {
   lighthouseAnalysis,
   lighthouseAnalysisResponse,
@@ -92,7 +92,7 @@ export async function* lighthouseGenerator(
       diffMinutes = Math.floor(diff / 60000);
     }
     if (!domain.domainVerified) {
-      if (domain.user.role === "admin") {
+      if (domain.user.role === UserRole.ADMIN) {
         yield* lighthouseLogger.log(
           `❗✅ admin mode (not verified): domain ${domain.domainName}`
         );

@@ -1,4 +1,4 @@
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient, UserRole } from "@prisma/client";
 import { NextApiRequest, NextApiResponse } from "next";
 import { getServerSession } from "next-auth";
 
@@ -107,7 +107,7 @@ export async function POST(request: Request) {
   }
 
   // Check domain limit for non-premium/non-admin users
-  if (user.role !== 'admin' && user.role !== 'premium' && user.domains.length >= 5) {
+  if (user.role !== UserRole.ADMIN && user.role !== UserRole.PREMIUM && user.domains.length >= 5) {
     return Response.json({ 
       error: "Free users can only add up to 5 domains. Please upgrade to Premium to add more domains.",
       code: "DOMAIN_LIMIT_EXCEEDED"

@@ -1,6 +1,6 @@
 import { authOptions } from "@/lib/auth";
 import { ErrorResponse, SessionResponse } from "@/app/api/types";
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient, UserRole } from "@prisma/client";
 import { getServerSession } from "next-auth";
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
@@ -82,7 +82,7 @@ export async function GET(
 
     const updateData: {
       stripeCustomers?: string[];
-      role?: string;
+      role?: UserRole;
       name?: string;
     } = {};
 
@@ -142,7 +142,7 @@ export async function GET(
     // Update role to premium if payment is successful
     if (isSuccessful) {
       console.log('Payment successful - updating user role to premium');
-      updateData.role = 'premium';
+      updateData.role = UserRole.PREMIUM;
     }
 
     // Update name if available from customer details

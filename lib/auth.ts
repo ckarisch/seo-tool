@@ -1,10 +1,9 @@
 // lib/auth.ts
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, UserRole } from '@prisma/client';
 import { scryptSync, randomBytes } from 'crypto';
 import { NextAuthOptions } from 'next-auth';
 import CredentialsProvider from "next-auth/providers/credentials";
 import GithubProvider from "next-auth/providers/github";
-import type { UserRole } from "@/types/next-auth";
 
 const prisma = new PrismaClient();
 
@@ -32,8 +31,8 @@ export const authOptions: NextAuthOptions = {
           return {
             id: '-1',
             email: 'admin@localhost',
-            name: 'admin',
-            role: 'admin' as UserRole // Add role here
+            name: UserRole.ADMIN,
+            role: UserRole.ADMIN // Add role here
           };
         }
 
@@ -77,7 +76,7 @@ export const authOptions: NextAuthOptions = {
           name: profile.name || profile.login,
           email: profile.email,
           image: profile.avatar_url,
-          role: 'standard' as UserRole // Default role for GitHub users
+          role: UserRole.STANDARD as UserRole // Default role for GitHub users
         };
       }
     }),

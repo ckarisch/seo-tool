@@ -46,13 +46,19 @@ model VerificationToken {
   @@map("verificationtokens")
 }
 
+enum UserRole {
+  ADMIN
+  PREMIUM
+  STANDARD
+}
+
 model User {
   id                   String                @id @default(auto()) @map("_id") @db.ObjectId
   email                String                @unique
   name                 String?
   password             String?
   salt                 String?
-  role                 String
+  role                 UserRole              @default(STANDARD)
   domains              Domain[]
   notificationContacts NotificationContact[]
   AdminLogs            AdminLog[]

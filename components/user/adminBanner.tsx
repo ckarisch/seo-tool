@@ -7,12 +7,13 @@ import { Admin } from "@/icons/admin";
 import styles from "./adminBanner.module.scss";
 import { PremiumUser } from "@/icons/premiumUser";
 import { useProtectedSession } from "@/hooks/useProtectedSession";
+import { UserRole } from "@prisma/client";
 
 const image = (role: string | undefined) => {
     switch (role) {
-        case 'admin':
+        case UserRole.ADMIN:
             return <div> <Admin /> </div>;
-        case 'premium':
+        case UserRole.PREMIUM:
             return <div> <PremiumUser /> </div>;
         default: return null;
     }

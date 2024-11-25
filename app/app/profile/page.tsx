@@ -13,6 +13,7 @@ import Section from "@/components/layout/section"
 import Background from "@/components/layout/background"
 import { Alert, AlertDescription } from '@/components/layout/alert/Alert'
 import { ConfirmDialog } from '@/components/layout/dialog/ConfirmDialog'
+import { UserRole } from '@prisma/client'
 
 interface NotificationContact {
     id: string
@@ -193,7 +194,7 @@ export default function ProfilePage() {
                                     <span className={styles.label}>Role</span>
                                     <div className={styles.valueWithIcon}>
                                         <span className={styles.value}>{profile?.role}</span>
-                                        {profile?.role === 'premium' && (
+                                        {profile?.role === UserRole.PREMIUM && (
                                             <Crown className={styles.roleIcon} size={16} />
                                         )}
                                     </div>

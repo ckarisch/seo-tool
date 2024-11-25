@@ -12,6 +12,7 @@ import Background from "@/components/layout/background"
 import PricingSwitch from './PricingSwitch'
 import { EmbeddedCheckout, EmbeddedCheckoutProvider } from '@stripe/react-stripe-js'
 import { useSession } from 'next-auth/react'
+import { UserRole } from '@prisma/client'
 
 interface CheckoutResponse {
   clientSecret?: string;
@@ -139,7 +140,7 @@ export default function GetPremiumPage() {
                   <span className={styles.statusActive}>Active</span>
                 </div>
                 <h3 className={styles.cardTitle}>
-                  {premiumStatus.subscriptionType || 'Premium'} Access
+                  {premiumStatus.subscriptionType || UserRole.PREMIUM} Access
                 </h3>
                 <p className={styles.cardDescription}>
                   {premiumStatus.accessType === 'lifetime'

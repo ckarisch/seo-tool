@@ -13,7 +13,7 @@ import { CrawlResponseYieldType, createLogger, isLogEntry, Logger, LoggerFunctio
 import { LogEntry } from "@/apiComponents/dev/StreamingLogViewer";
 import { lighthouseAnalysis, lighthouseAnalysisResponse } from "@/crawler/lighthouseAnalysis";
 import { prisma } from '@/lib/prisma';
-import { Domain } from '@prisma/client';
+import { Domain, UserRole } from '@prisma/client';
 // export type LoggerFunction = (logger: Logger, url: string, depth: number, followLinks: boolean, maxDuration: number) => AsyncGenerator<boolean | Generator<LogEntry, any, any>, Response, unknown>;
 
 export type crawlDomainResponse = {
@@ -79,7 +79,7 @@ export async function* crawlDomain(
             return { error: 'user not fould' };
         }
 
-        if (sessionUser.role !== 'admin') {
+        if (sessionUser.role !== UserRole.ADMIN) {
             // admins are allowed to crawl unverified domains
             if (!domain.domainVerified) {
                 yield* logger.log('error: domain not verified');

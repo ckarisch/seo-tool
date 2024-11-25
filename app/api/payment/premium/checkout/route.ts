@@ -1,5 +1,5 @@
 import { authOptions } from "@/lib/auth";
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient, UserRole } from "@prisma/client";
 import { getServerSession } from "next-auth";
 import { NextResponse } from 'next/server'
 import Stripe from 'stripe'
@@ -193,7 +193,7 @@ async function checkExistingAccess(customerIds: string[]) {
           return {
             hasPremiumAccess: true,
             accessType: 'subscription' as const,
-            subscriptionType: 'Premium',
+            subscriptionType: UserRole.PREMIUM,
             lifetimeLicenses: []
           };
         }

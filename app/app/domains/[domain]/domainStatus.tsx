@@ -17,6 +17,7 @@ import { Load } from "@/components/layout/load";
 import Image from "next/image";
 import RetinaScrollableImage from "@/components/layout/RetinaScrollableImage";
 import { canAccessFeature } from "@/lib/session";
+import { UserRole } from "@prisma/client";
 
 export default function DomainStatus({ params, domainFetchTag, linksFetchTag }: { params: { domain: string }, domainFetchTag: string, linksFetchTag: string }) {
     const { data: session, status } = useSession({
@@ -131,7 +132,7 @@ export default function DomainStatus({ params, domainFetchTag, linksFetchTag }: 
         }
     }
 
-    if (apiUser.role !== 'admin' && !domain.domainVerified && !['loading', 'authenticated'].includes(status)) {
+    if (apiUser.role !== UserRole.ADMIN && !domain.domainVerified && !['loading', 'authenticated'].includes(status)) {
         return (
             <div>
                 <Card>

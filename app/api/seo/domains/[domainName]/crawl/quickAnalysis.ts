@@ -1,4 +1,4 @@
-import { Prisma, PrismaClient, User, NotificationContact } from "@prisma/client";
+import { Prisma, PrismaClient, User, NotificationContact, UserRole } from "@prisma/client";
 import axios, { AxiosError } from 'axios';
 import { NextResponse } from 'next/server';
 import { analyzeLink } from "../../../../../../apiComponents/crawler/linkTools";
@@ -150,7 +150,7 @@ export async function* quickAnalysis(
             return { error: 'user not found' };
         }
 
-        if (sessionUser.role !== 'admin') {
+        if (sessionUser.role !== UserRole.ADMIN) {
             if (!domain.domainVerified) {
                 const issueEntry: IssueLogEntry = {
                     type: 'issue',

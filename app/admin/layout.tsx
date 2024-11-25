@@ -12,6 +12,7 @@ import { useRouter } from 'next/navigation';
 import AdminDashboard from '@/components/admin/dashboard/adminDashboard';
 import AppHeader from '@/components/layout/Header/AppHeader';
 import { useProtectedSession } from '@/hooks/useProtectedSession';
+import { UserRole } from '@prisma/client';
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -47,7 +48,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     </>;
   }
 
-  if (!(apiUser.role === 'admin')) {
+  if (!(apiUser.role === UserRole.ADMIN)) {
     router.push('/')
     return <div>not allowed</div>;
   }

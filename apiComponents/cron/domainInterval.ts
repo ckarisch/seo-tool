@@ -1,4 +1,4 @@
-import { CronJob, Domain } from "@prisma/client";
+import { CronJob, Domain, UserRole } from "@prisma/client";
 import { createLogger, LogEntry } from "../dev/logger";
 
 
@@ -12,21 +12,21 @@ export async function* domainIntervalGenerator(userRole: string, domain: Domain,
     const logger = createLogger('interval');
 
     switch (userRole) {
-        case 'standard':
+        case UserRole.STANDARD:
             if (cron.standardInterval) {
                 yield* logger.log(`domain ${domain.domainName} standard interval`);
                 domainInterval = cron.standardInterval;
                 intervalFound = true;
             }
             break;
-        case 'premium':
+        case UserRole.PREMIUM:
             if (cron.premiumInterval) {
                 yield* logger.log(`domain ${domain.domainName} premium interval`);
                 domainInterval = cron.premiumInterval;
                 intervalFound = true;
             }
             break;
-        case 'admin':
+        case UserRole.ADMIN:
             if (cron.adminInterval) {
                 yield* logger.log(`domain ${domain.domainName} admin interval`);
                 domainInterval = cron.adminInterval;

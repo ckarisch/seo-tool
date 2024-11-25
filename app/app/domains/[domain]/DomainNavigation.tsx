@@ -6,7 +6,7 @@ import Link from 'next/link';
 import styles from './DomainNavigation.module.scss';
 import { useSession } from 'next-auth/react';
 import { getUserRole, canAccessFeature } from '@/lib/session';
-import type { UserRole } from '@/types/next-auth';
+import { UserRole } from '@prisma/client';
 
 interface DomainNavigationProps {
   domain: string;
@@ -34,13 +34,13 @@ export default function DomainNavigation({ domain }: DomainNavigationProps) {
       name: 'Performance', 
       path: `${basePath}/performance`,
       feature: 'performance',
-      roles: ['admin']
+      roles: [UserRole.ADMIN]
     },
     { 
       name: 'Quick Analysis', 
       path: `${basePath}/quick-analysis`,
       feature: 'quick-analysis',
-      roles: ['admin']
+      roles: [UserRole.ADMIN]
     },
     { 
       name: 'Errors', 
@@ -51,7 +51,7 @@ export default function DomainNavigation({ domain }: DomainNavigationProps) {
       name: 'Crawls', 
       path: `${basePath}/crawls`,
       feature: 'crawls',
-      roles: ['admin']
+      roles: [UserRole.ADMIN]
     },
     { 
       name: 'Settings', 
@@ -84,7 +84,7 @@ export default function DomainNavigation({ domain }: DomainNavigationProps) {
               aria-current={isActiveLink(item.path) ? 'page' : undefined}
             >
               <span className={styles.linkText}>{item.name}</span>
-              {item.roles?.includes('admin') && (
+              {item.roles?.includes(UserRole.ADMIN) && (
                 <span className={styles.adminBadge} aria-label="Admin only">
                   Admin
                 </span>

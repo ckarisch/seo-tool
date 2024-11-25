@@ -1,7 +1,7 @@
 import { env } from "process";
 import { createLogger } from "../dev/logger";
 import { LogEntry } from "../dev/StreamingLogViewer";
-import { CronJob, PrismaClient } from "@prisma/client";
+import { CronJob, PrismaClient, UserRole } from "@prisma/client";
 import { checkTimeout } from "@/app/api/seo/domains/[domainName]/crawl/crawlLinkHelper";
 import Stripe from 'stripe';
 
@@ -107,7 +107,7 @@ export async function* userGenerator(
   yield* userLogger.log("start user premium check");
   const users = await prisma.user.findMany({
     where: {
-      role: 'premium'
+      role: UserRole.PREMIUM
     }
   });
 
@@ -132,7 +132,7 @@ export async function* userGenerator(
       try {
         await prisma.user.update({
           where: { id: user.id },
-          data: { role: 'standard' }
+          data: { role: UserRole.STANDARD }
         });
         usersDowngraded.push(user.email);
       } catch (error) {

@@ -5,7 +5,7 @@ import {
   crawlDomain,
   crawlDomainResponse,
 } from "@/app/api/seo/domains/[domainName]/crawl/crawlDomain";
-import { CronJob } from "@prisma/client";
+import { CronJob, UserRole } from "@prisma/client";
 import {
   domainIntervalGenerator,
   domainIntervalResponse,
@@ -96,7 +96,7 @@ export async function* crawlerGenerator(
       break;
     }
     if (!domain.domainVerified) {
-      if (domain.user.role === "admin") {
+      if (domain.user.role === UserRole.ADMIN) {
         yield* mainLogger.log(
           `❗✅ admin mode (not verified): domain ${domain.domainName}`
         );
