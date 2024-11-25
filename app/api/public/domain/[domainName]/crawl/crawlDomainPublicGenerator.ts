@@ -1,4 +1,4 @@
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient, UserRole } from "@prisma/client";
 
 import { AxiosError } from 'axios';
 import { NextResponse } from 'next/server';
@@ -101,7 +101,8 @@ export async function* crawlDomainPublicGenerator(url: string, depth: number, fo
             null, //domainCrawl
             false, // do not push links to database in public crawls
             requestStartTime,
-            crawlDomainPublicLogger);
+            crawlDomainPublicLogger,
+            UserRole.STANDARD);
 
         let result: IteratorResult<LogEntry, recursiveCrawlResponse>;
         do {
@@ -229,7 +230,7 @@ export async function* crawlDomainPublicGenerator(url: string, depth: number, fo
 
         // await CalculateScore(domain.id);
         yield* crawlDomainPublicLogger.log('crawling done: ' + timePassed);
-        
+
         return { error: error ? 'crawl errors' : undefined, errorTooManyLinksOccured, error404Occured, error503Occured, warning, crawlWarning, warningDoubleSlashOccured };
     }
 

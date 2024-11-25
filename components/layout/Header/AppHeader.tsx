@@ -52,6 +52,11 @@ export default function AppHeader() {
               </Link>
             </li>
             <li className={styles.headerLi}>
+              <Link href={'/app/error-types'} className={styles.headerLink}>
+                Types
+              </Link>
+            </li>
+            <li className={styles.headerLi}>
               <Signin />
             </li>
           </div>

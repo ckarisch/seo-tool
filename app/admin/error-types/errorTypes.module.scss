@@ -132,11 +132,22 @@
   line-height: 1.4;
 }
 
-.implementationControl {
-  margin-top: auto;
+.controls {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
-.statusSelect {
+.controlGroup {
+  label {
+    display: block;
+    font-size: 0.85rem;
+    color: $text-secondary;
+    margin-bottom: 4px;
+  }
+}
+
+.select {
   width: 100%;
   padding: 8px 12px;
   border-radius: 6px;
@@ -166,6 +177,18 @@
   
   &.production {
     color: $veryGood;
+  }
+  
+  &.adminRole {
+    color: $error;
+  }
+  
+  &.premiumRole {
+    color: $warning;
+  }
+  
+  &.standardRole {
+    color: $good;
   }
 }
 

@@ -1,4 +1,3 @@
-// app/admin/error-types/page.tsx
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -13,14 +12,22 @@ interface ErrorType {
   implementation: ImplementationStatus;
   category: string;
   severity: Severity;
+  userRole: UserRole;
 }
 
 type ImplementationStatus = 'NOT_IMPLEMENTED' | 'TEST' | 'DEVELOPMENT' | 'PRODUCTION';
 type Severity = 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW' | 'INFO';
+type UserRole = 'ADMIN' | 'PREMIUM' | 'STANDARD';
 
 type GroupedErrorTypes = {
   [key: string]: ErrorType[];
 };
+
+interface UpdatePayload {
+  code: string;
+  implementation?: ImplementationStatus;
+  userRole?: UserRole;
+}
 
 export default function ErrorTypesPage() {
   const [errorTypes, setErrorTypes] = useState<ErrorType[]>([]);
@@ -46,35 +53,33 @@ export default function ErrorTypesPage() {
     }
   };
 
-  const handleStatusChange = async (code: string, newStatus: ImplementationStatus) => {
+  const handleUpdate = async (updatePayload: UpdatePayload) => {
     try {
-      const response = await fetch('/api/admin/error-types/update-implementation', {
+      const response = await fetch('/api/admin/error-types/update', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ code, status: newStatus }),
+        body: JSON.stringify(updatePayload),
       });
 
       if (!response.ok) {
-        throw new Error('Failed to update status');
+        throw new Error('Failed to update error type');
       }
 
       setUpdateStatus({
-        message: `Successfully updated ${code} to ${newStatus}`,
+        message: `Successfully updated ${updatePayload.code}`,
         type: 'success',
       });
 
-      // Refresh error types
       fetchErrorTypes();
 
-      // Clear status message after 3 seconds
       setTimeout(() => {
         setUpdateStatus(null);
       }, 3000);
     } catch (error) {
       setUpdateStatus({
-        message: `Failed to update status: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        message: `Failed to update: ${error instanceof Error ? error.message : 'Unknown error'}`,
         type: 'error',
       });
     }
@@ -109,6 +114,15 @@ export default function ErrorTypesPage() {
       PRODUCTION: styles.production,
     };
     return implementationClasses[status] || '';
+  };
+
+  const getUserRoleClass = (role: UserRole): string => {
+    const roleClasses = {
+      ADMIN: styles.adminRole,
+      PREMIUM: styles.premiumRole,
+      STANDARD: styles.standardRole,
+    };
+    return roleClasses[role] || '';
   };
 
   if (loading) {
@@ -147,19 +161,40 @@ export default function ErrorTypesPage() {
                     <h3 className={styles.errorCode}>{error.code}</h3>
                   </div>
                   <p className={styles.errorName}>{error.name}</p>
-                  <div className={styles.implementationControl}>
-                    <select
-                      value={error.implementation}
-                      onChange={(e) => 
-                        handleStatusChange(error.code, e.target.value as ImplementationStatus)
-                      }
-                      className={`${styles.statusSelect} ${getImplementationClass(error.implementation)}`}
-                    >
-                      <option value="NOT_IMPLEMENTED">Not Implemented</option>
-                      <option value="TEST">Test</option>
-                      <option value="DEVELOPMENT">Development</option>
-                      <option value="PRODUCTION">Production</option>
-                    </select>
+                  <div className={styles.controls}>
+                    <div className={styles.controlGroup}>
+                      <label htmlFor={`implementation-${error.id}`}>Implementation:</label>
+                      <select
+                        id={`implementation-${error.id}`}
+                        value={error.implementation}
+                        onChange={(e) => handleUpdate({
+                          code: error.code,
+                          implementation: e.target.value as ImplementationStatus
+                        })}
+                        className={`${styles.select} ${getImplementationClass(error.implementation)}`}
+                      >
+                        <option value="NOT_IMPLEMENTED">Not Implemented</option>
+                        <option value="TEST">Test</option>
+                        <option value="DEVELOPMENT">Development</option>
+                        <option value="PRODUCTION">Production</option>
+                      </select>
+                    </div>
+                    <div className={styles.controlGroup}>
+                      <label htmlFor={`role-${error.id}`}>Minimum Role:</label>
+                      <select
+                        id={`role-${error.id}`}
+                        value={error.userRole}
+                        onChange={(e) => handleUpdate({
+                          code: error.code,
+                          userRole: e.target.value as UserRole
+                        })}
+                        className={`${styles.select} ${getUserRoleClass(error.userRole)}`}
+                      >
+                        <option value="STANDARD">Standard</option>
+                        <option value="PREMIUM">Premium</option>
+                        <option value="ADMIN">Admin</option>
+                      </select>
+                    </div>
                   </div>
                 </div>
               ))}

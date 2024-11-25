@@ -221,7 +221,8 @@ export async function* crawlDomain(
             domain.id,
             domainCrawl,
             true,
-            requestStartTime, logger);
+            requestStartTime, logger,
+            user?.role ?? UserRole.STANDARD);
 
         let result: IteratorResult<LogEntry, recursiveCrawlResponse>;
         do {

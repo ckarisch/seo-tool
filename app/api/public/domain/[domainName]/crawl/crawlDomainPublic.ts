@@ -1,4 +1,4 @@
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient, UserRole } from "@prisma/client";
 
 import { AxiosError } from 'axios';
 import { NextResponse } from 'next/server';
@@ -92,7 +92,8 @@ export const crawlDomainPublic = async (url: string, depth: number, followLinks:
             null, //domainCrawl
             true,
             requestStartTime,
-            cronLogger);
+            cronLogger,
+            UserRole.STANDARD);
 
 
         // Initialize the result variable
@@ -114,7 +115,7 @@ export const crawlDomainPublic = async (url: string, depth: number, followLinks:
             }
         } while (!subfunctionItem.done);
 
-        
+
         if (!subfunctionResult) {
             return Response.json({ error: 'Public Crawl Error' }, { status: 500 });
         }

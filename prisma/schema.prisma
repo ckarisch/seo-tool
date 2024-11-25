@@ -113,6 +113,7 @@ model ErrorType {
   severity       Severity
   implementation ImplementationStatus @default(NOT_IMPLEMENTED)
   errorLogs      ErrorLog[]
+  userRole       UserRole             @default(ADMIN)
 
   @@map("errortype")
 }

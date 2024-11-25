@@ -1,6 +1,5 @@
-
 import { prisma } from '@/lib/prisma';
-import { ImplementationStatus } from '@prisma/client';
+import { ImplementationStatus, UserRole } from '@prisma/client';
 import { checkMultipleH1 } from './checks/checkMultipleH1';
 
 const isDevelopment = process.env.NODE_ENV?.toLowerCase() === 'development'
@@ -28,29 +27,43 @@ export interface ErrorResult {
 }
 
 /**
- * Determines if an error type should be executed based on its implementation status
- * and the current environment
+ * Determines if an error type should be executed based on its implementation status,
+ * current environment, and user's role
  */
-function shouldExecuteCheck(implementation: ImplementationStatus): boolean {
-    if (isTest) {
-        // In test mode, run TEST, DEVELOPMENT, and PRODUCTION implementations
-        return ['TEST', 'DEVELOPMENT', 'PRODUCTION'].includes(implementation);
+function shouldExecuteCheck(
+    implementation: ImplementationStatus,
+    checkUserRole: UserRole,
+    userRole: UserRole
+): boolean {
+    // First check if implementation status allows execution
+    const implementationAllowed = isTest
+        ? ['TEST', 'DEVELOPMENT', 'PRODUCTION'].includes(implementation)
+        : isDevelopment
+            ? ['DEVELOPMENT', 'PRODUCTION'].includes(implementation)
+            : implementation === 'PRODUCTION';
+
+    if (!implementationAllowed) {
+        return false;
     }
-    
-    if (isDevelopment) {
-        // In development, run DEVELOPMENT and PRODUCTION implementations
-        return ['DEVELOPMENT', 'PRODUCTION'].includes(implementation);
+
+    // Then check if user has sufficient privileges
+    switch (userRole) {
+        case 'ADMIN':
+            return true; // Admin can access all checks
+        case 'PREMIUM':
+            return checkUserRole !== 'ADMIN'; // Premium can access Premium and Standard checks
+        case 'STANDARD':
+            return checkUserRole === 'STANDARD'; // Standard can only access Standard checks
+        default:
+            return false;
     }
-    
-    // In production, only run PRODUCTION implementations
-    return implementation === 'PRODUCTION';
 }
 
 /**
  * Creates or updates an error log entry
  */
 async function logError(
-    errorType: { id: string; code: string; implementation: ImplementationStatus },
+    errorType: { id: string; code: string; implementation: ImplementationStatus; userRole: UserRole },
     errorResult: ErrorResult,
     params: PageCheckParams
 ) {
@@ -101,14 +114,14 @@ async function logError(
     await prisma.errorLog.create({ data: createData });
 
     if (isDevelopment) {
-        console.log(`[${errorType.implementation}] Logged error: ${errorType.code}`);
+        console.log(`[${errorType.implementation}] [${errorType.userRole}] Logged error: ${errorType.code}`);
     }
 }
 
 /**
  * Main function to run all implemented error checks
  */
-export async function runErrorChecks(params: PageCheckParams) {
+export async function runErrorChecks(params: PageCheckParams, userRole: UserRole = 'STANDARD') {
     const results: Record<string, ErrorResult> = {};
     
     // Skip database operations for public requests
@@ -119,11 +132,21 @@ export async function runErrorChecks(params: PageCheckParams) {
 
     // Get error type configuration
     const multipleH1ErrorType = await prisma.errorType.findUnique({
-        where: { code: 'MULTIPLE_H1' }
+        where: { code: 'MULTIPLE_H1' },
+        select: {
+            id: true,
+            code: true,
+            implementation: true,
+            userRole: true
+        }
     });
 
     // Only run check if error type exists and should be executed
-    if (multipleH1ErrorType && shouldExecuteCheck(multipleH1ErrorType.implementation)) {
+    if (multipleH1ErrorType && shouldExecuteCheck(
+        multipleH1ErrorType.implementation,
+        multipleH1ErrorType.userRole,
+        userRole
+    )) {
         const multipleH1Result = await checkMultipleH1(params.data);
         results.multipleH1Result = multipleH1Result;
 

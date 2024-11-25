@@ -4,7 +4,7 @@ import { checkRequests, checkTimeout, createPushLinkInput, getStrongestErrorCode
 import axios, { AxiosError } from "axios";
 import { load } from "cheerio";
 import runErrorChecks from "./errorChecker";
-import { DomainCrawl, InternalLink, Prisma } from "@prisma/client";
+import { DomainCrawl, InternalLink, Prisma, UserRole } from "@prisma/client";
 
 export interface recursiveCrawlResponse {
     timeout: boolean,
@@ -27,7 +27,8 @@ export async function* recursiveCrawl(
     domainCrawl: DomainCrawl | null,
     pushLinksToDomain: boolean,
     requestStartTime: number,
-    subLogger: Logger): AsyncGenerator<LogEntry, recursiveCrawlResponse, unknown> {
+    subLogger: Logger,
+    userRole: UserRole): AsyncGenerator<LogEntry, recursiveCrawlResponse, unknown> {
 
     yield* subLogger.log('recursive crawl started');
     yield* subLogger.log('extractedDomain: ' + extractedDomain);
@@ -136,7 +137,8 @@ export async function* recursiveCrawl(
                                     internalLinkId,
                                     domainCrawlId: domainCrawl ? domainCrawl.id : undefined,
                                     url: requestUrl
-                                });
+                                },
+                                    userRole);
                             }
                             catch (error: AxiosError | TypeError | any) {
                                 // Handle any errors
