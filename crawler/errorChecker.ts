@@ -1,24 +1,24 @@
-import { PrismaClient } from '@prisma/client';
-import * as cheerio from 'cheerio';
 
-const prisma = new PrismaClient();
+import { prisma } from '@/lib/prisma';
+import { ImplementationStatus } from '@prisma/client';
+import { checkMultipleH1 } from './checks/checkMultipleH1';
 
 const isDevelopment = process.env.NODE_ENV?.toLowerCase() === 'development'
     || process.env.NODE_ENV?.toLowerCase() === 'local';
 
 const isTest = isDevelopment && (
     process.env.NEXT_PUBLIC_TEST_MODE === 'true'
-)
+);
 
 interface PageCheckParams {
-    data: string;               // HTML content from axios
-    domainId?: string;          // ID of the domain being checked
-    internalLinkId?: string;    // ID of the page/internal link being checked
-    domainCrawlId?: string;     // ID of the current crawl
-    url: string;               // URL of the page being checked
+    data: string;              
+    domainId?: string;         
+    internalLinkId?: string;   
+    domainCrawlId?: string;    
+    url: string;               
 }
 
-interface ErrorResult {
+export interface ErrorResult {
     found: boolean;
     details?: {
         count?: number;
@@ -28,97 +28,78 @@ interface ErrorResult {
 }
 
 /**
- * Checks for multiple H1 tags in the page
+ * Determines if an error type should be executed based on its implementation status
+ * and the current environment
  */
-async function checkMultipleH1(html: string): Promise<ErrorResult> {
-    const $ = cheerio.load(html);
-    const h1Elements = $('h1');
-
-    if (h1Elements.length <= 1) {
-        return { found: false };
+function shouldExecuteCheck(implementation: ImplementationStatus): boolean {
+    if (isTest) {
+        // In test mode, run TEST, DEVELOPMENT, and PRODUCTION implementations
+        return ['TEST', 'DEVELOPMENT', 'PRODUCTION'].includes(implementation);
     }
-
-    // Get locations/content of H1s for error details
-    const h1Details = h1Elements.map((i, el) => {
-        const h1Text = $(el).text().trim();
-        return `"${h1Text.substring(0, 50)}${h1Text.length > 50 ? '...' : ''}"`;
-    }).get();
-
-    return {
-        found: true,
-        details: {
-            count: h1Elements.length,
-            locations: h1Details,
-            message: `Found ${h1Elements.length} H1 tags: ${h1Details.join(', ')}`
-        }
-    };
+    
+    if (isDevelopment) {
+        // In development, run DEVELOPMENT and PRODUCTION implementations
+        return ['DEVELOPMENT', 'PRODUCTION'].includes(implementation);
+    }
+    
+    // In production, only run PRODUCTION implementations
+    return implementation === 'PRODUCTION';
 }
 
 /**
- * Logs an error to the database if it's found and properly implemented
+ * Creates or updates an error log entry
  */
-async function logError(params: {
-    errorCode: string;
-    domainId: string;
-    internalLinkId?: string;
-    domainCrawlId?: string;
-    metadata?: any;
-}) {
-    // Check if error type exists and is properly implemented
-    const errorType = await prisma.errorType.findUnique({
-        where: { code: params.errorCode }
+async function logError(
+    errorType: { id: string; code: string; implementation: ImplementationStatus },
+    errorResult: ErrorResult,
+    params: PageCheckParams
+) {
+    const now = new Date();
+    const { domainId, internalLinkId, domainCrawlId, url } = params;
+
+    // Find existing error
+    const existingError = await prisma.errorLog.findFirst({
+        where: {
+            domainId,
+            internalLinkId,
+            errorType: { code: errorType.code }
+        }
     });
 
-    if (!errorType) return;
-
-    // Check implementation status based on environment
-    if (isTest) {
-        // In test mode, accept TEST, DEVELOPMENT, and PRODUCTION implementations
-        if (errorType.implementation !== 'TEST' &&
-            errorType.implementation !== 'DEVELOPMENT' &&
-            errorType.implementation !== 'PRODUCTION') {
-            return;
-        }
-    } else if (isDevelopment) {
-        // In development, accept both DEVELOPMENT and PRODUCTION implementations
-        if (errorType.implementation !== 'DEVELOPMENT' &&
-            errorType.implementation !== 'PRODUCTION') {
-            return;
-        }
-    } else {
-        // In production, only accept PRODUCTION implementations
-        if (errorType.implementation !== 'PRODUCTION') {
-            return;
-        }
+    if (existingError) {
+        // Update existing error
+        await prisma.errorLog.update({
+            where: { id: existingError.id },
+            data: {
+                occurrence: { increment: 1 },
+                lastOccurrence: now
+            }
+        });
+        return;
     }
 
-    // Build the create data object conditionally
+    // Create new error log
     const createData: any = {
         errorType: { connect: { id: errorType.id } },
-        domain: { connect: { id: params.domainId } },
+        domain: { connect: { id: domainId } },
+        occurrence: 1,
+        notified: false,
+        metadata: {
+            url,
+            ...errorResult.details
+        }
     };
 
-    // Only add internalLink connection if ID is provided
-    if (params.internalLinkId) {
-        createData.internalLink = { connect: { id: params.internalLinkId } };
+    // Add optional connections
+    if (internalLinkId) {
+        createData.internalLink = { connect: { id: internalLinkId } };
+    }
+    if (domainCrawlId) {
+        createData.domainCrawl = { connect: { id: domainCrawlId } };
     }
 
-    // Only add domainCrawl connection if ID is provided
-    if (params.domainCrawlId) {
-        createData.domainCrawl = { connect: { id: params.domainCrawlId } };
-    }
+    await prisma.errorLog.create({ data: createData });
 
-    // Add metadata if provided
-    if (params.metadata) {
-        createData.metadata = params.metadata;
-    }
-
-    // Create error log with conditional connections
-    await prisma.errorLog.create({
-        data: createData
-    });
-
-    // Log to console in development environment
     if (isDevelopment) {
         console.log(`[${errorType.implementation}] Logged error: ${errorType.code}`);
     }
@@ -127,116 +108,27 @@ async function logError(params: {
 /**
  * Main function to run all implemented error checks
  */
-export async function runErrorChecks({
-    data,
-    domainId,
-    internalLinkId,
-    domainCrawlId,
-    url
-}: PageCheckParams) {
-    // Check for multiple H1 tags
-    const multipleH1Result = await checkMultipleH1(data);
-    const now = new Date();
-
-    const results = {
-        multipleH1Result
+export async function runErrorChecks(params: PageCheckParams) {
+    const results: Record<string, ErrorResult> = {};
+    
+    // Skip database operations for public requests
+    if (!params.domainId) {
+        const multipleH1Result = await checkMultipleH1(params.data);
+        return { multipleH1Result };
     }
 
-    if (!domainId) {
-        // to not create database entries for public requests
-        return results;
-    }
+    // Get error type configuration
+    const multipleH1ErrorType = await prisma.errorType.findUnique({
+        where: { code: 'MULTIPLE_H1' }
+    });
 
-    if (multipleH1Result.found) {
-        // First check if this exact error already exists
-        const existingError = await prisma.errorLog.findFirst({
-            where: {
-                domainId,
-                internalLinkId,
-                errorType: {
-                    code: 'MULTIPLE_H1'
-                },
-            },
-            include: {
-                errorType: true
-            }
-        });
+    // Only run check if error type exists and should be executed
+    if (multipleH1ErrorType && shouldExecuteCheck(multipleH1ErrorType.implementation)) {
+        const multipleH1Result = await checkMultipleH1(params.data);
+        results.multipleH1Result = multipleH1Result;
 
-        if (existingError) {
-            // If the error exists, update occurrence count and ensure notified is true
-            await prisma.errorLog.update({
-                where: {
-                    id: existingError.id
-                },
-                data: {
-                    occurrence: {
-                        increment: 1
-                    },
-                    lastOccurrence: now
-                }
-            });
-        } else {
-            // Check if error type exists and is properly implemented
-            const errorType = await prisma.errorType.findUnique({
-                where: { code: 'MULTIPLE_H1' }
-            });
-
-            if (!errorType) return results;
-
-            // Check implementation status based on environment
-            if (isTest) {
-                // In test mode, accept TEST, DEVELOPMENT, and PRODUCTION implementations
-                if (errorType.implementation !== 'TEST' &&
-                    errorType.implementation !== 'DEVELOPMENT' &&
-                    errorType.implementation !== 'PRODUCTION') {
-                    return results;
-                }
-            } else if (isDevelopment) {
-                // In development, accept both DEVELOPMENT and PRODUCTION implementations
-                if (errorType.implementation !== 'DEVELOPMENT' &&
-                    errorType.implementation !== 'PRODUCTION') {
-                    return results;
-                }
-            } else {
-                // In production, only accept PRODUCTION implementations
-                if (errorType.implementation !== 'PRODUCTION') {
-                    return results;
-                }
-            }
-
-            // Build the create data object conditionally
-            const createData: any = {
-                errorType: { connect: { id: errorType.id } },
-                domain: { connect: { id: domainId } },
-                occurrence: 1,
-                notified: false // New errors start as not notified
-            };
-
-            // Only add internalLink connection if ID is provided
-            if (internalLinkId) {
-                createData.internalLink = { connect: { id: internalLinkId } };
-            }
-
-            // Only add domainCrawl connection if ID is provided
-            if (domainCrawlId) {
-                createData.domainCrawl = { connect: { id: domainCrawlId } };
-            }
-
-            // Add metadata
-            createData.metadata = {
-                url,
-                ...multipleH1Result.details
-            };
-
-            // Create new error log
-            await prisma.errorLog.create({
-                data: createData
-            });
-
-            // Log to console in development environment
-            if (isDevelopment) {
-                console.log(`[${errorType.implementation}] Logged error: ${errorType.code}`);
-            }
+        if (multipleH1Result.found) {
+            await logError(multipleH1ErrorType, multipleH1Result, params);
         }
     }
 
