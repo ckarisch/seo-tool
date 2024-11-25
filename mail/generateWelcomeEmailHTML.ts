@@ -72,7 +72,7 @@ export function generateWelcomeEmailHTML(domain: string, metrics: {
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 2rem;">
             ${getMetricCardHtml('SEO Score', metrics.quickCheckScore, '#3b82f6', '🎯')}
             ${getMetricCardHtml('Performance', metrics.performanceScore, '#8b5cf6', '⚡')}
-            ${false && getMetricCardHtml('Accessibility', metrics.accessibility, '#14b8a6', '♿')}
+            ${false ? getMetricCardHtml('Accessibility', metrics.accessibility, '#14b8a6', '♿') : ''}
           </div>
 
           <!-- Issues Summary -->
