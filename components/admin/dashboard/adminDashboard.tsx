@@ -59,9 +59,10 @@ const Button: React.FC<{
 // Menu items configuration
 const menuItems: MenuItem[] = [
     { key: '1', icon: <Home size={20} />, label: 'Home', path: '/admin' },
-    { key: '2', icon: <Users size={20} />, label: 'Users', path: '/admin/users' },
-    { key: '3', icon: <FileText size={20} />, label: 'Logs', path: '/admin/logs' },
-    { key: '4', icon: <Settings size={20} />, label: 'Settings', path: '/admin/settings' },
+    { key: '2', icon: <Home size={20} />, label: 'ErrorTypes', path: '/admin/error-types' },
+    { key: '3', icon: <Users size={20} />, label: 'Users', path: '/admin/users' },
+    { key: '4', icon: <FileText size={20} />, label: 'Logs', path: '/admin/logs' },
+    { key: '5', icon: <Settings size={20} />, label: 'Settings', path: '/admin/settings' },
 ];
 
 // Main AdminDashboard component

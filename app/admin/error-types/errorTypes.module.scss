@@ -1,0 +1,177 @@
+// app/admin/error-types/errorTypes.module.scss
+@import '@/app/variables';
+
+.container {
+  padding: 20px 0;
+  
+  @media (min-width: 768px) {
+    padding: 40px 0;
+  }
+}
+
+.header {
+  margin-bottom: 32px;
+
+  h1 {
+    font-size: 1.8rem;
+    margin-bottom: 16px;
+    
+    @media (min-width: 768px) {
+      font-size: 2.5rem;
+    }
+  }
+}
+
+.statusMessage {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  border-radius: 8px;
+  margin-top: 16px;
+  
+  &.success {
+    background-color: rgba($veryGood, 0.1);
+    color: $veryGood;
+  }
+  
+  &.error {
+    background-color: rgba($error, 0.1);
+    color: $error;
+  }
+  
+  .icon {
+    width: 20px;
+    height: 20px;
+  }
+}
+
+.categorySection {
+  margin-bottom: 40px;
+}
+
+.categoryTitle {
+  font-size: 1.5rem;
+  margin-bottom: 24px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid $background-light;
+}
+
+.errorGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+  
+  @media (min-width: 640px) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  @media (min-width: 1024px) {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.errorCard {
+  background-color: white;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  border: 1px solid $background-light;
+}
+
+.errorHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.severity {
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: lowercase;
+  
+  &.criticalSeverity {
+    background-color: rgba($error, 0.1);
+    color: $error;
+  }
+  
+  &.highSeverity {
+    background-color: rgba($warning, 0.1);
+    color: darken($warning, 10%);
+  }
+  
+  &.mediumSeverity {
+    background-color: rgba($warning, 0.05);
+    color: darken($warning, 20%);
+  }
+  
+  &.lowSeverity {
+    background-color: rgba($good, 0.1);
+    color: darken($good, 10%);
+  }
+  
+  &.infoSeverity {
+    background-color: rgba($color, 0.1);
+    color: $color;
+  }
+}
+
+.errorCode {
+  font-family: var(--font-mono);
+  font-size: 0.9rem;
+  color: $text-secondary;
+}
+
+.errorName {
+  font-size: 0.95rem;
+  color: $text-secondary;
+  margin-bottom: 16px;
+  line-height: 1.4;
+}
+
+.implementationControl {
+  margin-top: auto;
+}
+
+.statusSelect {
+  width: 100%;
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: 2px solid $background-light;
+  font-size: 0.9rem;
+  font-weight: 500;
+  background-color: white;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  
+  &:focus {
+    outline: none;
+    border-color: $color;
+  }
+  
+  &.notImplemented {
+    color: $error;
+  }
+  
+  &.test {
+    color: $warning;
+  }
+  
+  &.development {
+    color: $good;
+  }
+  
+  &.production {
+    color: $veryGood;
+  }
+}
+
+.loading {
+  text-align: center;
+  padding: 40px;
+  color: $text-secondary;
+  font-size: 1.1rem;
+}
