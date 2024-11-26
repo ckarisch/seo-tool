@@ -38,7 +38,14 @@ export async function GET(
     include: {
       errorLogs: {
         include: {
-          errorType: true
+          errorType: {
+            select: {
+              name: true,
+              category: true,
+              severity: true,
+              code: true
+            }
+          }
         }
       }
     }

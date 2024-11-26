@@ -1,24 +1,23 @@
-import { PrismaClient, UserRole } from "@prisma/client";
-
+import { UserRole } from "@prisma/client";
 import { AxiosError } from 'axios';
-import { NextResponse } from 'next/server';
 import { initialCrawl } from "@/crawler/initialCrawl";
 import { analyzeLink } from "@/apiComponents/crawler/linkTools";
 import { Link, checkTimeout } from "@/app/api/seo/domains/[domainName]/crawl/crawlLinkHelper";
 import { extractLinks } from "@/crawler/extractLinks";
 import { recursiveCrawl, recursiveCrawlResponse } from "@/crawler/recursiveCrawl";
-import { CrawlResponseYieldType, createLogger, isLogEntry, LogEntry } from "@/apiComponents/dev/logger";
-
-const prisma = new PrismaClient();
+import { createLogger, LogEntry } from "@/apiComponents/dev/logger";
+import { prisma } from "@/lib/prisma";
 
 export type crawlDomainPublicResponse = {
-    error?: string,
-    errorTooManyLinksOccured?: boolean,
-    error404Occured?: boolean,
-    error503Occured?: boolean,
-    warning?: boolean,
-    crawlWarning?: boolean,
-    warningDoubleSlashOccured?: boolean
+    error?: string;
+    errorTooManyLinksOccured?: boolean;
+    error404Occured?: boolean;
+    error503Occured?: boolean;
+    warning?: boolean;
+    crawlWarning?: boolean;
+    warningDoubleSlashOccured?: boolean;
+    errorCount?: number;
+    warningCount?: number;
 }
 
 export async function* crawlDomainPublicGenerator(url: string, depth: number, followLinks: boolean, maxDuration: number): AsyncGenerator<LogEntry, crawlDomainPublicResponse> {
@@ -44,20 +43,17 @@ export async function* crawlDomainPublicGenerator(url: string, depth: number, fo
 
     const domain = await prisma.domain.findFirst({ where: { domainName: url } });
 
-
-    const targetURL = 'https://' + url; // URL of the website you want to crawl
+    const targetURL = 'https://' + url;
     analyzedUrl = analyzeLink(targetURL, targetURL);
     const extractedDomain = analyzedUrl.linkDomain;
 
     if (domain) {
-        // no public crawls during normal crawl
         if (domain.crawlStatus === 'crawling') {
+            // no public crawls during normal crawl
             yield* crawlDomainPublicLogger.log('domain currently crawling: ' + (new Date().getTime() - (domain.lastCrawl?.getTime() ?? 0)));
-            // return Response.json({ error: 'domain currently crawling' }, { status: 500 })
             return { error: 'domain currently crawling' };
         }
-    }
-    else {
+    } else {
         return { error: 'domain not found' };
     }
 
@@ -71,14 +67,15 @@ export async function* crawlDomainPublicGenerator(url: string, depth: number, fo
     });
 
     let crawlError = false;
+    let totalErrorCount = 0;
+    let totalWarningCount = 0;
 
     try {
         yield* crawlDomainPublicLogger.log('Public Crawling: ' + targetURL + `depth ${depth}, followLinks ${followLinks}, maxDuration ${maxDuration}`);
 
-        // Fetch the HTML content from the target URL
         timePassed = (new Date().getTime() - crawlStartTime);
         if (checkTimeout(timePassed, maxCrawlTime)) {
-            Response.json({ error: 'Timeout' }, { status: 500 });
+            return { error: 'Timeout' };
         }
 
         requestStartTime = new Date().getTime();
@@ -87,7 +84,8 @@ export async function* crawlDomainPublicGenerator(url: string, depth: number, fo
 
         links.push(...extractLinks(data, url, targetURL));
 
-        const subfunctionGenerator = recursiveCrawl(prisma,
+        const subfunctionGenerator = recursiveCrawl(
+            prisma,
             links,
             crawledLinks,
             depth,
@@ -98,11 +96,12 @@ export async function* crawlDomainPublicGenerator(url: string, depth: number, fo
             maxLinkEntries,
             maxRequests,
             '',
-            null, //domainCrawl
-            false, // do not push links to database in public crawls
+            null,
+            false,
             requestStartTime,
             crawlDomainPublicLogger,
-            UserRole.STANDARD);
+            UserRole.STANDARD
+        );
 
         let result: IteratorResult<LogEntry, recursiveCrawlResponse>;
         do {
@@ -112,17 +111,18 @@ export async function* crawlDomainPublicGenerator(url: string, depth: number, fo
             }
         } while (!result.done);
 
-        // Initialize the result variable
         let subfunctionResult: recursiveCrawlResponse | undefined = undefined;
         subfunctionResult = result.value;
 
         yield* crawlDomainPublicLogger.log(`subfunctionResult` + subfunctionResult);
 
-        // yield* crawlDomainPublicLogger.log(`subfunctionResult (${JSON.stringify(subfunctionResult)})`);
         if (!subfunctionResult) {
-            // return Response.json({ error: 'Public Crawl Error' }, { status: 500 });
             return { error: 'Public Crawl Error' };
         }
+
+        // Update total counts from recursive crawl
+        totalErrorCount = subfunctionResult.errorCount || 0;
+        totalWarningCount = subfunctionResult.warningCount || 0;
 
         if (subfunctionResult.warningDoubleSlashOccured) {
             warningDoubleSlashOccured = true;
@@ -131,15 +131,13 @@ export async function* crawlDomainPublicGenerator(url: string, depth: number, fo
 
         if (subfunctionResult.timeout) {
             errorTimeoutOccured = true;
-        }
-        else if (subfunctionResult.tooManyRequests) {
+        } else if (subfunctionResult.tooManyRequests) {
             errorTooManyLinksOccured = true;
         }
 
         requestTime = new Date().getTime() - requestStartTime;
         yield* crawlDomainPublicLogger.log(`request time (${targetURL}): ${requestTime}`);
 
-        // 2do: always update
         await prisma.anonymousCrawl.update({
             where: { id: domainCrawl.id },
             data: {
@@ -151,11 +149,7 @@ export async function* crawlDomainPublicGenerator(url: string, depth: number, fo
             }
         });
 
-        // Send the extracted data as a response
-        // return NextResponse.json({ links }, { status: 200 })
-
     } catch (error: AxiosError | TypeError | any) {
-        // Handle any errors
         yield* crawlDomainPublicLogger.log(error);
         timePassed = (new Date().getTime() - crawlStartTime);
         errorUnknownOccured = true;
@@ -175,8 +169,7 @@ export async function* crawlDomainPublicGenerator(url: string, depth: number, fo
                     crawlTime: timePassed
                 }
             });
-        }
-        else if (error instanceof TypeError) {
+        } else if (error instanceof TypeError) {
             yield* crawlDomainPublicLogger.log('type error on request')
             crawlError = true;
 
@@ -191,8 +184,7 @@ export async function* crawlDomainPublicGenerator(url: string, depth: number, fo
                     crawlTime: timePassed
                 }
             });
-        }
-        else {
+        } else {
             yield* crawlDomainPublicLogger.log('unknown request error')
             crawlError = true;
 
@@ -208,17 +200,15 @@ export async function* crawlDomainPublicGenerator(url: string, depth: number, fo
                 }
             });
         }
-        // return Response.json({ error: 'Error fetching data' }, { status: 500 })
         return { error: 'Error fetching data' };
-    }
-    finally {
+    } finally {
         timePassed = (new Date().getTime() - crawlStartTime);
 
         const error = (
             error404Occured ||
             error503Occured ||
             crawlError
-        )
+        );
 
         const crawlWarning = (
             errorTooManyLinksOccured
@@ -228,10 +218,18 @@ export async function* crawlDomainPublicGenerator(url: string, depth: number, fo
             warningDoubleSlashOccured
         );
 
-        // await CalculateScore(domain.id);
         yield* crawlDomainPublicLogger.log('crawling done: ' + timePassed);
 
-        return { error: error ? 'crawl errors' : undefined, errorTooManyLinksOccured, error404Occured, error503Occured, warning, crawlWarning, warningDoubleSlashOccured };
+        return {
+            error: error ? 'crawl errors' : undefined,
+            errorTooManyLinksOccured,
+            error404Occured,
+            error503Occured,
+            warning,
+            crawlWarning,
+            warningDoubleSlashOccured,
+            errorCount: totalErrorCount,
+            warningCount: totalWarningCount
+        };
     }
-
 }

@@ -7,10 +7,15 @@ import runErrorChecks from "./errorChecker";
 import { DomainCrawl, InternalLink, Prisma, UserRole } from "@prisma/client";
 
 export interface recursiveCrawlResponse {
-    timeout: boolean,
-    tooManyRequests: boolean,
-    warningDoubleSlashOccured: boolean
+    timeout: boolean;
+    tooManyRequests: boolean;
+    warningDoubleSlashOccured: boolean;
+    errorCount: number;
+    warningCount: number;
 }
+
+let totalErrorCount = 0;
+let totalWarningCount = 0;
 
 export async function* recursiveCrawl(
     prisma: any,
@@ -47,7 +52,9 @@ export async function* recursiveCrawl(
     let response: recursiveCrawlResponse = {
         timeout: false,
         tooManyRequests: false,
-        warningDoubleSlashOccured: false
+        warningDoubleSlashOccured: false,
+        errorCount: 0,
+        warningCount: 0
     }
 
     let crawlActive = true;
@@ -131,14 +138,16 @@ export async function* recursiveCrawl(
                                     const internalLink = await pushLink(prisma, '', normalizedLink, false, domainId, linkType.page, requestTime, null);
                                     internalLinkId = internalLink.id;
                                 }
-                                await runErrorChecks({
+                                const errorCheckResult = await runErrorChecks({
                                     data,
                                     domainId: domainId ? domainId : undefined,
                                     internalLinkId,
                                     domainCrawlId: domainCrawl ? domainCrawl.id : undefined,
                                     url: requestUrl
-                                },
-                                    userRole);
+                                }, userRole);
+
+                                totalErrorCount += errorCheckResult.summary.errorCount;
+                                totalWarningCount += errorCheckResult.summary.warningCount;
                             }
                             catch (error: AxiosError | TypeError | any) {
                                 // Handle any errors
@@ -222,5 +231,9 @@ export async function* recursiveCrawl(
         yield* subLogger.log(`end pushing links (${pushLinkInputs.length}): ${new Date().getTime() - requestStartTime}`);
     }
 
-    return response;
+    return {
+        ...response,
+        errorCount: totalErrorCount,
+        warningCount: totalWarningCount
+    };
 }

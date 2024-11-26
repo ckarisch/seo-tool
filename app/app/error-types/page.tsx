@@ -92,10 +92,12 @@ export default function ErrorTypesPage() {
                                 <Star className={styles.starIcon} />
                                 <h2>Premium Checks</h2>
                             </div>
-                            {userRole !== 'PREMIUM' && userRole !== 'ADMIN' && (
+                            {userRole === 'STANDARD' ? (
                                 <Link href="/app/get-premium" className={styles.upgradeBadge}>
                                     Upgrade for access
                                 </Link>
+                            ) : (
+                                <span className={styles.included}>Included in your plan</span>
                             )}
                         </div>
                         <div className={styles.checksGrid}>

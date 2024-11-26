@@ -107,7 +107,7 @@ const DomainMetrics: React.FC<DomainMetricsProps> = ({ domainScores, className =
             <Line
               type="monotone"
               dataKey="quickCheckScore"
-              name="Quick Check"
+              name="SEO Check"
               stroke="#f59e0b"
               strokeWidth={2}
               dot={{ r: 4, fill: "#f59e0b" }}

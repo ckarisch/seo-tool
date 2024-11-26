@@ -178,7 +178,6 @@ export default function LinkList({ params, linksFetchTag, domainFetchTag }: {
                                                     <div className={styles.errorDetails}>
                                                         <div><strong>Name:</strong> {log.errorType.name}</div>
                                                         <div><strong>Category:</strong> {log.errorType.category}</div>
-                                                        <div><strong>Implementation:</strong> {log.errorType.implementation}</div>
                                                         <div><strong>Occurrences:</strong> {log.occurrence}</div>
                                                         <div>
                                                             <strong>Created:</strong> {format(new Date(log.createdAt), visibleDateFormat)}

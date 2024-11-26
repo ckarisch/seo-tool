@@ -14,7 +14,7 @@ import { storeQuickAnalysisHistory } from "@/crawler/scoreData";
 import { VerifyDomain } from "../domain/verifyDomain";
 
 const resetCrawlTime = 3600000; // 1h
-const maxDomainCrawls = 7;
+const maxDomainCrawls = 20;
 const fallbackInterval = 1420; // nearly a day
 const scoreDifferenceThreshold = 0.1; // 10% threshold for score notifications
 
@@ -332,8 +332,15 @@ export async function* quickAnalysisGenerator(
                         });
                     }
 
+                    const shouldSendInitialMessage = (
+                        !domain.initialMessageSent &&
+                        !!domain.lastQuickAnalysis &&
+                        !!domain.lastCrawl &&
+                        !!domain.lastLighthouseAnalysis
+                    )
+
                     // Send consolidated notifications if any exist
-                    if (notifications.length > 0) {
+                    if (notifications.length > 0 || shouldSendInitialMessage) {
                         const notificationResult = await consolidatedCrawlNotification(
                             completeUser,
                             domain,

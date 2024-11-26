@@ -277,7 +277,7 @@ function createNotificationData(
     switch (type) {
         case crawlNotificationType.InitialMessage:
             const scoreInfo = additionalData?.quickCheckScore ?
-                `Initial Quick Check Score: ${Math.floor(additionalData.quickCheckScore * 100)}%` : '';
+                `Initial SEO Score: ${Math.floor(additionalData.quickCheckScore * 100)}%` : '';
             const performanceInfo = additionalData?.performanceScore ?
                 `\nPerformance Score: ${Math.floor(additionalData.performanceScore * 100)}%` : '';
             const errorInfo = additionalData?.totalErrors ?

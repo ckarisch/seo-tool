@@ -41,7 +41,7 @@ const WelcomeEmail: React.FC<WelcomeEmailProps> = ({ domain, metrics }) => {
           <div className={`${styles.metricCard} ${styles.quickCheck}`}>
             <div className={styles.metricHeader}>
               <BarChart2 className={styles.metricIcon} />
-              <h3>Quick Check Score</h3>
+              <h3>SEO Score</h3>
             </div>
             <p className={styles.metricValue}>{metrics.quickCheckScore}%</p>
           </div>

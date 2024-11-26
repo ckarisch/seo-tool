@@ -1,6 +1,7 @@
 import { prisma } from '@/lib/prisma';
 import { ImplementationStatus, UserRole } from '@prisma/client';
 import { checkMultipleH1 } from './checks/checkMultipleH1';
+import { checkEmailExposed } from './checks/checkEmailExposed';
 
 const isDevelopment = process.env.NODE_ENV?.toLowerCase() === 'development'
     || process.env.NODE_ENV?.toLowerCase() === 'local';
@@ -10,11 +11,11 @@ const isTest = isDevelopment && (
 );
 
 interface PageCheckParams {
-    data: string;              
-    domainId?: string;         
-    internalLinkId?: string;   
-    domainCrawlId?: string;    
-    url: string;               
+    data: string;
+    domainId?: string;
+    internalLinkId?: string;
+    domainCrawlId?: string;
+    url: string;
 }
 
 export interface ErrorResult {
@@ -23,6 +24,15 @@ export interface ErrorResult {
         count?: number;
         locations?: string[];
         message?: string;
+    };
+}
+
+export interface ErrorCheckSummary {
+    errorCount: number;     // Count of different error types found
+    warningCount: number;   // Count of different warning types found
+    details?: {            // Only included for authenticated users
+        errors?: string[];
+        warnings?: string[];
     };
 }
 
@@ -118,44 +128,97 @@ async function logError(
     }
 }
 
+
 /**
  * Main function to run all implemented error checks
  */
-export async function runErrorChecks(params: PageCheckParams, userRole: UserRole = 'STANDARD') {
+export async function runErrorChecks(
+    params: PageCheckParams, 
+    userRole: UserRole = 'STANDARD'
+): Promise<{ results: Record<string, ErrorResult>, summary: ErrorCheckSummary }> {
     const results: Record<string, ErrorResult> = {};
+    const errors: string[] = [];
+    const warnings: string[] = [];
     
     // Skip database operations for public requests
     if (!params.domainId) {
         const multipleH1Result = await checkMultipleH1(params.data);
-        return { multipleH1Result };
+        const emailExposedResult = await checkEmailExposed(params.data);
+        
+        if (multipleH1Result.found) errors.push('MULTIPLE_H1');
+        if (emailExposedResult.found) errors.push('EMAIL_EXPOSED');
+
+        return {
+            results: { multipleH1Result, emailExposedResult },
+            summary: {
+                errorCount: errors.length,
+                warningCount: warnings.length
+            }
+        };
     }
 
-    // Get error type configuration
-    const multipleH1ErrorType = await prisma.errorType.findUnique({
-        where: { code: 'MULTIPLE_H1' },
+    // Get error type configurations
+    const errorTypes = await prisma.errorType.findMany({
+        where: {
+            code: {
+                in: ['MULTIPLE_H1', 'EMAIL_EXPOSED']
+            }
+        },
         select: {
             id: true,
             code: true,
             implementation: true,
-            userRole: true
+            userRole: true,
+            severity: true
         }
     });
 
-    // Only run check if error type exists and should be executed
-    if (multipleH1ErrorType && shouldExecuteCheck(
-        multipleH1ErrorType.implementation,
-        multipleH1ErrorType.userRole,
-        userRole
-    )) {
-        const multipleH1Result = await checkMultipleH1(params.data);
-        results.multipleH1Result = multipleH1Result;
+    // Run checks based on error type configurations
+    for (const errorType of errorTypes) {
+        if (shouldExecuteCheck(errorType.implementation, errorType.userRole, userRole)) {
+            let result: ErrorResult;
 
-        if (multipleH1Result.found) {
-            await logError(multipleH1ErrorType, multipleH1Result, params);
+            switch (errorType.code) {
+                case 'MULTIPLE_H1':
+                    result = await checkMultipleH1(params.data);
+                    results.multipleH1Result = result;
+                    if (result.found) {
+                        errorType.severity === 'HIGH' || errorType.severity === 'CRITICAL' 
+                            ? errors.push(errorType.code)
+                            : warnings.push(errorType.code);
+                    }
+                    break;
+                case 'EMAIL_EXPOSED':
+                    result = await checkEmailExposed(params.data);
+                    results.emailExposedResult = result;
+                    if (result.found) {
+                        errorType.severity === 'HIGH' || errorType.severity === 'CRITICAL'
+                            ? errors.push(errorType.code)
+                            : warnings.push(errorType.code);
+                    }
+                    break;
+            }
+
+            if (result!.found) {
+                await logError(errorType, result!, params);
+            }
         }
     }
 
-    return results;
+    const summary: ErrorCheckSummary = {
+        errorCount: errors.length,
+        warningCount: warnings.length
+    };
+
+    // Only include detailed error/warning information for authenticated users
+    if (params.domainId) {
+        summary.details = {
+            errors,
+            warnings
+        };
+    }
+
+    return { results, summary };
 }
 
 export default runErrorChecks;

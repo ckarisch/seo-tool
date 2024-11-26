@@ -44,7 +44,7 @@ export default function MetricsOverview({ domain, loading = false }: MetricsOver
   const metrics = [
     { value: domain.score, label: 'Overall Score' },
     { value: domain.performanceScore, label: 'Performance' },
-    { value: domain.quickCheckScore, label: 'Quick Check' },
+    { value: domain.quickCheckScore, label: 'SEO Check' },
   ];
 
   const getScoreClass = (score?: number | null): string => {
@@ -137,7 +137,7 @@ export default function MetricsOverview({ domain, loading = false }: MetricsOver
                   <Line
                     type="linear"
                     dataKey="quickCheckScore"
-                    name="Quick Check"
+                    name="SEO Check"
                     stroke="#f59e0b"
                     strokeWidth={2}
                     dot={{ fill: "#f59e0b", r: 4 }}

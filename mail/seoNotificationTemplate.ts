@@ -172,7 +172,7 @@ export const seoNotificationTemplate = () => `<!DOCTYPE html>
 <body>
     <div class="email-container">
         <div class="header animate">
-            <img src="https://www.rankidang.com/logo.svg" alt="Rankidang" class="logo">
+            <img src="https://www.rankidang.com/logo.png" alt="Rankidang" class="logo">
             <h1>SEO Notification Summary</h1>
         </div>
         

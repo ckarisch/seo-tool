@@ -9,14 +9,16 @@ import { Warning } from "@/icons/warningAnimated";
 import URLInput from "@/components/layout/input/URLinput";
 
 interface publicCrawlResponse {
-    error: boolean,
-    error404Occured: boolean,
-    error503Occured: boolean,
-    warning: boolean,
-    crawlWarning: boolean,
-    warningDoubleSlashOccured: boolean,
-    errorTimeoutOccured: boolean,
-    errorTooManyLinksOccured: boolean
+    error: boolean;
+    error404Occured: boolean;
+    error503Occured: boolean;
+    warning: boolean;
+    crawlWarning: boolean;
+    warningDoubleSlashOccured: boolean;
+    errorTimeoutOccured: boolean;
+    errorTooManyLinksOccured: boolean;
+    errorCount: number;
+    warningCount: number;
 }
 
 
@@ -129,7 +131,7 @@ export default function CrawlRequestPublic() {
                 <div className={styles.findings}
                     ref={contentRef}
                     style={{ height, overflow: 'hidden', transition: 'height 0.5s ease' }}>
-                    {crawlResponse?.error ?
+                    {/* {crawlResponse?.error ?
                         <div className={styles.finding}>
                             <Cross width={20} height={20} />
                             <strong>
@@ -191,13 +193,36 @@ export default function CrawlRequestPublic() {
                             <strong>There are no warnings.</strong> <br />
                             We&apos;re continually enhancing our analysis to deliver even more practical recommendations. Stay tuned for new tips to help you improve your website!
                         </div>
-                    }
+                    } */}
                     {crawlResponse?.crawlWarning &&
                         <div className={styles.finding}>
                             <strong>Limited Analysis Completed</strong><br />
                             We&apos;ve performed a partial review of your website. Some tests were not executed. For a comprehensive analysis including all available tests, please register your domain with our service.
                         </div>
                     }
+                    {crawlResponse?.errorCount && crawlResponse?.errorCount > 0 ? (
+                        <div className={styles.finding}>
+                            <strong>
+                                <Warning width={28} height={28} />
+                                Found {crawlResponse.errorCount} errors
+                            </strong>
+                            <p>
+                                Sign in to see detailed information about these errors and get recommendations for fixing them.
+                            </p>
+                        </div>
+                    ) : null}
+
+                    {crawlResponse?.warningCount && crawlResponse?.warningCount > 0 ? (
+                        <div className={styles.finding}>
+                            <strong>
+                                <Warning width={28} height={28} />
+                                Found {crawlResponse.warningCount} warnings
+                            </strong>
+                            <p>
+                                Sign in to see detailed information about these warnings and get recommendations for improving your site.
+                            </p>
+                        </div>
+                    ) : null}
                 </div>
                 : null
             }
