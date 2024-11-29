@@ -165,7 +165,7 @@ export const errorTypes: ErrorTypeDefinition[] = [
         code: 'EMAIL_EXPOSED',
         name: 'Email Address Exposed in Plain Text',
         category: 'SECURITY',
-        severity: 'HIGH',
+        severity: 'LOW',
     },
     {
         code: 'MISSING_HTTPS',

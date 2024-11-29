@@ -1,7 +1,7 @@
 import { PrismaClient } from "@prisma/client";
 import { env } from "process";
 
-export const maxDuration = 250; // in seconds
+export const maxDuration = 290; // in seconds
 import { NextResponse } from "next/server";
 import {
   generateStreamingLogViewer,
@@ -21,7 +21,7 @@ export async function GET(request: Request) {
 
   // maxExecutionTime ist 20 seconds lower than maxDuration to prevent hard timeouts
   const maxDurationInMilliseconds = maxDuration * 1000;
-  const maxExecutionTime = 230000; // in milliseconds
+  const maxExecutionTime = 260000; // in milliseconds
   const cronStartTime = new Date().getTime();
   let timePassed = new Date().getTime() - cronStartTime;
   let timeLeft = maxExecutionTime - timePassed;

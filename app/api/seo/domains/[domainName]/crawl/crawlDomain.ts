@@ -33,8 +33,8 @@ export async function* crawlDomain(
     const crawlStartTime = new Date().getTime();
     const maxCrawlTime = maxDuration - 1000; // milliseconds
     const seconds = 30; // min seconds between crawls
-    const maxRequests = 100;
-    const maxLinkEntries = 300; // with documents and images
+    const maxRequests = 350;
+    const maxLinkEntries = 500; // with documents and images
 
     const url = domain.domainName;
 

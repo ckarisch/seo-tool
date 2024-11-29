@@ -47,8 +47,9 @@ const pricingData: PricingTier[] = [
         title: "Core Features",
         icon: <Shield size={20} />,
         features: [
-          { title: "Up to 5 domains", included: true, icon: <Globe size={16} /> },
+          { title: "Up to 2 domains", included: true, icon: <Globe size={16} /> },
           { title: "SEO basic checks", included: true, icon: <Bot size={16} /> },
+          { title: "Analysis Priority: Shared Pool", included: true, icon: <Gauge size={16} /> }
         ]
       },
       {
@@ -65,7 +66,7 @@ const pricingData: PricingTier[] = [
         features: [
           { title: "Website errors detection", included: true, icon: <Shield size={16} /> },
           { title: "Website warnings", included: true, icon: <Shield size={16} /> },
-          { title: "Link errors and warnings", included: true, icon: <Shield size={16} /> },
+          { title: "Page errors and warnings", included: true, icon: <Shield size={16} /> },
         ]
       }
     ]
@@ -85,31 +86,37 @@ const pricingData: PricingTier[] = [
         icon: <Check size={20} />,
         features: [
           { title: "All Free features included", included: true, icon: <Check size={16} /> },
-          { title: "Up to 100 domains", included: true, icon: <Globe size={16} /> },
+          { title: "Up to 10 domains", included: true, icon: <Globe size={16} /> },
+          { title: "Analysis Priority: Priority Pool", included: true, icon: <Zap size={16} /> }
         ]
       },
       {
         title: "Advanced Analysis",
         icon: <LineChart size={20} />,
         features: [
-          { title: "Comprehensive pagespeed analysis", included: true, icon: <Zap size={16} /> },
-          { title: "Accessibility checks", included: true, icon: <Users size={16} /> },
+          { title: "Comprehensive SEO checks", included: true, icon: <Bot size={16} /> },
+          { title: "Page status check", included: true, icon: <Zap size={16} /> },
+          // { title: "Comprehensive pagespeed analysis", included: true, icon: <Zap size={16} /> },
+          // { title: "Accessibility checks", included: true, icon: <Users size={16} /> },
         ]
       },
-      {
-        title: "Agency Features",
-        icon: <Settings size={20} />,
-        features: [
-          { title: "Track published & staging versions", included: true, icon: <Boxes size={16} /> },
-          { title: "Version comparison", included: true, icon: <Settings size={16} /> },
-        ]
-      },
+      // {
+      //   title: "Agency Features",
+      //   icon: <Settings size={20} />,
+      //   features: [
+      //     { title: "Track published & staging versions", included: true, icon: <Boxes size={16} /> },
+      //     { title: "Version comparison", included: true, icon: <Settings size={16} /> },
+      //   ]
+      // },
       {
         title: "Coming Soon",
         icon: <Stars size={20} />,
         features: [
+          { title: "Comprehensive pagespeed analysis", included: true, comingSoon: true, icon: <Zap size={16} /> },
+          { title: "Agency Features", included: true, comingSoon: true, icon: <Boxes size={16} /> },
           { title: "Comprehensive ranking analysis", included: true, comingSoon: true, icon: <LineChart size={16} /> },
           { title: "Ranking tracking", included: true, comingSoon: true, icon: <LineChart size={16} /> },
+          { title: "Accessibility checks", included: true, comingSoon: true, icon: <Users size={16} /> },
         ]
       }
     ]
@@ -136,7 +143,7 @@ const pricingData: PricingTier[] = [
         features: [
           { title: "One-time payment", included: true, icon: <Lock size={16} /> },
           { title: "Lifetime updates", included: true, icon: <Stars size={16} /> },
-          { title: "Premium support", included: true, icon: <Shield size={16} /> },
+          // { title: "Premium support", included: true, icon: <Shield size={16} /> },
         ]
       }
     ]
