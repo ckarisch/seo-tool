@@ -48,11 +48,11 @@ export class EnhancedEmailer {
         const htmlContent = generateWelcomeEmailHTML(domain, metrics);
 
         await this.sendEmail({
-            from: "SEO Notification <notification@formundzeichen.at>",
+            from: "Rankidang Notification <info@notification.rankidang.com>",
             to: [toEmail],
             subject: `Welcome to Rankidang - ${domain} Successfully Added`,
             html: htmlContent,
-            replyTo: 'notification@formundzeichen.at'
+            replyTo: 'info@notification.rankidang.com'
         });
     }
 
@@ -127,11 +127,11 @@ export class EnhancedEmailer {
         const subject = this.generateConsolidatedSubject(notifications);
 
         await this.sendEmail({
-            from: "SEO Notification <notification@formundzeichen.at>",
+            from: "Rankidang Notification <info@notification.rankidang.com>",
             to: [toEmail],
             subject,
             html: htmlContent,
-            replyTo: 'notification@formundzeichen.at'
+            replyTo: 'info@notification.rankidang.com'
         });
     }
 
