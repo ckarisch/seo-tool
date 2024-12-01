@@ -100,36 +100,36 @@ export default function DomainStatus({ params, domainFetchTag, linksFetchTag }: 
 
     const icons = () => {
         if (loading) {
-            return <div title='crawling'>
+            return <div title='loading'>
                 <Loading />
             </div>
         }
         else if (noCrawling && noLoading && domain.error) {
-            return <div title='crawl error'>
+            return <div title='analysis error'>
                 <Cross />
             </div>
         }
         else if (noCrawling && noLoading && domain.warning) {
-            return <div title='crawl error'>
+            return <div title='analysis error'>
                 <Warning />
             </div>
         }
-        else if (noCrawling && noLoading && !domain.error && !domain.warning &&
+        else if (noLoading && !domain.error && !domain.warning &&
             domain.crawlStatus == 'idle') {
             return <div title='status ok'>
                 <Check />
             </div>
         }
-        else if (!domain.error && !domain.warning && !noCrawling && noLoading) {
-            return <div title='crawling'>
-                <Loading />
-            </div>
-        }
-        else if (crawlStatus === 'crawling') {
-            return <div title='crawling'>
-                <Loading />
-            </div>
-        }
+        // else if (!domain.error && !domain.warning && !noCrawling && noLoading) {
+        //     return <div title='analysing'>
+        //         <Loading />
+        //     </div>
+        // }
+        // else if (crawlStatus === 'crawling') {
+        //     return <div title='analysing'>
+        //         <Loading />
+        //     </div>
+        // }
     }
 
     if (apiUser.role !== UserRole.ADMIN && !domain.domainVerified && !['loading', 'authenticated'].includes(status)) {
