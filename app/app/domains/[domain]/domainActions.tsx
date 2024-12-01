@@ -35,6 +35,7 @@ const DomainActions: React.FC<DomainActionsProps> = ({
                     <span className={styles.adminBadge}>Admin</span>
                 </div>
             }
+            initiallyMinimized={true}
         >
             <div className={[styles.icon].join(' ')}>
                 {icons()}
