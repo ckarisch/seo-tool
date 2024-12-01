@@ -1,4 +1,4 @@
-import { Prisma, PrismaClient } from "@prisma/client";
+import { InternalLink, Prisma, PrismaClient } from "@prisma/client";
 import { JsonObject } from "@prisma/client/runtime/library";
 
 export enum linkType {
@@ -40,42 +40,37 @@ export const pushLink = (prisma: PrismaClient, foundOnPath: string, href: string
 }
 
 export const pushAllLinks = async (
-    prisma: PrismaClient,
+    prisma: PrismaClient, 
     internalLinkUpsertArgs: Prisma.InternalLinkUpsertArgs[]
-): Promise<JsonObject[]> => {
+  ): Promise<InternalLink[]> => {
     const batchSize = 5;
     const chunks = Array.from(
-        { length: Math.ceil(internalLinkUpsertArgs.length / batchSize) },
-        (_, i) => internalLinkUpsertArgs.slice(i * batchSize, (i + 1) * batchSize)
+      { length: Math.ceil(internalLinkUpsertArgs.length / batchSize) },
+      (_, i) => internalLinkUpsertArgs.slice(i * batchSize, (i + 1) * batchSize)
     );
-
-    const results: JsonObject[] = [];
-
+  
+    const results: InternalLink[] = [];
+    
     for (const chunk of chunks) {
-        try {
-            const batchResults = await Promise.all(
-                chunk.map(args =>
-                    prisma.internalLink.upsert(args)
-                        .catch(error => {
-                            if (error.code === 'P2034') {
-                                // Add small delay and retry once on conflict
-                                return new Promise(resolve =>
-                                    setTimeout(() => resolve(prisma.internalLink.upsert(args)), 100)
-                                );
-                            }
-                            throw error;
-                        })
-                )
-            );
-            results.push(...(batchResults as JsonObject[]));
-        } catch (error) {
-            console.error('Error processing batch:', error);
-            throw error;
-        }
+      const batchResults = await Promise.all(
+        chunk.map(args => 
+          prisma.internalLink.upsert(args)
+            .catch(error => {
+              if (error.code === 'P2034') {
+                // Add small delay and retry once on conflict
+                return new Promise<InternalLink>(resolve => 
+                  setTimeout(() => resolve(prisma.internalLink.upsert(args)), 100)
+                );
+              }
+              throw error;
+            })
+        )
+      );
+      results.push(...batchResults);
     }
-
+  
     return results;
-};
+  };
 
 export const pushExternalLinks = async (prisma: PrismaClient, links: { foundOnPath: string, href: string }[], domainId: string) => {
     // Create the upsert operations for all links

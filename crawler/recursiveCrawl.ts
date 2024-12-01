@@ -297,13 +297,9 @@ export async function* recursiveCrawl(
     if (pushLinksToDomain && domainId) {
         requestStartTime = new Date().getTime();
         yield* subLogger.log(`start pushing links (${pushLinkInputs.length})`);
-
-        // Push internal links
-        const internalPromises = pushAllLinks(prisma, pushLinkInputs);
-
-        // Push external links in batches
+    
         yield* subLogger.log(`filtering ${externalLinksToInsert.length} external links for unique entries`);
-
+    
         // Filter for unique external links based on href
         const uniqueExternalLinks = externalLinksToInsert.reduce<{ foundOnPath: string; href: string }[]>((acc, current) => {
             // Only add if href doesn't exist in accumulator
@@ -312,13 +308,15 @@ export async function* recursiveCrawl(
             }
             return acc;
         }, []);
-
+    
         yield* subLogger.log(`start pushing external links (${uniqueExternalLinks.length} unique from ${externalLinksToInsert.length} total)`);
-        const externalPromises = pushExternalLinks(prisma, uniqueExternalLinks, domainId);
-
-        // Wait for all pushes to complete
-        await Promise.all([...internalPromises, externalPromises]);
-
+        
+        // Run both operations concurrently
+        const [internalResults, externalResults] = await Promise.all([
+            pushAllLinks(prisma, pushLinkInputs),
+            pushExternalLinks(prisma, uniqueExternalLinks, domainId)
+        ]);
+    
         requestTime = new Date().getTime() - requestStartTime;
         yield* subLogger.log(`end pushing all links (internal: ${pushLinkInputs.length}, external: ${externalLinksToInsert.length}): ${requestTime}ms`);
     }
