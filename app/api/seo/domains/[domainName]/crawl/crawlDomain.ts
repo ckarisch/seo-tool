@@ -262,7 +262,7 @@ export async function* crawlDomain(
 
     } catch (error: AxiosError | TypeError | any) {
         // Handle any errors
-        yield* logger.log(error);
+        yield* logger.log(JSON.stringify(error));
         timePassed = (new Date().getTime() - crawlStartTime);
         errorUnknownOccured = true;
 
