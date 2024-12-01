@@ -51,6 +51,14 @@ export default function LinkList({ params, linksFetchTag, domainFetchTag }: {
     const [hide404, setHide404] = useState(false);
     const [hide503, setHide503] = useState(false);
 
+    const has404Errors = linksJson.links?.some(link =>
+        link.errorLogs.some(log => log.errorType.code === 'ERROR_404')
+    );
+
+    const has503Errors = linksJson.links?.some(link =>
+        link.errorLogs.some(log => log.errorType.code === 'ERROR_503')
+    );
+
     useEffect(() => {
         if (status !== "loading") {
             fetch(process.env.NEXT_PUBLIC_API_DOMAIN + '/api/seo/domains/' + params.domain + '/links',
@@ -125,24 +133,28 @@ export default function LinkList({ params, linksFetchTag, domainFetchTag }: {
         <div className={styles.sectionContainer}>
             <MinimizableContainer title={`Links (${filteredLinks.length})`}>
                 <div className={styles.filterContainer}>
-                    <button
-                        className={[
-                            styles.filterButton,
-                            hide404 ? styles.active : ''
-                        ].join(' ')}
-                        onClick={() => setHide404(!hide404)}
-                    >
-                        Hide 404 Errors
-                    </button>
-                    <button
-                        className={[
-                            styles.filterButton,
-                            hide503 ? styles.active : ''
-                        ].join(' ')}
-                        onClick={() => setHide503(!hide503)}
-                    >
-                        Hide 503 Errors
-                    </button>
+                    {has404Errors && (
+                        <button
+                            className={[
+                                styles.filterButton,
+                                hide404 ? styles.active : ''
+                            ].join(' ')}
+                            onClick={() => setHide404(!hide404)}
+                        >
+                            Hide 404 Errors
+                        </button>
+                    )}
+                    {has503Errors && (
+                        <button
+                            className={[
+                                styles.filterButton,
+                                hide503 ? styles.active : ''
+                            ].join(' ')}
+                            onClick={() => setHide503(!hide503)}
+                        >
+                            Hide 503 Errors
+                        </button>
+                    )}
                 </div>
                 <div className={styles.links}>
 

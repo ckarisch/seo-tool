@@ -3,6 +3,7 @@ import styles from './domainActions.module.scss';
 import MinimizableContainer from '@/components/layout/MinimizableContainer';
 import { Play, RotateCcw } from 'lucide-react';
 import { Domain } from '@prisma/client';
+import { Loading } from '@/icons/loading';
 
 interface DomainActionsProps {
     domainJson: Partial<Domain>;
@@ -11,16 +12,23 @@ interface DomainActionsProps {
     handleResetLinks: (event: React.FormEvent<HTMLFormElement>) => void;
 }
 
-const DomainActions: React.FC<DomainActionsProps> = ({ 
-    domainJson, 
-    crawlStatus, 
-    handleCrawl, 
-    handleResetLinks 
+const DomainActions: React.FC<DomainActionsProps> = ({
+    domainJson,
+    crawlStatus,
+    handleCrawl,
+    handleResetLinks
 }) => {
     const isCrawling = domainJson.crawlStatus === 'crawling' || crawlStatus === 'crawling';
 
+    const icons = () => {
+        if (isCrawling) {
+            return <div title='crawling'>
+                <Loading />
+            </div>
+        }
+    }
     return (
-        <MinimizableContainer 
+        <MinimizableContainer
             title={
                 <div className={styles.titleContainer}>
                     <span>Domain Actions</span>
@@ -28,6 +36,9 @@ const DomainActions: React.FC<DomainActionsProps> = ({
                 </div>
             }
         >
+            <div className={[styles.icon].join(' ')}>
+                {icons()}
+            </div>
             <div className={styles.actionItem}>
                 <h3 className={styles.actionTitle}>Request Crawl</h3>
                 <p className={styles.actionDescription}>
