@@ -56,3 +56,8 @@ export const defaultDomainState: Partial<Domain> = {
   badRequestPercentage: null,
   typeErrorPercentage: null,
 };
+
+
+export type PartialDomainWithDomainName = Partial<Domain> & {
+  domainName: string;
+};

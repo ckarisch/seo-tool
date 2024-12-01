@@ -14,6 +14,7 @@ export interface recursiveCrawlResponse {
     warningDoubleSlashOccured: boolean;
     errorCount: number;
     warningCount: number;
+    isPartial: boolean;
 }
 
 let totalErrorCount = 0;
@@ -37,6 +38,11 @@ export async function* recursiveCrawl(
     subLogger: Logger,
     userRole: UserRole): AsyncGenerator<LogEntry, recursiveCrawlResponse, unknown> {
 
+    const checkPartialTimeout = (currentTime: number) => {
+        const timeLeft = maxCrawlTime - currentTime;
+        return timeLeft <= 20000; // 20 seconds left
+    };
+
     yield* subLogger.log('recursive crawl started');
     yield* subLogger.log('extractedDomain: ' + extractedDomain);
     let timePassed, requestTime;
@@ -57,7 +63,8 @@ export async function* recursiveCrawl(
         tooManyRequests: false,
         warningDoubleSlashOccured: false,
         errorCount: 0,
-        warningCount: 0
+        warningCount: 0,
+        isPartial: false
     }
 
     let crawlActive = true;
@@ -65,6 +72,40 @@ export async function* recursiveCrawl(
 
     for (let j = 0; (crawlActive && j < depth); j++) {
         for (let i = 0; (crawlActive && i < links.length); i++) {
+            // Check for partial timeout before processing each link
+            timePassed = (new Date().getTime() - crawlStartTime);
+            if (checkPartialTimeout(timePassed) && domainCrawl) {
+                // Save remaining links
+                const remainingLinks = links.slice(i).reduce<Link[]>((acc, current) => {
+                    // Only add if path doesn't exist in accumulator
+                    if (!acc.some(link => link.path === current.path)) {
+                        acc.push(current);
+                    }
+                    return acc;
+                }, []);
+
+                yield* subLogger.log('Saving partial crawl state with ' + remainingLinks.length + ' remaining links');
+
+                await prisma.domainCrawl.update({
+                    where: { id: domainCrawl.id },
+                    data: {
+                        status: 'partial',
+                        isPartial: true,
+                        remainingLinks: {
+                            links: remainingLinks,
+                            crawledLinks: crawledLinks
+                        },
+                        endTime: new Date(),
+                        crawlTime: timePassed
+                    }
+                });
+
+                response.timeout = true;
+                response.isPartial = true;
+                crawlActive = false;
+                break;
+            }
+
             if (typeof links[i] !== 'undefined' && links[i]) { // Check if the link is defined
                 const { subdomain, normalizedLink, isInternal, isInternalPage, warningDoubleSlash } = analyzeLink(links[i]!.path, extractedDomain);
 

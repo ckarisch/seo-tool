@@ -21,7 +21,7 @@ export async function* crawlerGenerator(
   host: string,
   cron: CronJob
 ): AsyncGenerator<LogEntry> {
-  
+
   const crawlerStartTime = new Date().getTime();
   let timePassed = new Date().getTime() - crawlerStartTime;
   let timeLeft = maxExecutionTime - timePassed;
@@ -37,8 +37,27 @@ export async function* crawlerGenerator(
   yield* mainLogger.log("start auto crawl");
   const domains = await prisma.domain.findMany({
     orderBy: { lastCrawl: "asc" },
-    include: { user: { select: { role: true } } },
+    select: {
+      id: true,
+      name: true,
+      domainName: true,
+      domainVerificationKey: true,
+      domainVerified: true,
+      lastCrawl: true,
+      crawlEnabled: true,
+      crawlDepth: true,
+      crawlStatus: true,
+      crawlInterval: true,
+      userId: true,
+      score: true,
+      user: {
+        select: {
+          role: true
+        }
+      }
+    }
   });
+  yield* mainLogger.log("domains loaded");
 
   if (!domains || domains.length === 0) {
     yield* mainLogger.log("no auto crawls found");
@@ -137,12 +156,12 @@ export async function* crawlerGenerator(
       if (diffMinutes >= domainInterval) {
         yield* mainLogger.log(
           "➝  auto crawl: " +
-            domain.domainName +
-            " last crawl was " +
-            diffMinutes +
-            " / " +
-            domainInterval +
-            " minutes ago"
+          domain.domainName +
+          " last crawl was " +
+          diffMinutes +
+          " / " +
+          domainInterval +
+          " minutes ago"
         );
 
         const depth = 1;
@@ -181,9 +200,8 @@ export async function* crawlerGenerator(
         await prisma.adminLog.create({
           data: {
             createdAt: new Date(),
-            message: `domain ${domain.domainName} crawled (score: ${
-              (domain.score ? domain.score : 0) * 100
-            }), host: ${host}`,
+            message: `domain ${domain.domainName} crawled (score: ${(domain.score ? domain.score : 0) * 100
+              }), host: ${host}`,
             domainId: domain.id,
             userId: domain.userId,
           },
@@ -196,12 +214,12 @@ export async function* crawlerGenerator(
       } else {
         yield* mainLogger.log(
           "➥  skip auto crawl: " +
-            domain.domainName +
-            " last crawl was " +
-            diffMinutes +
-            " / " +
-            domainInterval +
-            " minutes ago"
+          domain.domainName +
+          " last crawl was " +
+          diffMinutes +
+          " / " +
+          domainInterval +
+          " minutes ago"
         );
       }
     }

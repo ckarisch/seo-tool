@@ -49,7 +49,8 @@ const pricingData: PricingTier[] = [
         features: [
           { title: "Up to 2 domains", included: true, icon: <Globe size={16} /> },
           { title: "SEO basic checks", included: true, icon: <Bot size={16} /> },
-          { title: "Analysis Priority: Shared Pool", included: true, icon: <Gauge size={16} /> }
+          { title: "Analysis priority: shared pool", included: true, icon: <Gauge size={16} /> },
+          { title: "Standard analysis time limit", included: true, icon: <Gauge size={16} /> }
         ]
       },
       {
@@ -87,7 +88,8 @@ const pricingData: PricingTier[] = [
         features: [
           { title: "All Free features included", included: true, icon: <Check size={16} /> },
           { title: "Up to 10 domains", included: true, icon: <Globe size={16} /> },
-          { title: "Analysis Priority: Priority Pool", included: true, icon: <Zap size={16} /> }
+          { title: "Analysis Priority: Priority Pool", included: true, icon: <Zap size={16} /> },
+          { title: "Extended website scan depth", included: true, icon: <Zap size={16} /> }
         ]
       },
       {

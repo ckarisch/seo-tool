@@ -6,7 +6,7 @@ export interface domainIntervalResponse {
     domainInterval: number
 }
 
-export async function* domainIntervalGenerator(userRole: string, domain: Domain, cron: CronJob, fallbackInterval = 1420): AsyncGenerator<LogEntry, domainIntervalResponse>{
+export async function* domainIntervalGenerator(userRole: string, domain: Partial<Domain>, cron: CronJob, fallbackInterval = 1420): AsyncGenerator<LogEntry, domainIntervalResponse>{
     let domainInterval = fallbackInterval;
     let intervalFound = false;
     const logger = createLogger('interval');

@@ -38,7 +38,25 @@ export async function* lighthouseGenerator(
   yield* lighthouseLogger.log("start lighthouse");
   const domains = await prisma.domain.findMany({
     orderBy: { lastLighthouseAnalysis: "asc" },
-    include: { user: { select: { role: true } } },
+    select: {
+      id: true,
+      name: true,
+      domainName: true,
+      domainVerificationKey: true,
+      domainVerified: true,
+      lastLighthouseAnalysis: true,
+      crawlEnabled: true,
+      crawlDepth: true,
+      crawlStatus: true,
+      crawlInterval: true,
+      userId: true,
+      score: true,
+      user: {
+        select: {
+          role: true
+        }
+      }
+    }
   });
 
   if (!domains || domains.length === 0) {

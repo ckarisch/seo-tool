@@ -5,6 +5,7 @@ import { MailOptions } from "nodemailer/lib/json-transport";
 import { prisma } from '@/lib/prisma';
 import { renderWelcomeEmail } from "@/util/emailRenderer";
 import { generateWelcomeEmailHTML } from "./generateWelcomeEmailHTML";
+import { PartialDomainWithDomainName } from '@/interfaces/domain';
 
 interface NotificationGroup {
     domain: string;
@@ -166,7 +167,7 @@ export enum crawlNotificationType {
 
 export const consolidatedCrawlNotification = async (
     userWithNotificationContacts: User & { notificationContacts: any[] },
-    domain: Domain,
+    domain: PartialDomainWithDomainName,
     notifications: Array<{
         type: crawlNotificationType;
         errorPresent: boolean;

@@ -1,20 +1,16 @@
 
-import axios, { AxiosError } from 'axios';
+import { AxiosError } from 'axios';
 import { analyzeLink } from "../../../../../../apiComponents/crawler/linkTools";
-import { crawlNotification, crawlNotificationType } from "./crawlNotification";
-import { CalculateScore } from "@/apiComponents/domain/calculateScore";
 import { initialCrawl } from "@/crawler/initialCrawl";
-import { Link, checkRequests, checkTimeoutAndPush, getStrongestErrorCode, linkType, pushExternalLink, pushLink } from "./crawlLinkHelper";
+import { Link, checkTimeoutAndPush, linkType, pushLink } from "./crawlLinkHelper";
 import { extractLinks } from "@/crawler/extractLinks";
 import { recursiveCrawl, recursiveCrawlResponse } from "@/crawler/recursiveCrawl";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { CrawlResponseYieldType, createLogger, isLogEntry, Logger, LoggerFunctionWithReturn } from "@/apiComponents/dev/logger";
+import { createLogger } from "@/apiComponents/dev/logger";
 import { LogEntry } from "@/apiComponents/dev/StreamingLogViewer";
-import { lighthouseAnalysis, lighthouseAnalysisResponse } from "@/crawler/lighthouseAnalysis";
 import { prisma } from '@/lib/prisma';
 import { Domain, UserRole } from '@prisma/client';
-// export type LoggerFunction = (logger: Logger, url: string, depth: number, followLinks: boolean, maxDuration: number) => AsyncGenerator<boolean | Generator<LogEntry, any, any>, Response, unknown>;
 
 export type crawlDomainResponse = {
     error?: string | null,
@@ -23,7 +19,7 @@ export type crawlDomainResponse = {
 }
 
 export async function* crawlDomain(
-    domain: Domain,
+    domain: Partial<Domain>,
     depth: number,
     followLinks: boolean,
     maxDuration: number,
@@ -36,33 +32,33 @@ export async function* crawlDomain(
     const maxRequests = 1000;
     const maxLinkEntries = 500; // with documents and images
 
-    const url = domain.domainName;
-
-    const logger = createLogger('CRAWL ' + url);
+    let logger = createLogger('CRAWL ');
+    if (!domain) {
+        yield* logger.log('error: domain not found');
+        return { error: 'domain not found' };
+    }
+    const url = domain.domainName ?? '';
+    logger = createLogger('CRAWL ' + url);
+    
+    if (!domain.id || !domain.domainName || url === '') {
+        yield* logger.log('error: domain fields not found');
+        return { error: 'domain fields not found' };
+    }
 
     let analyzedUrl = analyzeLink(url, url);
     let extractedDomain = analyzedUrl.linkDomain;
+    let extractedDomainLinkHttps = analyzedUrl.linkDomainWithHttps;
 
     const links: Link[] = [];
     const crawledLinks: (string)[] = ['/'];
 
     let timePassed, requestStartTime, requestTime;
-    let requests = 0;
-    let linkEntries = 0;
     let warningDoubleSlashOccured = false;
     let errorUnknownOccured = false;
     let error404Occured = false;
     let error503Occured = false;
-    let error404Links: string[] = [];
 
-
-    // const domain = await prisma.domain.findFirst({ where: { domainName: extractedDomain } });
     const user = await prisma.user.findFirst({ where: { id: domain?.userId }, include: { notificationContacts: true } });
-
-    if (!domain) {
-        yield* logger.log('error: domain not found');
-        return { error: 'domain not found' };
-    }
 
 
     const session = await getServerSession(authOptions);
@@ -97,8 +93,7 @@ export async function* crawlDomain(
         }
     }
 
-    let targetURL = 'https://' + extractedDomain; // URL of the website you want to crawl
-    const protocol = 'https://';
+    let targetURL = extractedDomainLinkHttps; // URL of the website you want to crawl
 
     if (domain.crawlStatus === 'crawling') {
         yield* logger.log('domain currently crawling: ' + (new Date().getTime() - (domain.lastCrawl?.getTime() ?? 0)));
@@ -110,18 +105,51 @@ export async function* crawlDomain(
         return { error: 'crawling too soon' };
     }
 
-    const domainCrawl = await prisma.domainCrawl.create({
-        data: {
-            domain: {
-                connect: {
-                    id: domain.id
-                }
-            },
-            startTime: new Date(),
-            status: 'crawling',
-            error: false
+    // Check for partial crawl before starting new one
+    const partialCrawl = await prisma.domainCrawl.findFirst({
+        where: {
+            domainId: domain.id,
+            isPartial: true,
+            status: 'partial'
+        },
+        orderBy: {
+            startTime: 'desc'
         }
     });
+
+    let domainCrawl;
+
+    if (partialCrawl && partialCrawl.remainingLinks) {
+        yield* logger.log('Continuing partial crawl');
+        // Convert stored JSON back to Link array
+        const savedState = partialCrawl.remainingLinks as any;
+        links.push(...savedState.links);
+        crawledLinks.push(...savedState.crawledLinks);
+
+        // Update the crawl status
+        domainCrawl = await prisma.domainCrawl.update({
+            where: { id: partialCrawl.id },
+            data: {
+                status: 'crawling',
+                isPartial: false,
+                remainingLinks: null
+            }
+        });
+    }
+    else {
+        domainCrawl = await prisma.domainCrawl.create({
+            data: {
+                domain: {
+                    connect: {
+                        id: domain.id
+                    }
+                },
+                startTime: new Date(),
+                status: 'crawling',
+                error: false
+            }
+        });
+    }
 
     await prisma.domain.update({
         where: { id: domain.id },
@@ -137,7 +165,8 @@ export async function* crawlDomain(
         // Fetch the HTML content from the target URL
         timePassed = (new Date().getTime() - crawlStartTime);
         if (await checkTimeoutAndPush(prisma, timePassed, maxCrawlTime, domainCrawl.id, domain.id)) {
-            Response.json({ error: 'Timeout' }, { status: 500 });
+            yield* logger.log(`timout in crawlDomain`);
+            return { links: [] };
         }
 
         requestStartTime = new Date().getTime();
@@ -151,16 +180,12 @@ export async function* crawlDomain(
         requestTime = new Date().getTime() - requestStartTime;
         yield* logger.log(`request time (${targetURL}): ${requestTime}`);
 
-        // extractedDomain = analyzeLink(targetURL, '').linkDomain;
-        // extractedDomain
         targetURL = finalURLObject.hostname;
         analyzedUrl = analyzeLink(targetURL, targetURL);
         extractedDomain = analyzedUrl.linkDomain;
         yield* logger.log(`now using finalURL ${targetURL}`);
         const analyzedFinalUrl = analyzeLink(finalURL, extractedDomain);
 
-
-        // links.push({ path: '/', foundOnPath: '/' });
         const internalLink = await pushLink(prisma, '/', analyzedFinalUrl.normalizedLink, false, domain.id, linkType.page, requestTime, null);
 
         if (!followLinks) {
@@ -182,9 +207,6 @@ export async function* crawlDomain(
         }
 
         links.push(...extractLinks(data, targetURL, targetURL));
-
-        // const addSlash = targetURL.endsWith('/') ? '' : '/';
-
         yield* logger.log('start recursive crawl');
 
         /* subfunction */

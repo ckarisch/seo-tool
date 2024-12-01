@@ -1,5 +1,6 @@
 import { analyzeLink } from "@/apiComponents/crawler/linkTools";
 import { createLogger, LogEntry, Logger } from "@/apiComponents/dev/logger";
+import { PartialDomainWithDomainName } from "@/interfaces/domain";
 import { Domain, Prisma, PrismaClient } from "@prisma/client";
 
 export interface lighthouseAnalysisResponse {
@@ -44,7 +45,7 @@ async function getPageSpeedInsights(httpLink: string) {
 
 export async function* lighthouseAnalysis(
     prisma: PrismaClient,
-    domain: Domain
+    domain: PartialDomainWithDomainName
 ): AsyncGenerator<LogEntry, lighthouseAnalysisResponse, unknown> {
 
     const logger = createLogger('Lighthouse ' + domain.domainName);

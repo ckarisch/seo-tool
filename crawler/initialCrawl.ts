@@ -34,7 +34,7 @@ interface ResourceMetrics {
 }
 
 export const initialCrawl = async (
-    domain: Domain,
+    domain: Partial<Domain>,
     targetURL: string,
     maxCrawlTime: number,
     crawlStartTime: number,

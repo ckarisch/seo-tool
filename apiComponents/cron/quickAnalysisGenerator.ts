@@ -44,17 +44,54 @@ export async function* quickAnalysisGenerator(
 
     const domains = await prisma.domain.findMany({
         orderBy: { lastQuickAnalysis: "asc" },
-        include: {
+        select: {
+            id: true,
+            name: true,
+            domainName: true,
+            domainVerificationKey: true,
+            domainVerified: true,
+            lastCrawl: true,
+            lastLighthouseAnalysis: true,
+            lastQuickAnalysis: true,
+            crawlEnabled: true,
+            crawlDepth: true,
+            crawlStatus: true,
+            crawlInterval: true,
+            userId: true,
+            score: true,
+            performanceScore: true,
+            initialMessageSent: true,
             user: {
-                include: {
+                select: {
+                    id: true,
+                    name: true,
+                    email: true,
+                    role: true,
                     notificationContacts: true
                 }
             },
             quickAnalysisHistory: {
                 orderBy: { timestamp: 'desc' },
                 take: 1,
+                select: {
+                    id: true,
+                    domainId: true,
+                    score: true,
+                    metrics: true,
+                    issues: true,
+                    crawlTime: true,
+                    status: true,
+                    timestamp: true,
+                    timeToInteractive: true,
+                    firstContentfulPaint: true,
+                    totalBytes: true,
+                    scriptCount: true,
+                    styleCount: true,
+                    imageCount: true,
+                    totalResources: true
+                }
             }
-        },
+        }
     });
 
     if (!domains || domains.length === 0) {

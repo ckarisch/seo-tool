@@ -1,8 +1,8 @@
+import { PartialDomainWithDomainName } from "@/interfaces/domain";
 import { prisma } from "@/lib/prisma";
 import { performDnsLookup } from "@/util/api/dnsLookup";
-import { Domain } from "@prisma/client";
 
-export const VerifyDomain = async (domain: Domain): Promise<any> => {
+export const VerifyDomain = async (domain: PartialDomainWithDomainName): Promise<any> => {
     console.log('lookup', domain.domainName);
     if (!domain.domainVerificationKey)
         return false;

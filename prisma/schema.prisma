@@ -267,6 +267,8 @@ model DomainCrawl {
   error404           Boolean?
   error503           Boolean?
   errorLogs          ErrorLog[] @relation("CrawlErrors")
+  remainingLinks     Json?
+  isPartial          Boolean    @default(false)
 
   @@map("domaincrawl")
 }

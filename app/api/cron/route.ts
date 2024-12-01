@@ -1,7 +1,7 @@
 import { PrismaClient } from "@prisma/client";
 import { env } from "process";
 
-export const maxDuration = 2900; // in seconds
+export const maxDuration = 300; // in seconds
 import { NextResponse } from "next/server";
 import {
   generateStreamingLogViewer,
@@ -21,7 +21,7 @@ export async function GET(request: Request) {
 
   // maxExecutionTime ist 20 seconds lower than maxDuration to prevent hard timeouts
   const maxDurationInMilliseconds = maxDuration * 1000;
-  const maxExecutionTime = 2600000; // in milliseconds
+  const maxExecutionTime = 230000; // in milliseconds
   const cronStartTime = new Date().getTime();
   let timePassed = new Date().getTime() - cronStartTime;
   let timeLeft = maxExecutionTime - timePassed;
@@ -34,11 +34,11 @@ export async function GET(request: Request) {
       'quick': 3,
       'user': 4
     };
-    
+
     // Get order value, default to 999 for unknown types
     const orderA = order[a.type] || 999;
     const orderB = order[b.type] || 999;
-    
+
     return orderA - orderB;
   });
 
@@ -58,7 +58,7 @@ export async function GET(request: Request) {
       if (
         env.NODE_ENV !== "development" &&
         request.headers.get("Authorization") !==
-          `Bearer ${process.env.CRON_SECRET}`
+        `Bearer ${process.env.CRON_SECRET}`
       ) {
         return Response.json({ error: "unauthorized" }, { status: 401 });
       }
@@ -71,16 +71,11 @@ export async function GET(request: Request) {
         for (const cron of sortedCronJobs) {
           timePassed = new Date().getTime() - cronStartTime;
           timeLeft = maxExecutionTime - timePassed;
-          yield* cronLogger.log(`${cron.name}: time left: ${timeLeft}`);
-
-          if (checkTimeout(timePassed, maxDurationInMilliseconds)) {
-            await prisma.cronJob.update({
-              where: { id: cron.id },
-              data: { status: "idle", lastEnd: new Date() },
-            });
-            yield* cronLogger.log(`${cron.name}: timeout, status idle`);
+          if (checkTimeout(timePassed, maxExecutionTime)) {
+            yield* cronLogger.log(`${cron.name}: timeout, time left: ${timeLeft}`);
             return;
           }
+          yield* cronLogger.log(`${cron.name}: time left: ${timeLeft}`);
 
           if (cron.acitve) {
             yield* cronLogger.log(`${cron.name}: active`);

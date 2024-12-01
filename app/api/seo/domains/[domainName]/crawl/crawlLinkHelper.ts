@@ -122,7 +122,7 @@ export const checkTimeoutAndPush = async (prisma: PrismaClient, timePassed: numb
 }
 
 export const checkTimeout = (timePassed: number, maxDuration: number) => {
-    if (timePassed + 500 > maxDuration) {
+    if (timePassed + 1500 > maxDuration) {
         return true;
     }
     return false;
