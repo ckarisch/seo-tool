@@ -1,8 +1,9 @@
 import { analyzeLink } from "@/apiComponents/crawler/linkTools";
+import { Link } from "@/app/api/seo/domains/[domainName]/crawl/crawlLinkHelper";
 import { load } from "cheerio";
 
 export const extractLinks = (data: any, url: string, targetURL: string) => {
-    const links: { path: string, foundOnPath: string }[] = [];
+    const links: Link[] = [];
     let startTime: number;
     console.log('extracting links');
     const $ = load(data);
@@ -13,7 +14,7 @@ export const extractLinks = (data: any, url: string, targetURL: string) => {
         const href = $(element).attr('href');
         if (href) {
             const { normalizedLink } = analyzeLink(href, url);
-            links.push({ path: normalizedLink, foundOnPath: targetURL });
+            links.push({ path: normalizedLink, foundOnPath: targetURL, ignoreCanonical: false });
         }
     }
     console.log(`extracting links operation time: ${new Date().getTime() - startTime}`);

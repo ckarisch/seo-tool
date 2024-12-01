@@ -33,7 +33,7 @@ export async function* crawlDomain(
     const crawlStartTime = new Date().getTime();
     const maxCrawlTime = maxDuration - 1000; // milliseconds
     const seconds = 30; // min seconds between crawls
-    const maxRequests = 350;
+    const maxRequests = 1000;
     const maxLinkEntries = 500; // with documents and images
 
     const url = domain.domainName;
@@ -148,26 +148,6 @@ export async function* crawlDomain(
             finalURLObject
         } = await initialCrawl(domain, targetURL, maxCrawlTime, crawlStartTime, user, analyzedUrl);
 
-
-        // /* subfunction */
-        // const lighthouseGenerator = lighthouseAnalysis(
-        //     prisma,
-        //     domain,
-        //     logger
-        // );
-
-        // let lighthouseIteratorResult: IteratorResult<LogEntry, lighthouseAnalysisResponse>;
-        // do {
-        //     lighthouseIteratorResult = await lighthouseGenerator.next();
-        //     if (!lighthouseIteratorResult.done) {
-        //         yield lighthouseIteratorResult.value;
-        //     }
-        // } while (!lighthouseIteratorResult.done);
-
-        // let lighthouseResult: lighthouseAnalysisResponse | undefined = undefined;
-        // lighthouseResult = lighthouseIteratorResult.value;
-        // /* end subfunction */
-
         requestTime = new Date().getTime() - requestStartTime;
         yield* logger.log(`request time (${targetURL}): ${requestTime}`);
 
@@ -181,7 +161,7 @@ export async function* crawlDomain(
 
 
         // links.push({ path: '/', foundOnPath: '/' });
-        const internalLink = await pushLink(prisma, '', analyzedFinalUrl.normalizedLink, false, domain.id, linkType.page, requestTime, null);
+        const internalLink = await pushLink(prisma, '/', analyzedFinalUrl.normalizedLink, false, domain.id, linkType.page, requestTime, null);
 
         if (!followLinks) {
             await prisma.domainCrawl.update({

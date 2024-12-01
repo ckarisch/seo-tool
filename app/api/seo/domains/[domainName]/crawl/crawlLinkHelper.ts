@@ -45,6 +45,37 @@ export const pushAllLinks = (prisma: PrismaClient, internalLinkUpsertArgs: Prism
     return promises;
 }
 
+export const pushExternalLinks = async (prisma: PrismaClient, links: { foundOnPath: string, href: string }[], domainId: string) => {
+    // Create the upsert operations for all links
+    const upsertOperations = links.map(link => {
+        return prisma.externalLink.upsert({
+            create: {
+                foundOnPath: link.foundOnPath,
+                url: link.href,
+                domain: {
+                    connect: {
+                        id: domainId
+                    }
+                },
+                lastCheck: new Date(),
+            },
+            update: {
+                foundOnPath: link.foundOnPath,
+                lastCheck: new Date(),
+            },
+            where: {
+                domainId_url: {
+                    domainId,
+                    url: link.href
+                }
+            }
+        });
+    });
+
+    // Execute all upsert operations in a single transaction
+    return prisma.$transaction(upsertOperations);
+};
+
 export const pushExternalLink = (prisma: PrismaClient, foundOnPath: string, href: string, domainId: string) => {
     return prisma.externalLink.upsert({
         create: {
@@ -103,7 +134,8 @@ export const checkRequests = (requests: number, maxRequests: number) => {
 
 export interface Link {
     foundOnPath: string,
-    path: string
+    path: string,
+    ignoreCanonical: boolean
 }
 
 export interface linkErros {

@@ -6,6 +6,34 @@
   gap: 24px;
 }
 
+.filterContainer {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.filterButton {
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 1px solid $background-light;
+  background: white;
+  color: $text-secondary;
+
+  &:hover {
+    background: $background-light;
+  }
+
+  &.active {
+    background: $color;
+    color: white;
+    border-color: $color;
+  }
+}
+
 .links {
   display: flex;
   flex-direction: column;

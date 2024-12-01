@@ -1,10 +1,12 @@
 import { analyzeLink } from "@/apiComponents/crawler/linkTools";
 import { LogEntry, Logger } from "@/apiComponents/dev/logger";
-import { checkRequests, checkTimeout, createPushLinkInput, getStrongestErrorCode, linkType, pushAllLinks, pushExternalLink, pushLink } from "@/app/api/seo/domains/[domainName]/crawl/crawlLinkHelper";
+import { checkRequests, checkTimeout, createPushLinkInput, Link, linkType, pushAllLinks, pushExternalLink, pushExternalLinks, pushLink } from "@/app/api/seo/domains/[domainName]/crawl/crawlLinkHelper";
 import axios, { AxiosError } from "axios";
 import { load } from "cheerio";
-import runErrorChecks from "./errorChecker";
-import { DomainCrawl, InternalLink, Prisma, UserRole } from "@prisma/client";
+import runErrorChecks, { HttpErrorCode, logHttpError } from "./errorChecker";
+import { DomainCrawl, Prisma, UserRole } from "@prisma/client";
+import { checkCanonical } from "./checks/checkCanonical";
+import { handleHttpError } from "./errorHandle/handleHttpError";
 
 export interface recursiveCrawlResponse {
     timeout: boolean;
@@ -19,7 +21,7 @@ let totalWarningCount = 0;
 
 export async function* recursiveCrawl(
     prisma: any,
-    links: any[],
+    links: Link[],
     crawledLinks: any[],
     depth: number,
     analyzedUrl: any,
@@ -46,7 +48,8 @@ export async function* recursiveCrawl(
     let error503Occured = false;
     const error404Links: string[] = [];
     const pushLinkInputs: Prisma.InternalLinkUpsertArgs[] = [];
-
+    const externalLinksToInsert: { foundOnPath: string; href: string }[] = []; // Add this line
+    const skippedCanonicals: any[] = [];
     const protocol = 'https://';
 
     let response: recursiveCrawlResponse = {
@@ -66,7 +69,6 @@ export async function* recursiveCrawl(
                 const { subdomain, normalizedLink, isInternal, isInternalPage, warningDoubleSlash } = analyzeLink(links[i]!.path, extractedDomain);
 
                 if (!crawledLinks.includes(normalizedLink)) {
-                    crawledLinks.push(normalizedLink);
                     if (warningDoubleSlash) {
                         yield* subLogger.log('❗double slash occured');
                         warningDoubleSlashOccured = true;
@@ -74,18 +76,11 @@ export async function* recursiveCrawl(
                     }
 
                     if (isInternal) {
-                        yield* subLogger.log('Crawling: ' + normalizedLink);
                         if (subdomain != analyzedUrl.subdomain) {
                             yield* subLogger.log(`warning: subdomain (${normalizedLink}) not matching with requested url`)
                         }
 
-                        crawledLinks.push(normalizedLink); // Use the non-null assertion operator
-
                         timePassed = (new Date().getTime() - crawlStartTime);
-                        // if (await checkTimeoutAndPush(prisma, timePassed, maxCrawlTime, domainCrawl.id, domain.id)) {
-                        //     yield* subLogger.log('timeout: ', timePassed);
-                        //     return Response.json({ error: 'Timeout' }, { status: 500 });
-                        // }
 
                         if (checkTimeout(timePassed, maxCrawlTime)) {
                             yield* subLogger.log('timeout: ' + timePassed);
@@ -97,7 +92,6 @@ export async function* recursiveCrawl(
                         linkEntries++;
                         if (checkRequests(linkEntries, maxLinkEntries)) {
                             yield* subLogger.log('too many link entries: ' + linkEntries);
-                            // return Response.json({ error: 'Too many link entries' }, { status: 500 });
                             response.tooManyRequests = true;
                             crawlActive = false;
                             break;
@@ -106,10 +100,8 @@ export async function* recursiveCrawl(
                         if (isInternalPage) {
                             // only crawl pages
                             requests++;
-                            yield* subLogger.log('request number: ' + requests);
                             if (checkRequests(requests, maxRequests)) {
                                 yield* subLogger.log('too many requests: ' + requests);
-                                // return Response.json({ error: 'Too many requests' }, { status: 500 });
                                 response.tooManyRequests = true;
                                 crawlActive = false;
                                 break;
@@ -117,7 +109,6 @@ export async function* recursiveCrawl(
 
                             requestStartTime = new Date().getTime();
                             const requestUrl = protocol + normalizedLink;
-                            yield* subLogger.log(`request (${requestUrl})`);
 
                             let errors = {
                                 err_404: false,
@@ -134,10 +125,46 @@ export async function* recursiveCrawl(
                                 requestTime = new Date().getTime() - requestStartTime;
                                 let internalLinkId: string | undefined = undefined;
 
+                                // Check for canonical URL before processing the page
+                                if (!links[i].ignoreCanonical) {
+                                    if (skippedCanonicals.includes(normalizedLink)) {
+                                        // if this link is already marked as non canonical, skip it
+                                        // no request to check for canonical tag will be started
+                                        continue;
+                                    }
+                                    const { hasCanonical, canonicalUrl } = checkCanonical(data);
+                                    if (hasCanonical && canonicalUrl) {
+                                        // Add new link with ignoreCanonical = true
+                                        const { normalizedLink: canonicalNormalizedLink } = analyzeLink(canonicalUrl, extractedDomain);
+
+                                        if (canonicalNormalizedLink !== normalizedLink) {
+                                            // only skip, if canonical link is different
+                                            links.push({
+                                                path: canonicalNormalizedLink,
+                                                foundOnPath: requestUrl,
+                                                ignoreCanonical: true
+                                            });
+
+                                            // do not push non canonicals to database
+
+                                            yield* subLogger.log('skip non canonical ' + normalizedLink)
+                                            yield* subLogger.log('use ' + canonicalNormalizedLink)
+                                            skippedCanonicals.push(normalizedLink);
+
+                                            // Skip further processing of this link
+                                            continue;
+                                        }
+                                    }
+                                }
+
+                                // only push to crawled links, if link is not skipped
+                                crawledLinks.push(normalizedLink);
+
                                 if (pushLinksToDomain && domainId) {
-                                    const internalLink = await pushLink(prisma, '', normalizedLink, false, domainId, linkType.page, requestTime, null);
+                                    const internalLink = await pushLink(prisma, links[i].foundOnPath, normalizedLink, false, domainId, linkType.page, requestTime, null);
                                     internalLinkId = internalLink.id;
                                 }
+
                                 const errorCheckResult = await runErrorChecks({
                                     data,
                                     domainId: domainId ? domainId : undefined,
@@ -150,40 +177,42 @@ export async function* recursiveCrawl(
                                 totalWarningCount += errorCheckResult.summary.warningCount;
                             }
                             catch (error: AxiosError | TypeError | any) {
-                                // Handle any errors
-                                // yield* subLogger.log(error);
+                                yield* subLogger.log(`request ${requests} error (${requestUrl})`);
                                 timePassed = (new Date().getTime() - crawlStartTime);
 
                                 if (error instanceof AxiosError) {
-                                    if (error.code === 'ERR_BAD_REQUEST') {
-                                        if (error.response?.status == 404) {
+                                    const errorResult = await handleHttpError({
+                                        error,
+                                        prisma,
+                                        domainId,
+                                        domainCrawlId: domainCrawl?.id,
+                                        normalizedLink,
+                                        foundOnPath: links[i].foundOnPath,
+                                        requestUrl,
+                                        requestTime,
+                                        userRole,
+                                        pushLinksToDomain
+                                    });
+
+                                    if (!errorResult.shouldSkip) {
+                                        if (errorResult.errorCode === HttpErrorCode.ERROR_404) {
                                             errors.err_404 = true;
                                             error404Occured = true;
                                             error404Links.push(normalizedLink);
-                                        }
-                                        yield* subLogger.log('error: 404' + requestUrl)
-                                    }
-                                    else if (error.code === 'ERR_BAD_RESPONSE') {
-                                        if (error.response?.status == 503) {
+                                            yield* subLogger.log('error: 404 ' + requestUrl);
+                                        } else if (errorResult.errorCode === HttpErrorCode.ERROR_503) {
                                             errors.err_503 = true;
                                             error503Occured = true;
+                                            yield* subLogger.log('error: 503 ' + requestUrl);
                                         }
-                                        yield* subLogger.log('error:503' + requestUrl)
                                     }
-                                }
-                                else {
+                                } else {
                                     throw error;
                                 }
                             }
-                            yield* subLogger.log(`request time (${requestUrl}): ${new Date().getTime() - requestStartTime}`);
+                            yield* subLogger.log(`request ${requests} ${new Date().getTime() - requestStartTime}ms (${requestUrl})`);
 
-                            const strongestErrorCode = getStrongestErrorCode(errors);
-                            // await pushLink(prisma, links[i].foundOnPath, normalizedLink, warningDoubleSlash, domain.id, linkType.page, requestTime, strongestErrorCode);
-
-                            // if (pushLinksToDomain && domainId) {
-                            //     const pushLinkInput = createPushLinkInput(links[i].foundOnPath, normalizedLink, warningDoubleSlash, domainId, linkType.page, requestTime, strongestErrorCode);
-                            //     pushLinkInputs.push(pushLinkInput);
-                            // }
+                            // const strongestErrorCode = getStrongestErrorCode(errors);
 
                             if (!data) continue;
                             const $ = load(data);
@@ -193,13 +222,13 @@ export async function* recursiveCrawl(
                                 const href = $(element).attr('href');
                                 if (href) {
                                     const { normalizedLink } = analyzeLink(href, extractedDomain);
-                                    links.push({ path: normalizedLink, foundOnPath: requestUrl });
+                                    links.push({ path: normalizedLink, foundOnPath: requestUrl, ignoreCanonical: false });
                                 }
                             }
                         }
                         else {
                             // add images and documents
-                            yield* subLogger.log('push to internal links: ' + normalizedLink);
+                            // yield* subLogger.log('push to internal links: ' + normalizedLink);
                             if (pushLinksToDomain && domainId) {
                                 requestTime = new Date().getTime() - requestStartTime;
 
@@ -210,27 +239,48 @@ export async function* recursiveCrawl(
                         }
                     }
                     else {
-                        yield* subLogger.log('push to external links: ' + normalizedLink);
+                        // yield* subLogger.log('push to external links: ' + normalizedLink);
                         if (pushLinksToDomain && domainId) {
-                            // 2do: summarize promises
-                            await pushExternalLink(prisma, links[i].foundOnPath, normalizedLink, domainId);
+                            // Instead of immediate push, collect in array
+                            externalLinksToInsert.push({
+                                foundOnPath: links[i].foundOnPath,
+                                href: normalizedLink
+                            });
                         }
                     }
                 }
             }
         }
     }
+
     if (pushLinksToDomain && domainId) {
         requestStartTime = new Date().getTime();
         yield* subLogger.log(`start pushing links (${pushLinkInputs.length})`);
 
-        const promises = pushAllLinks(prisma, pushLinkInputs);
-        await Promise.all(promises);
+        // Push internal links
+        const internalPromises = pushAllLinks(prisma, pushLinkInputs);
+
+        // Push external links in batches
+        yield* subLogger.log(`filtering ${externalLinksToInsert.length} external links for unique entries`);
+
+        // Filter for unique external links based on href
+        const uniqueExternalLinks = externalLinksToInsert.reduce<{ foundOnPath: string; href: string }[]>((acc, current) => {
+            // Only add if href doesn't exist in accumulator
+            if (!acc.some(link => link.href === current.href)) {
+                acc.push(current);
+            }
+            return acc;
+        }, []);
+
+        yield* subLogger.log(`start pushing external links (${uniqueExternalLinks.length} unique from ${externalLinksToInsert.length} total)`);
+        const externalPromises = pushExternalLinks(prisma, uniqueExternalLinks, domainId);
+
+        // Wait for all pushes to complete
+        await Promise.all([...internalPromises, externalPromises]);
+
         requestTime = new Date().getTime() - requestStartTime;
-
-        yield* subLogger.log(`end pushing links (${pushLinkInputs.length}): ${new Date().getTime() - requestStartTime}`);
+        yield* subLogger.log(`end pushing all links (internal: ${pushLinkInputs.length}, external: ${externalLinksToInsert.length}): ${requestTime}ms`);
     }
-
     return {
         ...response,
         errorCount: totalErrorCount,

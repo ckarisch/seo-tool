@@ -3,12 +3,17 @@ import { ImplementationStatus, UserRole } from '@prisma/client';
 import { checkMultipleH1 } from './checks/checkMultipleH1';
 import { checkEmailExposed } from './checks/checkEmailExposed';
 
-const isDevelopment = process.env.NODE_ENV?.toLowerCase() === 'development'
+export const isDevelopment = process.env.NODE_ENV?.toLowerCase() === 'development'
     || process.env.NODE_ENV?.toLowerCase() === 'local';
 
-const isTest = isDevelopment && (
+export const isTest = isDevelopment && (
     process.env.NEXT_PUBLIC_TEST_MODE === 'true'
 );
+
+export enum HttpErrorCode {
+    ERROR_404 = 'ERROR_404',
+    ERROR_503 = 'ERROR_503'
+}
 
 interface PageCheckParams {
     data: string;
@@ -53,20 +58,31 @@ function shouldExecuteCheck(
             : implementation === 'PRODUCTION';
 
     if (!implementationAllowed) {
+        if (isDevelopment) {
+            console.log(`Skipping check - Implementation status '${implementation}' not allowed in current environment (${isTest ? 'test' : isDevelopment ? 'development' : 'production'})`);
+        }
         return false;
     }
 
     // Then check if user has sufficient privileges
-    switch (userRole) {
-        case 'ADMIN':
-            return true; // Admin can access all checks
-        case 'PREMIUM':
-            return checkUserRole !== 'ADMIN'; // Premium can access Premium and Standard checks
-        case 'STANDARD':
-            return checkUserRole === 'STANDARD'; // Standard can only access Standard checks
-        default:
-            return false;
+    const hasPermission = (() => {
+        switch (userRole) {
+            case 'ADMIN':
+                return true;
+            case 'PREMIUM':
+                return checkUserRole !== 'ADMIN';
+            case 'STANDARD':
+                return checkUserRole === 'STANDARD';
+            default:
+                return false;
+        }
+    })();
+
+    if (!hasPermission && isDevelopment) {
+        console.log(`Skipping check - User role '${userRole}' does not have permission for check requiring '${checkUserRole}' role`);
     }
+
+    return hasPermission;
 }
 
 /**
@@ -128,23 +144,65 @@ async function logError(
     }
 }
 
+/**
+ * Logs HTTP errors (404, 503) to the error log
+ */
+export async function logHttpError(
+    errorCode: HttpErrorCode,
+    params: PageCheckParams,
+    userRole: UserRole = 'STANDARD'
+): Promise<void> {
+    if (!params.domainId) return; // Skip if no domain ID (public request)
+
+    const errorType = await prisma.errorType.findFirst({
+        where: { code: errorCode },
+        select: {
+            id: true,
+            code: true,
+            implementation: true,
+            userRole: true
+        }
+    });
+
+    if (!errorType) {
+        console.error(`Error type not found for code: ${errorCode}`);
+        return;
+    }
+
+    if (!shouldExecuteCheck(errorType.implementation, errorType.userRole, userRole)) {
+        return;
+    }
+
+    const errorResult: ErrorResult = {
+        found: true,
+        details: {
+            message: errorCode === HttpErrorCode.ERROR_404
+                ? 'Page not found (404)'
+                : 'Service unavailable (503)',
+            locations: [params.url]
+        }
+    };
+
+    await logError(errorType, errorResult, params);
+}
+
 
 /**
  * Main function to run all implemented error checks
  */
 export async function runErrorChecks(
-    params: PageCheckParams, 
+    params: PageCheckParams,
     userRole: UserRole = 'STANDARD'
 ): Promise<{ results: Record<string, ErrorResult>, summary: ErrorCheckSummary }> {
     const results: Record<string, ErrorResult> = {};
     const errors: string[] = [];
     const warnings: string[] = [];
-    
+
     // Skip database operations for public requests
     if (!params.domainId) {
         const multipleH1Result = await checkMultipleH1(params.data);
         const emailExposedResult = await checkEmailExposed(params.data);
-        
+
         if (multipleH1Result.found) errors.push('MULTIPLE_H1');
         if (emailExposedResult.found) errors.push('EMAIL_EXPOSED');
 
@@ -183,7 +241,7 @@ export async function runErrorChecks(
                     result = await checkMultipleH1(params.data);
                     results.multipleH1Result = result;
                     if (result.found) {
-                        errorType.severity === 'HIGH' || errorType.severity === 'CRITICAL' 
+                        errorType.severity === 'HIGH' || errorType.severity === 'CRITICAL'
                             ? errors.push(errorType.code)
                             : warnings.push(errorType.code);
                     }

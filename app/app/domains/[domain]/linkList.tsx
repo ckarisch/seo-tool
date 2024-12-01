@@ -48,6 +48,8 @@ export default function LinkList({ params, linksFetchTag, domainFetchTag }: {
     });
 
     const [linksJson, setLinksJson] = useState(defaultLinksState);
+    const [hide404, setHide404] = useState(false);
+    const [hide503, setHide503] = useState(false);
 
     useEffect(() => {
         if (status !== "loading") {
@@ -88,11 +90,14 @@ export default function LinkList({ params, linksFetchTag, domainFetchTag }: {
         );
     }
 
-    const handleLinkClick = ($e: React.MouseEvent<HTMLDivElement>, index: number): void => {
+    const handleLinkClick = ($e: React.MouseEvent<HTMLDivElement>, linkPath: string): void => {
         if (linksJson.links) {
             const tempLinks = linksJson.links;
-            tempLinks[index].descriptionVisible = !tempLinks[index].descriptionVisible;
-            setLinksJson({ ...linksJson, links: tempLinks });
+            const linkIndex = tempLinks.findIndex(link => link.path === linkPath);
+            if (linkIndex !== -1) {
+                tempLinks[linkIndex].descriptionVisible = !tempLinks[linkIndex].descriptionVisible;
+                setLinksJson({ ...linksJson, links: tempLinks });
+            }
         }
     };
 
@@ -104,16 +109,49 @@ export default function LinkList({ params, linksFetchTag, domainFetchTag }: {
         }
     };
 
+    const filteredLinks = linksJson.links.filter(link => {
+        if (hide404 && link.errorLogs.some(log =>
+            log.errorType.code === 'ERROR_404')) {
+            return false;
+        }
+        if (hide503 && link.errorLogs.some(log =>
+            log.errorType.code === 'ERROR_503')) {
+            return false;
+        }
+        return true;
+    });
+
     return (
         <div className={styles.sectionContainer}>
-            <MinimizableContainer title={`Links (${linksJson.links.length})`}>
+            <MinimizableContainer title={`Links (${filteredLinks.length})`}>
+                <div className={styles.filterContainer}>
+                    <button
+                        className={[
+                            styles.filterButton,
+                            hide404 ? styles.active : ''
+                        ].join(' ')}
+                        onClick={() => setHide404(!hide404)}
+                    >
+                        Hide 404 Errors
+                    </button>
+                    <button
+                        className={[
+                            styles.filterButton,
+                            hide503 ? styles.active : ''
+                        ].join(' ')}
+                        onClick={() => setHide503(!hide503)}
+                    >
+                        Hide 503 Errors
+                    </button>
+                </div>
                 <div className={styles.links}>
-                    {linksJson.links.map((link: UILink, index: number) => {
+
+                    {filteredLinks.map((link: UILink) => {
                         const highestSeverity = getHighestSeverity(link.errorLogs);
 
                         return (
                             <div
-                                key={index}
+                                key={link.path}
                                 className={[
                                     styles.linkInner,
                                     link.warningDoubleSlash ? styles.warning : '',
@@ -122,7 +160,7 @@ export default function LinkList({ params, linksFetchTag, domainFetchTag }: {
                             >
                                 <div
                                     className={styles.linkHeading}
-                                    onClick={($e) => handleLinkClick($e, index)}
+                                    onClick={($e) => handleLinkClick($e, link.path)}
                                 >
                                     <div className={styles.linkHeadingMain}>
                                         {highestSeverity && (

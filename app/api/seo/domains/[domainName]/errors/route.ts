@@ -67,7 +67,7 @@ export async function GET(
     const errorLogs = await prisma.errorLog.findMany({
       where: {
         domainId: domain.id,
-        createdAt: {
+        lastOccurrence: {
           gte: startDate,
           lte: now
         }
@@ -76,7 +76,7 @@ export async function GET(
         errorType: true
       },
       orderBy: {
-        createdAt: 'desc'
+        lastOccurrence: 'desc'
       }
     });
 
@@ -101,14 +101,14 @@ export async function GET(
       by: ['errorTypeId'],
       where: {
         domainId: domain.id,
-        createdAt: {
+        lastOccurrence: {
           gte: startDate,
           lte: now
         }
       },
       _count: true,
       _max: {
-        createdAt: true
+        lastOccurrence: true
       },
       orderBy: [
         {
@@ -133,7 +133,7 @@ export async function GET(
           category: errorType?.category || 'Unknown',
           severity: errorType?.severity || Severity.LOW,
           count: error._count,
-          lastOccurrence: error._max.createdAt
+          lastOccurrence: error._max.lastOccurrence
         };
       })
     );

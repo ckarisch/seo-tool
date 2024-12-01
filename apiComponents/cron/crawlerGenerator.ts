@@ -145,7 +145,7 @@ export async function* crawlerGenerator(
             " minutes ago"
         );
 
-        const depth = 2;
+        const depth = 1;
         const followLinks = true;
 
         timePassed = new Date().getTime() - crawlerStartTime;

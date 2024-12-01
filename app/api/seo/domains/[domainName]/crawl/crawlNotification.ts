@@ -36,12 +36,12 @@ export const sendMessageTemplate = (
     subject: string
 ) => {
     return {
-        from: "SEO Notification <notification@formundzeichen.at>",
+        from: "Rankidang Notification <info@notification.rankidang.com>",
         to: [toEmail], // list of receivers
         subject,
         text: messageHtml,
         html: messageHtml,
-        replyTo: 'notification@formundzeichen.at'
+        replyTo: 'info@notification.rankidang.com'
     } as MailOptions;
 };
 

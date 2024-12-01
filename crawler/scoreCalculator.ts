@@ -90,7 +90,6 @@ async function aggregateErrorLogs(domainId: string, onlyNotNotified = false) {
     return result;
 }
 
-// Updated score calculation function
 function calculateScore(metrics: QuickAnalysisMetrics, errors: ErrorLogWithDetails[]): number {
     let score = 0;
     let factors = 0;

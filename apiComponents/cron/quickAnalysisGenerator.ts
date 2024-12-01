@@ -214,11 +214,6 @@ export async function* quickAnalysisGenerator(
 
                 // Get aggregated errors and calculate scores
                 const aggregatedErrors = await aggregateErrorLogs(domain.id);
-                console.log('Raw aggregated errors:', aggregatedErrors.map(e => ({
-                    id: e.id,
-                    path: e.internalLink?.path,
-                    type: e.errorType.code
-                })));
                 aggregatedMetrics.errors = aggregatedErrors.length;  // Update error count based on actual errors
                 console.log('aggregatedErrors.length', aggregatedErrors.length)
                 const finalScore = calculateScore(aggregatedMetrics, aggregatedErrors);

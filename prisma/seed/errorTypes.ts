@@ -63,7 +63,7 @@ export const errorTypes: ErrorTypeDefinition[] = [
         code: 'MULTIPLE_H1',
         name: 'Multiple H1 Tags Found',
         category: 'SEO',
-        severity: 'HIGH',
+        severity: 'MEDIUM',
     },
     {
         code: 'MISSING_H1',
