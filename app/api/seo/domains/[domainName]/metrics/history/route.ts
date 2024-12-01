@@ -12,7 +12,7 @@ export async function GET(
 ) {
   try {
     const session = await getServerSession(authOptions);
-    
+
     if (!session?.user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -29,9 +29,7 @@ export async function GET(
           gte: thirtyDaysAgo,
         },
       },
-      orderBy: {
-        timestamp: 'asc',
-      },
+      // Remove the orderBy clause
       select: {
         timestamp: true,
         score: true,
@@ -39,9 +37,14 @@ export async function GET(
       },
     });
 
+    // Sort in JavaScript instead
+    const sortedMetrics = metrics.sort((a, b) =>
+      new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+    );
+
     // Create a map of dates to ensure we have entries for all days
     const dateMap = new Map();
-    
+
     // Initialize the date range
     let currentDate = thirtyDaysAgo;
     while (currentDate <= new Date()) {
@@ -56,10 +59,10 @@ export async function GET(
     }
 
     // Process metrics and update the map
-    metrics.forEach(metric => {
+    sortedMetrics.forEach(metric => {
       const dateKey = format(metric.timestamp, 'yyyy-MM-dd');
       let entry = dateMap.get(dateKey);
-      
+
       if (!entry) {
         entry = {
           date: dateKey,
@@ -91,19 +94,19 @@ export async function GET(
 
     // Remove trailing days with no data
     let lastDataIndex = formattedMetrics.length - 1;
-    while (lastDataIndex >= 0 && 
-           !formattedMetrics[lastDataIndex].domainScore && 
-           !formattedMetrics[lastDataIndex].performanceScore && 
-           !formattedMetrics[lastDataIndex].quickCheckScore) {
+    while (lastDataIndex >= 0 &&
+      !formattedMetrics[lastDataIndex].domainScore &&
+      !formattedMetrics[lastDataIndex].performanceScore &&
+      !formattedMetrics[lastDataIndex].quickCheckScore) {
       lastDataIndex--;
     }
 
     // Remove leading days with no data
     let firstDataIndex = 0;
-    while (firstDataIndex < formattedMetrics.length && 
-           !formattedMetrics[firstDataIndex].domainScore && 
-           !formattedMetrics[firstDataIndex].performanceScore && 
-           !formattedMetrics[firstDataIndex].quickCheckScore) {
+    while (firstDataIndex < formattedMetrics.length &&
+      !formattedMetrics[firstDataIndex].domainScore &&
+      !formattedMetrics[firstDataIndex].performanceScore &&
+      !formattedMetrics[firstDataIndex].quickCheckScore) {
       firstDataIndex++;
     }
 
