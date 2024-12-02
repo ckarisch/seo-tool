@@ -1,6 +1,8 @@
 import { ErrorLog, Prisma, Severity } from '@prisma/client';
 import { consolidatedCrawlNotification, crawlNotificationType } from '@/mail/EnhancedEmailer';
 import { prisma } from '@/lib/prisma';
+import { error } from 'console';
+import { JsonValue } from '@prisma/client/runtime/library';
 
 interface QuickAnalysisMetrics {
     loadTime: number;
@@ -274,34 +276,29 @@ export async function checkErrorChanges(
     });
 
     // Filter resolved errors in JavaScript
-    const filteredResolvedErrors = resolvedErrorLogs.filter(error => 
-        !!error.resolvedAt && 
+    const filteredResolvedErrors = resolvedErrorLogs.filter(error =>
+        !!error.resolvedAt &&
         !error.resolutionNotified
     );
-
-    // Helper function to clean and format URLs
-    const formatUrl = (path: string | undefined, domainName: string): string => {
-        let cleanPath = path || '';
-        if (cleanPath.startsWith(domainName)) {
-            cleanPath = cleanPath.substring(domainName.length);
-        }
-        if (!cleanPath.startsWith('/')) {
-            cleanPath = '/' + cleanPath;
-        }
-        return `https://${domainName}${cleanPath}`;
-    };
 
     // Convert current errors to a comparable format
     const currentErrorMap = new Map(
         currentErrors.map(error => {
             const url = error.internalLink?.path; // internalLink.path includes domain
+            if (!error.internalLink) {
+                console.log('internalLink not found');
+            }
+            else if (!error.internalLink.path) {
+                console.log('internalLink path not found');
+            }
+            const errorMetadata: JsonValue & { url?: string } = error.metadata ?? { url: undefined };
             return [
                 `${error.errorType.code}_${url}`,
                 {
                     id: error.id,
                     type: error.errorType.code,
                     message: error.errorType.name,
-                    url: url ?? '',
+                    url: url ?? errorMetadata.url ?? '',
                     severity: error.errorType.severity,
                     category: error.errorType.category
                 }
@@ -314,14 +311,24 @@ export async function checkErrorChanges(
         .map(([_, error]) => error);
 
     // Format resolved errors
-    const resolvedErrors = filteredResolvedErrors.map(error => ({
-        id: error.id,
-        type: error.errorType.code,
-        message: error.errorType.name,
-        url: error.internalLink?.path ?? '',
-        severity: error.errorType.severity,
-        category: error.errorType.category
-    }));
+    const resolvedErrors = filteredResolvedErrors.map(error => {
+        const url = error.internalLink?.path; // internalLink.path includes domain
+        if (!error.internalLink) {
+            console.log('internalLink not found (resolved error)');
+        }
+        else if (!error.internalLink.path) {
+            console.log('internalLink path not found (resolved error)');
+        }
+        const errorMetadata: JsonValue & { url?: string } = error.metadata ?? { url: undefined };
+        return {
+            id: error.id,
+            type: error.errorType.code,
+            message: error.errorType.name,
+            url: url ?? errorMetadata.url ?? '',
+            severity: error.errorType.severity,
+            category: error.errorType.category
+        }
+    });
 
     console.log('Current errors:', currentErrorMap.size);
     console.log('New errors:', newErrors.length);
@@ -390,7 +397,7 @@ export async function sendErrorChangeNotification(
             }
         });
         const resolvedErrorIds = changes.resolved.map(error => error.id);
-        
+
         // Update all resolved errors to set resolutionNotified to true
         await prisma.errorLog.updateMany({
             where: {
