@@ -156,7 +156,8 @@ export async function* recursiveCrawl(
                                 err_503: false
                             }
 
-                            let data
+                            let data;
+                            requestTime = 0; // set to 0 in case of error
 
                             try {
                                 timePassed = (new Date().getTime() - crawlStartTime);
