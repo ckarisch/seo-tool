@@ -39,7 +39,7 @@ export async function* crawlDomain(
     }
     const url = domain.domainName ?? '';
     logger = createLogger('CRAWL ' + url);
-    
+
     if (!domain.id || !domain.domainName || url === '') {
         yield* logger.log('error: domain fields not found');
         return { error: 'domain fields not found' };
@@ -184,10 +184,7 @@ export async function* crawlDomain(
         analyzedUrl = analyzeLink(targetURL, targetURL);
         extractedDomain = analyzedUrl.linkDomain;
         yield* logger.log(`now using finalURL ${targetURL}`);
-        const analyzedFinalUrl = analyzeLink(finalURL, extractedDomain);
-
-        const internalLink = await pushLink(prisma, '/', analyzedFinalUrl.normalizedLink, false, domain.id, linkType.page, requestTime, null);
-
+        
         if (!followLinks) {
             await prisma.domainCrawl.update({
                 where: { id: domainCrawl.id },
@@ -206,6 +203,7 @@ export async function* crawlDomain(
             return { links: [] };
         }
 
+        links.push({ foundOnPath: '', ignoreCanonical: false, path: targetURL });
         links.push(...extractLinks(data, targetURL, targetURL));
         yield* logger.log('start recursive crawl');
 
