@@ -40,29 +40,42 @@ export async function handleHttpError({
     pushLinksToDomain
 }: HttpErrorHandlingParams): Promise<HttpErrorResult> {
     // Determine error type based on status code
-    const errorCode = error.response?.status === 404 
-        ? HttpErrorCode.ERROR_404 
-        : error.response?.status === 503 
-            ? HttpErrorCode.ERROR_503 
-            : undefined;
+    const statusCode = error.response?.status;
+    let errorCode: HttpErrorCode;
 
-    if (!errorCode) {
-        return { shouldSkip: true, errorLogged: false };
+    switch (statusCode) {
+        case 404:
+            errorCode = HttpErrorCode.ERROR_404;
+            break;
+        case 503:
+            errorCode = HttpErrorCode.ERROR_503;
+            break;
+        case 500:
+            errorCode = HttpErrorCode.ERROR_500;
+            break;
+        case 403:
+            errorCode = HttpErrorCode.ERROR_403;
+            break;
+        case 301:
+            errorCode = HttpErrorCode.ERROR_301;
+            break;
+        default:
+            errorCode = HttpErrorCode.ERROR_UNKNOWN;
     }
 
     // Get error type configuration
     const errorType = await prisma.errorType.findFirst({
         where: { code: errorCode },
         select: {
+            id: true,
+            code: true,
             implementation: true,
             userRole: true
         }
     });
 
     if (!errorType) {
-        if (isDevelopment) {
-            console.log(`Error type not found for code: ${errorCode}`);
-        }
+        console.log(`Error type not found for code: ${errorCode}`);
         return { shouldSkip: true, errorLogged: false };
     }
 
@@ -87,15 +100,13 @@ export async function handleHttpError({
         }
     })();
 
-    // Log skip reasons in development
+    // Log skip reasons if applicable
     if (!implementationAllowed || !hasPermission) {
-        if (isDevelopment) {
-            if (!implementationAllowed) {
-                console.log(`Skipping error check and push - Implementation status '${errorType.implementation}' not allowed in current environment (${isTest ? 'test' : isDevelopment ? 'development' : 'production'})`);
-            }
-            if (!hasPermission) {
-                console.log(`Skipping error check and push - User role '${userRole}' does not have permission for check requiring '${errorType.userRole}' role`);
-            }
+        if (!implementationAllowed) {
+            console.log(`Skipping error check and push - Implementation status '${errorType.implementation}' not allowed in current environment (${isTest ? 'test' : isDevelopment ? 'development' : 'production'})`);
+        }
+        if (!hasPermission) {
+            console.log(`Skipping error check and push - User role '${userRole}' does not have permission for check requiring '${errorType.userRole}' role`);
         }
         return { shouldSkip: true, errorLogged: false };
     }
@@ -103,34 +114,48 @@ export async function handleHttpError({
     // Push link if permissions allow
     let internalLinkId: string | undefined;
     if (pushLinksToDomain && domainId) {
-        const internalLink = await pushLink(
-            prisma,
-            foundOnPath,
-            normalizedLink,
-            false,
-            domainId,
-            linkType.page,
-            requestTime,
-            null
-        );
-        internalLinkId = internalLink.id;
+        try {
+            const internalLink = await pushLink(
+                prisma,
+                foundOnPath,
+                normalizedLink,
+                false,
+                domainId,
+                linkType.page,
+                requestTime,
+                null
+            );
+            internalLinkId = internalLink.id;
+        } catch (err) {
+            console.error('Failed to push link:', err);
+        }
     }
 
     // Log error if we have necessary IDs
     let errorLogged = false;
-    if (domainId && internalLinkId) {
-        await logHttpError(
-            errorCode,
-            {
-                data: '',
-                domainId,
-                internalLinkId,
-                domainCrawlId,
-                url: requestUrl
-            },
-            userRole
-        );
-        errorLogged = true;
+    if (domainId) {
+        try {
+            await logHttpError(
+                errorCode,
+                {
+                    data: errorCode === HttpErrorCode.ERROR_UNKNOWN 
+                        ? JSON.stringify({ 
+                            statusCode,
+                            message: error.message,
+                            stack: error.stack 
+                        })
+                        : '',
+                    domainId,
+                    internalLinkId,
+                    domainCrawlId,
+                    url: requestUrl
+                },
+                userRole
+            );
+            errorLogged = true;
+        } catch (err) {
+            console.error('Failed to log error:', err);
+        }
     }
 
     return {

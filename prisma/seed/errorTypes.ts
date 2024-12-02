@@ -57,7 +57,12 @@ export const errorTypes: ErrorTypeDefinition[] = [
         category: 'HTTP',
         severity: 'MEDIUM',
     },
-
+    {
+        code: 'ERROR_UNKNOWN',
+        name: 'Unknown HTTP Error',
+        category: 'HTTP',
+        severity: 'HIGH'
+    },
     // SEO Structure Errors
     {
         code: 'MULTIPLE_H1',

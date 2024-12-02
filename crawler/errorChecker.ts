@@ -12,7 +12,11 @@ export const isTest = isDevelopment && (
 
 export enum HttpErrorCode {
     ERROR_404 = 'ERROR_404',
-    ERROR_503 = 'ERROR_503'
+    ERROR_503 = 'ERROR_503',
+    ERROR_500 = 'ERROR_500',
+    ERROR_403 = 'ERROR_403',
+    ERROR_301 = 'ERROR_301',
+    ERROR_UNKNOWN = 'ERROR_UNKNOWN'
 }
 
 interface PageCheckParams {
@@ -29,13 +33,15 @@ export interface ErrorResult {
         count?: number;
         locations?: string[];
         message?: string;
+        statusCode?: number;
+        stack?: string;
     };
 }
 
 export interface ErrorCheckSummary {
-    errorCount: number;     // Count of different error types found
-    warningCount: number;   // Count of different warning types found
-    details?: {            // Only included for authenticated users
+    errorCount: number;
+    warningCount: number;
+    details?: {
         errors?: string[];
         warnings?: string[];
     };
@@ -58,9 +64,7 @@ function shouldExecuteCheck(
             : implementation === 'PRODUCTION';
 
     if (!implementationAllowed) {
-        if (isDevelopment) {
-            console.log(`Skipping check - Implementation status '${implementation}' not allowed in current environment (${isTest ? 'test' : isDevelopment ? 'development' : 'production'})`);
-        }
+        console.log(`Skipping check - Implementation status '${implementation}' not allowed in current environment (${isTest ? 'test' : isDevelopment ? 'development' : 'production'})`);
         return false;
     }
 
@@ -78,7 +82,7 @@ function shouldExecuteCheck(
         }
     })();
 
-    if (!hasPermission && isDevelopment) {
+    if (!hasPermission) {
         console.log(`Skipping check - User role '${userRole}' does not have permission for check requiring '${checkUserRole}' role`);
     }
 
@@ -111,7 +115,11 @@ async function logError(
             where: { id: existingError.id },
             data: {
                 occurrence: { increment: 1 },
-                lastOccurrence: now
+                lastOccurrence: now,
+                metadata: {
+                    url,
+                    ...errorResult.details
+                }
             }
         });
         return;
@@ -138,14 +146,31 @@ async function logError(
     }
 
     await prisma.errorLog.create({ data: createData });
+    console.log(`[${errorType.implementation}] [${errorType.userRole}] Logged error: ${errorType.code}`);
+}
 
-    if (isDevelopment) {
-        console.log(`[${errorType.implementation}] [${errorType.userRole}] Logged error: ${errorType.code}`);
+/**
+ * Gets error message based on HTTP error code
+ */
+function getHttpErrorMessage(errorCode: HttpErrorCode): string {
+    switch (errorCode) {
+        case HttpErrorCode.ERROR_404:
+            return 'Page not found (404)';
+        case HttpErrorCode.ERROR_503:
+            return 'Service unavailable (503)';
+        case HttpErrorCode.ERROR_500:
+            return 'Internal server error (500)';
+        case HttpErrorCode.ERROR_403:
+            return 'Forbidden access (403)';
+        case HttpErrorCode.ERROR_301:
+            return 'Permanent redirect chain (301)';
+        case HttpErrorCode.ERROR_UNKNOWN:
+            return 'Unknown HTTP error';
     }
 }
 
 /**
- * Logs HTTP errors (404, 503) to the error log
+ * Logs HTTP errors to the error log
  */
 export async function logHttpError(
     errorCode: HttpErrorCode,
@@ -176,16 +201,14 @@ export async function logHttpError(
     const errorResult: ErrorResult = {
         found: true,
         details: {
-            message: errorCode === HttpErrorCode.ERROR_404
-                ? 'Page not found (404)'
-                : 'Service unavailable (503)',
-            locations: [params.url]
+            message: getHttpErrorMessage(errorCode),
+            locations: [params.url],
+            ...params.data ? JSON.parse(params.data) : {}
         }
     };
 
     await logError(errorType, errorResult, params);
 }
-
 
 /**
  * Main function to run all implemented error checks
