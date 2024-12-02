@@ -75,45 +75,61 @@ export async function* crawlerGenerator(
       continue;
     }
 
+    // Check for partial crawl
+    const partialCrawl = await prisma.domainCrawl.findFirst({
+      where: {
+        domainId: domain.id,
+        isPartial: true,
+        status: 'partial'
+      },
+      orderBy: {
+        startTime: 'desc'
+      }
+    });
+
     let domainInterval = fallbackInterval;
-
-    /* subfunction */
-    const generateInterval = domainIntervalGenerator(
-      domain.user.role,
-      domain,
-      cron,
-      fallbackInterval
-    );
-
-    let lighthouseIteratorResult: IteratorResult<
-      LogEntry,
-      domainIntervalResponse
-    >;
-    do {
-      lighthouseIteratorResult = await generateInterval.next();
-      if (!lighthouseIteratorResult.done) {
-        yield lighthouseIteratorResult.value;
-      }
-    } while (!lighthouseIteratorResult.done);
-
-    domainInterval = lighthouseIteratorResult.value.domainInterval;
-    /* end subfunction */
-
     let diffMinutes = 0;
-    if (domainInterval > 0) {
-      let lastCrawl = domain.lastCrawl;
-      if (!lastCrawl) {
-        lastCrawl = new Date("01-01-1970");
-      }
-      const now = new Date();
-      const diff = now.getTime() - lastCrawl.getTime();
-      diffMinutes = Math.floor(diff / 60000);
-    } else {
-      yield* mainLogger.log(
-        "❗ auto crawl: " + domain.domainName + " has no crawl interval"
+
+    // Only check interval if there's no partial crawl
+    if (!partialCrawl) {
+      /* subfunction */
+      const generateInterval = domainIntervalGenerator(
+        domain.user.role,
+        domain,
+        cron,
+        fallbackInterval
       );
-      break;
+
+      let lighthouseIteratorResult: IteratorResult<
+        LogEntry,
+        domainIntervalResponse
+      >;
+      do {
+        lighthouseIteratorResult = await generateInterval.next();
+        if (!lighthouseIteratorResult.done) {
+          yield lighthouseIteratorResult.value;
+        }
+      } while (!lighthouseIteratorResult.done);
+
+      domainInterval = lighthouseIteratorResult.value.domainInterval;
+      /* end subfunction */
+
+      if (domainInterval > 0) {
+        let lastCrawl = domain.lastCrawl;
+        if (!lastCrawl) {
+          lastCrawl = new Date("01-01-1970");
+        }
+        const now = new Date();
+        const diff = now.getTime() - lastCrawl.getTime();
+        diffMinutes = Math.floor(diff / 60000);
+      } else {
+        yield* mainLogger.log(
+          "❗ auto crawl: " + domain.domainName + " has no crawl interval"
+        );
+        break;
+      }
     }
+
     if (!domain.domainVerified) {
       if (domain.user.role === UserRole.ADMIN) {
         yield* mainLogger.log(
@@ -121,13 +137,13 @@ export async function* crawlerGenerator(
         );
       } else {
         yield* mainLogger.log(
-          `❌ not verified: domain ${domain.domainName} (${diffMinutes} / ${domainInterval} m)`
+          `❌ not verified: domain ${domain.domainName} ${!partialCrawl ? `(${diffMinutes} / ${domainInterval} m)` : '(partial crawl)'}`
         );
         continue;
       }
     }
     yield* mainLogger.log(
-      `✅ domain ${domain.domainName}: verified (${diffMinutes} / ${domainInterval} m)`
+      `✅ domain ${domain.domainName}: verified ${!partialCrawl ? `(${diffMinutes} / ${domainInterval} m)` : '(partial crawl)'}`
     );
 
     if (domain.crawlStatus === "crawling") {
@@ -135,8 +151,6 @@ export async function* crawlerGenerator(
         domain.lastCrawl &&
         Date.now() - domain.lastCrawl.getTime() > resetCrawlTime
       ) {
-        // reset domain crawl status, when it was remains in that status for a long time
-        // this can happen on route timeouts while crawling
         console.error(
           `➝  crawling status of domain ${domain.name} (${domain.domainName}) reset`
         );
@@ -150,78 +164,72 @@ export async function* crawlerGenerator(
       );
       continue;
     }
-    if (domain.crawlEnabled) {
-      yield* mainLogger.log(`➝  domain ${domain.domainName}: crawl enabled`);
 
-      if (diffMinutes >= domainInterval) {
-        yield* mainLogger.log(
-          "➝  auto crawl: " +
-          domain.domainName +
-          " last crawl was " +
-          diffMinutes +
-          " / " +
-          domainInterval +
-          " minutes ago"
-        );
+    // Proceed with crawl if there's a partial crawl or if the interval check passes
+    if (partialCrawl || (domain.crawlEnabled && diffMinutes >= domainInterval)) {
+      yield* mainLogger.log(
+        partialCrawl
+          ? `➝  auto crawl: ${domain.domainName} continuing partial crawl`
+          : `➝  auto crawl: ${domain.domainName} last crawl was ${diffMinutes} / ${domainInterval} minutes ago`
+      );
 
-        const depth = 1;
-        const followLinks = true;
+      const depth = 1;
+      const followLinks = true;
 
-        timePassed = new Date().getTime() - crawlerStartTime;
-        timeLeft = maxExecutionTime - timePassed;
-        yield* mainLogger.log(`➝  domain ${domain.domainName}: start (${timeLeft}ms left)`);
-        yield* mainLogger.log(`➝  name ${domain.name}`);
+      timePassed = new Date().getTime() - crawlerStartTime;
+      timeLeft = maxExecutionTime - timePassed;
+      yield* mainLogger.log(`➝  domain ${domain.domainName}: start (${timeLeft}ms left)`);
+      yield* mainLogger.log(`➝  name ${domain.name}`);
 
-        /* subfunction */
-        const subfunctionGenerator = crawlDomain(
-          domain,
-          depth,
-          followLinks,
-          timeLeft,
-          true
-        );
+      /* subfunction */
+      const subfunctionGenerator = crawlDomain(
+        domain,
+        depth,
+        followLinks,
+        timeLeft,
+        true
+      );
 
-        let result: IteratorResult<LogEntry, crawlDomainResponse>;
-        do {
-          result = await subfunctionGenerator.next();
-          if (!result.done) {
-            yield result.value;
-          }
-        } while (!result.done);
+      let result: IteratorResult<LogEntry, crawlDomainResponse>;
+      do {
+        result = await subfunctionGenerator.next();
+        if (!result.done) {
+          yield result.value;
+        }
+      } while (!result.done);
 
-        let subfunctionResult: crawlDomainResponse | undefined = undefined;
-        subfunctionResult = result.value;
-        /* end subfunction */
+      let subfunctionResult: crawlDomainResponse | undefined = undefined;
+      subfunctionResult = result.value;
+      /* end subfunction */
 
-        yield* mainLogger.log("➝  " + domain.domainName + " crawl ended");
+      yield* mainLogger.log("➝  " + domain.domainName + " crawl ended");
 
-        domainsCrawled += 1;
+      domainsCrawled += 1;
 
-        await prisma.adminLog.create({
-          data: {
-            createdAt: new Date(),
-            message: `domain ${domain.domainName} crawled (score: ${(domain.score ? domain.score : 0) * 100
-              }), host: ${host}`,
-            domainId: domain.id,
-            userId: domain.userId,
-          },
-        });
+      await prisma.adminLog.create({
+        data: {
+          createdAt: new Date(),
+          message: `domain ${domain.domainName} crawled (score: ${(domain.score ? domain.score : 0) * 100
+            }), host: ${host}`,
+          domainId: domain.id,
+          userId: domain.userId,
+        },
+      });
 
-        yield* mainLogger.log(
-          `➝  domain ${domain.domainName}: end (crawled = ${domainsCrawled})`
-        );
-        continue;
-      } else {
-        yield* mainLogger.log(
-          "➥  skip auto crawl: " +
-          domain.domainName +
-          " last crawl was " +
-          diffMinutes +
-          " / " +
-          domainInterval +
-          " minutes ago"
-        );
-      }
+      yield* mainLogger.log(
+        `➝  domain ${domain.domainName}: end (crawled = ${domainsCrawled})`
+      );
+      continue;
+    } else {
+      yield* mainLogger.log(
+        "➥  skip auto crawl: " +
+        domain.domainName +
+        " last crawl was " +
+        diffMinutes +
+        " / " +
+        domainInterval +
+        " minutes ago"
+      );
     }
   }
 }
