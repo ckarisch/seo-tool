@@ -50,6 +50,7 @@ export default function LinkList({ params, linksFetchTag, domainFetchTag }: {
     const [linksJson, setLinksJson] = useState(defaultLinksState);
     const [hide404, setHide404] = useState(false);
     const [hide503, setHide503] = useState(false);
+    const [hiddenLanguages, setHiddenLanguages] = useState<string[]>([]);
 
     const has404Errors = linksJson.links?.some(link =>
         link.errorLogs.some(log => log.errorType.code === 'ERROR_404')
@@ -58,6 +59,31 @@ export default function LinkList({ params, linksFetchTag, domainFetchTag }: {
     const has503Errors = linksJson.links?.some(link =>
         link.errorLogs.some(log => log.errorType.code === 'ERROR_503')
     );
+
+    const errorCounts = {
+        error404: (linksJson.links ?? []).filter(link =>
+            link.errorLogs.some(log => log.errorType.code === 'ERROR_404')
+        ).length,
+        error503: (linksJson.links ?? []).filter(link =>
+            link.errorLogs.some(log => log.errorType.code === 'ERROR_503')
+        ).length
+    };
+
+    const getLangCounts = (links: UILink[]): Record<string, number> => {
+        return links.reduce((acc, link) => {
+            if (link.language) {
+                acc[link.language] = (acc[link.language] || 0) + 1;
+            }
+            return acc;
+        }, {} as Record<string, number>);
+    };
+
+    const getUniqueLanguages = (links: UILink[]): string[] => {
+        const languages = links
+            .map(link => link.language)
+            .filter((lang): lang is string => !!lang); // Filter out null/undefined
+        return [...new Set(languages)].sort();
+    };
 
     useEffect(() => {
         if (status !== "loading") {
@@ -76,19 +102,18 @@ export default function LinkList({ params, linksFetchTag, domainFetchTag }: {
                         {dummyLinks.map((link: any, index: number) => (
                             <div key={index}>
                                 <div className={styles.linkInner}>
-                                    {link.path}, {link.lastCheck}, {link.lastLoadTime}
                                 </div>
                             </div>
                         ))}
                     </div>
                 </MinimizableContainer>
 
-                <MinimizableContainer title="External Links">
+                <MinimizableContainer title="External Links"
+                    initiallyMinimized={true}>
                     <div className={styles.links}>
                         {dummyExternalLinks.map((link: any, index: number) => (
                             <div key={index}>
                                 <div className={styles.linkInner}>
-                                    {link.url}, {link.lastCheck}, {link.lastLoadTime}
                                 </div>
                             </div>
                         ))}
@@ -118,12 +143,13 @@ export default function LinkList({ params, linksFetchTag, domainFetchTag }: {
     };
 
     const filteredLinks = linksJson.links.filter(link => {
-        if (hide404 && link.errorLogs.some(log =>
-            log.errorType.code === 'ERROR_404')) {
+        if (hide404 && link.errorLogs.some(log => log.errorType.code === 'ERROR_404')) {
             return false;
         }
-        if (hide503 && link.errorLogs.some(log =>
-            log.errorType.code === 'ERROR_503')) {
+        if (hide503 && link.errorLogs.some(log => log.errorType.code === 'ERROR_503')) {
+            return false;
+        }
+        if (link.language && hiddenLanguages.includes(link.language)) {
             return false;
         }
         return true;
@@ -141,7 +167,7 @@ export default function LinkList({ params, linksFetchTag, domainFetchTag }: {
                             ].join(' ')}
                             onClick={() => setHide404(!hide404)}
                         >
-                            Hide 404 Errors
+                            Hide 404 Errors ({errorCounts.error404})
                         </button>
                     )}
                     {has503Errors && (
@@ -152,9 +178,30 @@ export default function LinkList({ params, linksFetchTag, domainFetchTag }: {
                             ].join(' ')}
                             onClick={() => setHide503(!hide503)}
                         >
-                            Hide 503 Errors
+                            Hide 503 Errors ({errorCounts.error503})
                         </button>
                     )}
+                    {getUniqueLanguages(linksJson.links).map(lang => {
+                        const count = getLangCounts(linksJson.links ?? [])[lang];
+                        return (
+                            <button
+                                key={lang}
+                                className={[
+                                    styles.filterButton,
+                                    hiddenLanguages.includes(lang) ? styles.active : ''
+                                ].join(' ')}
+                                onClick={() => {
+                                    setHiddenLanguages(prev =>
+                                        prev.includes(lang)
+                                            ? prev.filter(l => l !== lang)
+                                            : [...prev, lang]
+                                    )
+                                }}
+                            >
+                                Hide {lang} ({count})
+                            </button>
+                        );
+                    })}
                 </div>
                 <div className={styles.links}>
 
@@ -255,7 +302,8 @@ export default function LinkList({ params, linksFetchTag, domainFetchTag }: {
                 </div>
             </MinimizableContainer>
 
-            <MinimizableContainer title={`External Links (${linksJson.externalLinks?.length})`}>
+            <MinimizableContainer title={`External Links (${linksJson.externalLinks?.length})`}
+                initiallyMinimized={true}>
                 <div className={styles.links}>
                     {linksJson.externalLinks && linksJson.externalLinks.map((link: any, index: number) => (
                         <div

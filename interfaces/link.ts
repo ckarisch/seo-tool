@@ -27,6 +27,7 @@ export interface UILink extends InternalLink {
     errorCode: number | null;
     foundOnPath: string | null;
     warningDoubleSlash: boolean | null;
+    language: string | null;
 }
 interface UIExternalLink extends ExternalLink {
     descriptionVisible?: boolean;

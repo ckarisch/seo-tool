@@ -3,10 +3,11 @@ import { JsonObject } from "@prisma/client/runtime/library";
 
 export enum linkType {
     anchor,
-    page
+    page,
+    file
 }
 
-export const createPushLinkInput = (foundOnPath: string, href: string, warningDoubleSlash: boolean, domainId: string, type: linkType, requestTime: number, errorCode: errorTypes | null): Prisma.InternalLinkUpsertArgs => {
+export const createPushLinkInput = (foundOnPath: string, href: string, warningDoubleSlash: boolean, domainId: string, type: linkType, requestTime: number, errorCode: errorTypes | null, language: string | null): Prisma.InternalLinkUpsertArgs => {
     return {
         create: {
             foundOnPath,
@@ -20,7 +21,8 @@ export const createPushLinkInput = (foundOnPath: string, href: string, warningDo
             lastLoadTime: requestTime,
             type: linkType[type],
             errorCode,
-            warningDoubleSlash
+            warningDoubleSlash,
+            language
         },
         update: {
             foundOnPath,
@@ -28,14 +30,15 @@ export const createPushLinkInput = (foundOnPath: string, href: string, warningDo
             lastLoadTime: requestTime,
             type: linkType[type],
             errorCode,
-            warningDoubleSlash
+            warningDoubleSlash,
+            language
         },
         where: { domainId_path: { domainId, path: href } }
     }
 }
 
-export const pushLink = (prisma: PrismaClient, foundOnPath: string, href: string, warningDoubleSlash: boolean, domainId: string, type: linkType, requestTime: number, errorCode: errorTypes | null) => {
-    const args = createPushLinkInput(foundOnPath, href, warningDoubleSlash, domainId, type, requestTime, errorCode);
+export const pushLink = (prisma: PrismaClient, foundOnPath: string, href: string, warningDoubleSlash: boolean, domainId: string, type: linkType, requestTime: number, errorCode: errorTypes | null, language: string | null) => {
+    const args = createPushLinkInput(foundOnPath, href, warningDoubleSlash, domainId, type, requestTime, errorCode, language);
     return prisma.internalLink.upsert(args);
 }
 

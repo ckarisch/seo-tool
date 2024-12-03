@@ -123,6 +123,7 @@ export async function handleHttpError({
                 domainId,
                 linkType.page,
                 requestTime,
+                null,
                 null
             );
             internalLinkId = internalLink.id;

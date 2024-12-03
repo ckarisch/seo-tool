@@ -1,4 +1,3 @@
-
 export interface StreamingLogViewerProps {
   title?: string;
   styles?: {
@@ -136,19 +135,40 @@ export function generateStreamingLogViewer(props: StreamingLogViewerProps = {}) 
       
       const startTime = new Date();
       let autoScroll = true;
+      let isScrolling = false;
+      let scrollTimeout;
+
+      function isUserNearBottom() {
+        const threshold = 50; // pixels from bottom
+        const scrollPosition = codeContent.scrollTop + codeContent.clientHeight;
+        const totalHeight = codeContent.scrollHeight;
+        return totalHeight - scrollPosition <= threshold;
+      }
 
       function appendLog(text, level = 'info') {
         const line = document.createElement('div');
         line.textContent = text;
         line.className = \`log-entry \${level}\`;
         logContent.appendChild(line);
-        if (autoScroll) {
-          scrollToBottom();
+        
+        // Only auto-scroll if we were already near the bottom
+        if (autoScroll && isUserNearBottom()) {
+          // Use requestAnimationFrame for smooth scrolling
+          requestAnimationFrame(() => {
+            scrollToBottom();
+          });
         }
       }
 
       function scrollToBottom() {
-        codeContent.scrollTop = codeContent.scrollHeight;
+        if (!isScrolling) {
+          isScrolling = true;
+          codeContent.scrollTop = codeContent.scrollHeight;
+          // Reset scrolling flag after animation
+          requestAnimationFrame(() => {
+            isScrolling = false;
+          });
+        }
       }
 
       function updateTimes() {
@@ -167,24 +187,39 @@ export function generateStreamingLogViewer(props: StreamingLogViewerProps = {}) 
         scrollStatusElement.textContent = autoScroll ? 'Auto-scroll: ON' : 'Auto-scroll: OFF (Press Space to resume)';
       }
 
+      // Debounced scroll handler
+      function handleScroll() {
+        if (scrollTimeout) {
+          clearTimeout(scrollTimeout);
+        }
+
+        scrollTimeout = setTimeout(() => {
+          // Only update auto-scroll if user has scrolled away from bottom
+          if (!isUserNearBottom() && autoScroll) {
+            autoScroll = false;
+            updateScrollStatus();
+          } else if (isUserNearBottom() && !autoScroll) {
+            autoScroll = true;
+            updateScrollStatus();
+          }
+        }, 150); // Debounce time
+      }
+
       // Update times every second
       setInterval(updateTimes, 1000);
 
-      // Detect manual scroll
-      codeContent.addEventListener('scroll', () => {
-        if (codeContent.scrollTop + codeContent.clientHeight < codeContent.scrollHeight) {
-          autoScroll = false;
-          updateScrollStatus();
-        }
-      });
+      // Improved scroll detection
+      codeContent.addEventListener('scroll', handleScroll);
 
-      // Detect space key press
+      // Detect space key press with improved handling
       document.addEventListener('keydown', (event) => {
         if (event.code === 'Space') {
-          autoScroll = true;
-          scrollToBottom();
-          updateScrollStatus();
           event.preventDefault(); // Prevent page scroll
+          autoScroll = true;
+          updateScrollStatus();
+          requestAnimationFrame(() => {
+            scrollToBottom();
+          });
         }
       });
 

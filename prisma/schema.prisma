@@ -305,6 +305,7 @@ model InternalLink {
   foundOnPath        String?
   warningDoubleSlash Boolean?
   errorLogs          ErrorLog[] @relation("PageErrors")
+  language           String?
 
   @@unique([domainId, path])
   @@map("internalLink")
@@ -336,7 +337,7 @@ model ExternalLink {
 model AdminLog {
   id        String   @id @default(auto()) @map("_id") @db.ObjectId
   message   String
-  createdAt DateTime
+  createdAt DateTime @default(now())
   domain    Domain?  @relation(fields: [domainId], references: [id], onDelete: Cascade)
   domainId  String?  @db.ObjectId
   user      User?    @relation(fields: [userId], references: [id])
@@ -349,7 +350,7 @@ model CronJob {
   id               String   @id @default(auto()) @map("_id") @db.ObjectId
   name             String
   type             String
-  createdAt        DateTime
+  createdAt        DateTime @default(now())
   lastStart        DateTime
   lastEnd          DateTime
   interval         Int

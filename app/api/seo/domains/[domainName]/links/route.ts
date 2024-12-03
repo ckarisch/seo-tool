@@ -34,7 +34,7 @@ export async function GET(
   }
 
   const links = await prisma.internalLink.findMany({
-    where: { domainId: domain.id },
+    where: { domainId: domain.id, type: 'page' },
     include: {
       errorLogs: {
         include: {

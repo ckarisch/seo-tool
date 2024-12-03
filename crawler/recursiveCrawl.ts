@@ -3,10 +3,11 @@ import { LogEntry, Logger } from "@/apiComponents/dev/logger";
 import { checkRequests, checkTimeout, createPushLinkInput, Link, linkType, pushAllLinks, pushExternalLink, pushExternalLinks, pushLink } from "@/app/api/seo/domains/[domainName]/crawl/crawlLinkHelper";
 import axios, { AxiosError } from "axios";
 import { load } from "cheerio";
-import runErrorChecks, { HttpErrorCode, logHttpError } from "./errorChecker";
+import runErrorChecks, { HttpErrorCode } from "./errorChecker";
 import { DomainCrawl, Prisma, UserRole } from "@prisma/client";
 import { checkCanonical } from "./checks/checkCanonical";
 import { handleHttpError } from "./errorHandle/handleHttpError";
+import { checkLanguage } from "./checks/checkLanguage";
 
 export interface recursiveCrawlResponse {
     timeout: boolean;
@@ -201,9 +202,18 @@ export async function* recursiveCrawl(
 
                                 // only push to crawled links, if link is not skipped
                                 crawledLinks.push(normalizedLink);
+                                const { language } = checkLanguage(data);
 
                                 if (pushLinksToDomain && domainId) {
-                                    const internalLink = await pushLink(prisma, links[i].foundOnPath, normalizedLink, false, domainId, linkType.page, requestTime, null);
+                                    const internalLink = await pushLink(prisma,
+                                        links[i].foundOnPath,
+                                        normalizedLink,
+                                        false,
+                                        domainId,
+                                        linkType.page,
+                                        requestTime,
+                                        null,
+                                        language);
                                     internalLinkId = internalLink.id;
                                 }
 
@@ -274,7 +284,7 @@ export async function* recursiveCrawl(
                             if (pushLinksToDomain && domainId) {
                                 requestTime = new Date().getTime() - requestStartTime;
 
-                                const pushLinkInput = createPushLinkInput(links[i].foundOnPath, normalizedLink, warningDoubleSlash, domainId, linkType.page, requestTime, null);
+                                const pushLinkInput = createPushLinkInput(links[i].foundOnPath, normalizedLink, warningDoubleSlash, domainId, linkType.file, requestTime, null, null);
                                 pushLinkInputs.push(pushLinkInput);
                             }
                             // await pushLink(prisma, links[i].foundOnPath, normalizedLink, warningDoubleSlash, domainId, linkType.page, requestTime, null);
@@ -298,9 +308,9 @@ export async function* recursiveCrawl(
     if (pushLinksToDomain && domainId) {
         requestStartTime = new Date().getTime();
         yield* subLogger.log(`start pushing links (${pushLinkInputs.length})`);
-    
+
         yield* subLogger.log(`filtering ${externalLinksToInsert.length} external links for unique entries`);
-    
+
         // Filter for unique external links based on href
         const uniqueExternalLinks = externalLinksToInsert.reduce<{ foundOnPath: string; href: string }[]>((acc, current) => {
             // Only add if href doesn't exist in accumulator
@@ -309,15 +319,15 @@ export async function* recursiveCrawl(
             }
             return acc;
         }, []);
-    
+
         yield* subLogger.log(`start pushing external links (${uniqueExternalLinks.length} unique from ${externalLinksToInsert.length} total)`);
-        
+
         // Run both operations concurrently
         const [internalResults, externalResults] = await Promise.all([
             pushAllLinks(prisma, pushLinkInputs),
             pushExternalLinks(prisma, uniqueExternalLinks, domainId)
         ]);
-    
+
         requestTime = new Date().getTime() - requestStartTime;
         yield* subLogger.log(`end pushing all links (internal: ${pushLinkInputs.length}, external: ${externalLinksToInsert.length}): ${requestTime}ms`);
     }
