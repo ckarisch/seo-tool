@@ -55,3 +55,21 @@
     padding-top: 32px;
   }
 }
+
+.domain {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  
+  @media (min-width: 768px) {
+    width: auto;
+  }
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-left: auto;
+}

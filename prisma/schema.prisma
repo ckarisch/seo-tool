@@ -147,6 +147,27 @@ enum Severity {
   INFO
 }
 
+enum NotificationType {
+  MAIL
+  NOTIFICATION
+  BOTH
+}
+
+model Notification {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  domain    Domain   @relation(fields: [domainId], references: [id], onDelete: Cascade)
+  domainId  String   @db.ObjectId
+  type      String // notification type (error, warning, success)
+  title     String
+  message   String
+  urls      String[] // Array of affected URLs
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+  metadata  Json? // For storing additional notification data
+
+  @@map("notifications")
+}
+
 model Domain {
   id                                String                 @id @default(auto()) @map("_id") @db.ObjectId
   name                              String
@@ -207,6 +228,8 @@ model Domain {
   totalResources                    Int?
   lastMetricsUpdate                 DateTime?
   initialMessageSent                Boolean?
+  notificationType                  NotificationType       @default(BOTH)
+  notifications                     Notification[] // Add relation to notifications
 
   @@unique([userId, domainName])
   @@map("domain")

@@ -9,7 +9,7 @@ import { CustomLogEntry } from "@/types/logs";
 import { consolidatedCrawlNotification, crawlNotificationType } from "@/mail/EnhancedEmailer";
 import { prisma } from '@/lib/prisma';
 import { calculateOverallScore } from "@/util/calculateOverallScore";
-import { aggregateErrorLogs, calculateErrorScore, calculateScore, checkErrorChanges, NotificationItem, QuickAnalysisMetrics, sendErrorChangeNotification as getErrorChangeNotifications } from "@/crawler/scoreCalculator";
+import { aggregateErrorLogs, calculateErrorScore, calculateScore, checkErrorChanges, NotificationItem, QuickAnalysisMetrics, getErrorChangeNotifications } from "@/crawler/scoreCalculator";
 import { storeQuickAnalysisHistory } from "@/crawler/scoreData";
 import { VerifyDomain } from "../domain/verifyDomain";
 
@@ -61,6 +61,7 @@ export async function* quickAnalysisGenerator(
             score: true,
             performanceScore: true,
             initialMessageSent: true,
+            notificationType: true,
             user: {
                 select: {
                     id: true,

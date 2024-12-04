@@ -1,11 +1,11 @@
 import _ from 'lodash';
-import { Domain, ErrorLog, ErrorType, Severity, User } from "@prisma/client";
+import { Domain, User } from "@prisma/client";
 import * as nodemailer from "nodemailer";
 import { MailOptions } from "nodemailer/lib/json-transport";
-import { prisma } from '@/lib/prisma';
-import { renderWelcomeEmail } from "@/util/emailRenderer";
 import { generateWelcomeEmailHTML } from "./generateWelcomeEmailHTML";
 import { PartialDomainWithDomainName } from '@/interfaces/domain';
+import { NotificationType } from "@prisma/client";
+import { prisma } from '@/lib/prisma';
 
 interface NotificationGroup {
     domain: string;
@@ -167,7 +167,7 @@ export enum crawlNotificationType {
 
 export const consolidatedCrawlNotification = async (
     userWithNotificationContacts: User & { notificationContacts: any[] },
-    domain: PartialDomainWithDomainName,
+    domain: PartialDomainWithDomainName & { notificationType?: NotificationType, id?: string },
     notifications: Array<{
         type: crawlNotificationType;
         errorPresent: boolean;
@@ -177,11 +177,27 @@ export const consolidatedCrawlNotification = async (
     isInitialCrawl: boolean,
     isAnalysisMissing: boolean
 ) => {
+    console.log('Starting consolidatedCrawlNotification:', {
+        domainName: domain.domainName,
+        notificationType: domain.notificationType,
+        isInitialCrawl,
+        isAnalysisMissing,
+        notificationCount: notifications.length
+    });
+
     const result = {
-        sent: false
+        sent: false,
+        mailSent: false,
+        notificationsSaved: 0
     }
+
     if (isAnalysisMissing) {
-        console.log(`analysis are missing - no notification sent`);
+        console.log(`Analysis is missing for domain ${domain.domainName} - no notification sent`);
+        return result;
+    }
+
+    if (!domain.id) {
+        console.error(`Domain ID is missing for ${domain.domainName} - cannot save notifications`);
         return result;
     }
 
@@ -189,8 +205,10 @@ export const consolidatedCrawlNotification = async (
         ? userWithNotificationContacts.notificationContacts
         : [userWithNotificationContacts];
 
+    console.log(`Found ${notificationContacts.length} notification contacts`);
+
     if (isInitialCrawl) {
-        // Find initial message notification to get metrics
+        console.log('Processing initial crawl notification');
         const initialNotification = notifications.find(n => n.type === crawlNotificationType.InitialMessage);
 
         if (initialNotification?.additionalData) {
@@ -202,7 +220,8 @@ export const consolidatedCrawlNotification = async (
                 totalIssues: initialNotification.additionalData.totalErrors || 0
             };
 
-            // Send welcome email to each contact
+            console.log('Sending welcome emails with metrics:', metrics);
+
             for (const contact of notificationContacts) {
                 try {
                     await enhancedEmailer.sendWelcomeEmail(
@@ -211,7 +230,8 @@ export const consolidatedCrawlNotification = async (
                         metrics
                     );
                     result.sent = true;
-                    console.log(`Welcome email sent to ${contact.email}`);
+                    result.mailSent = true;
+                    console.log(`Welcome email sent successfully to ${contact.email}`);
                 } catch (e) {
                     console.error(`Error sending welcome email to ${contact.email}:`, e);
                 }
@@ -220,13 +240,18 @@ export const consolidatedCrawlNotification = async (
         }
     }
 
-    // Rest of the function remains the same...
+    console.log(`Processing ${notifications.length} notifications for domain ${domain.domainName}`);
+    console.log('Current notification type setting:', domain.notificationType);
+
     const notificationGroup: NotificationGroup = {
         domain: domain.domainName,
         notifications: []
     };
 
+    // Process notifications
     for (const notification of notifications) {
+        console.log(`Processing notification of type: ${crawlNotificationType[notification.type]}`);
+
         const notificationData = createNotificationData(
             notification.type,
             notification.errorPresent,
@@ -237,24 +262,111 @@ export const consolidatedCrawlNotification = async (
         );
 
         if (notificationData) {
+            console.log('Created notification data:', {
+                type: notificationData.type,
+                title: notificationData.title
+            });
+
             notificationGroup.notifications.push(notificationData);
+
+            // Save notification to database if notifications are enabled
+            if (domain.notificationType === NotificationType.NOTIFICATION ||
+                domain.notificationType === NotificationType.BOTH) {
+                try {
+                    console.log('Saving notification to database for domain:', domain.id);
+
+                    // First, count existing notifications
+                    const existingCount = await prisma.notification.count({
+                        where: { domainId: domain.id }
+                    });
+
+                    console.log(`Current notification count: ${existingCount}`);
+                    const max = 5;
+
+                    // If we're at or above the limit, remove oldest notifications to make space
+                    if (existingCount >= max) {
+                        const notificationsToRemove = existingCount - (max - 1); // Remove enough to have space for 1 new
+                        console.log(`Removing ${notificationsToRemove} old notifications`);
+
+                        // Get the IDs of the oldest notifications
+                        const oldestNotifications = await prisma.notification.findMany({
+                            where: { domainId: domain.id },
+                            orderBy: { createdAt: 'asc' },
+                            take: notificationsToRemove,
+                            select: { id: true }
+                        });
+
+                        // Delete the oldest notifications
+                        await prisma.notification.deleteMany({
+                            where: {
+                                id: {
+                                    in: oldestNotifications.map(n => n.id)
+                                }
+                            }
+                        });
+                    }
+
+                    // Save the new notification
+                    const savedNotification = await prisma.notification.create({
+                        data: {
+                            domainId: domain.id,
+                            type: notificationData.type,
+                            title: notificationData.title,
+                            message: notificationData.message,
+                            urls: notificationData.urls || [],
+                            metadata: notification.additionalData || {},
+                            read: false,
+                            createdAt: new Date()
+                        }
+                    });
+
+                    console.log('Successfully saved notification:', savedNotification.id);
+                    result.notificationsSaved++;
+                } catch (error) {
+                    console.error('Error saving notification to database:', error);
+                    console.error('Failed notification data:', {
+                        domainId: domain.id,
+                        type: notificationData.type,
+                        title: notificationData.title
+                    });
+                }
+            } else {
+                console.log('Skipping database save - notifications not enabled for this type');
+            }
+        } else {
+            console.log('No notification data created for type:', crawlNotificationType[notification.type]);
         }
     }
 
-    // Send consolidated notification to each contact
-    for (const contact of notificationContacts) {
-        try {
-            await enhancedEmailer.sendConsolidatedNotification(
-                contact.email,
-                contact.name,
-                notificationGroup
-            );
-            result.sent = true;
-            console.log(`Consolidated notification sent to ${contact.email}`);
-        } catch (e) {
-            console.error(`Error sending notification to ${contact.email}:`, e);
+    // Send email notifications if enabled
+    if (domain.notificationType === NotificationType.MAIL ||
+        domain.notificationType === NotificationType.BOTH) {
+        console.log('Sending email notifications to contacts');
+
+        for (const contact of notificationContacts) {
+            try {
+                await enhancedEmailer.sendConsolidatedNotification(
+                    contact.email,
+                    contact.name,
+                    notificationGroup
+                );
+                result.sent = true;
+                result.mailSent = true;
+                console.log(`Consolidated notification email sent to ${contact.email}`);
+            } catch (e) {
+                console.error(`Error sending notification email to ${contact.email}:`, e);
+            }
         }
+    } else {
+        console.log('Skipping email notifications - not enabled for this type');
     }
+
+    console.log('Notification processing complete:', {
+        sent: result.sent,
+        mailSent: result.mailSent,
+        notificationsSaved: result.notificationsSaved
+    });
+
     return result;
 };
 

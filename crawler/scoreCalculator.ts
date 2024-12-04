@@ -340,7 +340,7 @@ export async function checkErrorChanges(
     };
 }
 
-export async function sendErrorChangeNotification(
+export async function getErrorChangeNotifications(
     changes: ErrorChange
 ) {
     if (changes.added.length === 0 && changes.resolved.length === 0) {

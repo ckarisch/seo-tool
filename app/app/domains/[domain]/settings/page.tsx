@@ -9,6 +9,7 @@ import { defaultDomainState } from "@/interfaces/domain";
 import Section from "@/components/layout/section";
 import Card from "@/components/layout/card";
 import { Play, Pause } from 'lucide-react';
+import { NotificationType } from "@prisma/client";
 
 export default function Settings({ params }: { params: { domain: string } }) {
   const { status } = useSession({
@@ -26,35 +27,34 @@ export default function Settings({ params }: { params: { domain: string } }) {
   useEffect(() => {
     if (status !== "loading") {
       fetchData(
-        'api/seo/domains/' + params.domain, 
-        'domainFetchTag', 
-        setDomainJson, 
+        'api/seo/domains/' + params.domain,
+        'domainFetchTag',
+        setDomainJson,
         () => setInitialLoading(false)
       );
     }
   }, [status, params.domain]);
 
-  const handleSendNotificationChange = async (_e: ChangeEvent<HTMLInputElement>) => {
+  const handleNotificationTypeChange = async (event: ChangeEvent<HTMLSelectElement>) => {
+    const newValue = event.target.value as NotificationType;
     setNotificationsLoading(true);
-    // Use current state to determine new value
-    const newValue = !domainJson.disableNotifications;  // If currently disabled, we want to enable
 
     try {
-      const endpoint = `/api/seo/domains/${params.domain}/settings/disableNotifications`;
+      const endpoint = `/api/seo/domains/${params.domain}/settings/notificationType`;
       const response = await fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ value: newValue })
       });
 
-      if (!response.ok) throw new Error('Failed to update notifications setting');
+      if (!response.ok) throw new Error('Failed to update notification type');
 
       setDomainJson(prev => ({
         ...prev,
-        disableNotifications: newValue
+        notificationType: newValue
       }));
     } catch (error) {
-      console.error('Error updating notifications:', error);
+      console.error('Error updating notification type:', error);
     } finally {
       setNotificationsLoading(false);
     }
@@ -63,14 +63,14 @@ export default function Settings({ params }: { params: { domain: string } }) {
   const handleSetCrawlEnabled = async (event: React.FormEvent) => {
     event.preventDefault();
     setCrawlLoading(true);
-    
+
     try {
       const newValue = !domainJson.crawlEnabled;
       const endpoint = `/api/seo/domains/${params.domain}/settings/crawlEnabled`;
       const response = await fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ value: newValue })
+        body: JSON.stringify({ setting: 'crawlEnabled', value: newValue })
       });
 
       if (!response.ok) throw new Error('Failed to update analysis setting');
@@ -109,18 +109,23 @@ export default function Settings({ params }: { params: { domain: string } }) {
           <div className={styles.settingItem}>
             <div className={styles.settingContent}>
               <div className={styles.settingInfo}>
-                <h3 className={styles.settingTitle}>Notifications</h3>
+                <h3 className={styles.settingTitle}>Notification Settings</h3>
                 <p className={styles.settingDescription}>
-                  Control whether you receive notifications about domain changes and updates.
+                  Choose how you want to receive notifications about domain changes and updates.
                 </p>
               </div>
-              <div className="self-center">
-                <Toggle
-                  loading={notificationsLoading}
-                  checked={!domainJson.disableNotifications}
-                  onChange={handleSendNotificationChange}
-                  label="Enable notifications"
-                />
+              <div className={styles.settingControl}>
+                <select
+                  className={styles.select}
+                  value={domainJson.notificationType || 'BOTH'}
+                  onChange={handleNotificationTypeChange}
+                  disabled={notificationsLoading}
+                >
+                  <option value="MAIL">Email only</option>
+                  <option value="NOTIFICATION">In-app only</option>
+                  <option value="BOTH">Email and in-app</option>
+                </select>
+                {notificationsLoading && <span className={styles.loadingIndicator} />}
               </div>
             </div>
           </div>
@@ -136,12 +141,12 @@ export default function Settings({ params }: { params: { domain: string } }) {
                 </p>
               </div>
               <form onSubmit={handleSetCrawlEnabled} className="w-full md:w-auto">
-                <button 
+                <button
                   className={[
                     styles.button,
                     domainJson.crawlEnabled ? styles.crawlEnabled : styles.crawlDisabled,
                     crawlLoading ? styles.loading : ''
-                  ].join(' ')} 
+                  ].join(' ')}
                   type="submit"
                   disabled={crawlLoading}
                 >
