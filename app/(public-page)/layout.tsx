@@ -1,16 +1,14 @@
 import type { Metadata } from "next";
-import Signin from "@/components/user/signin";
 import layout from "./layout.module.scss";
-import Link from "next/link";
-import Image from "next/image";
-import Section from "@/components/layout/section";
 import { PublicHeader } from '@/components/layout/Header/PublicHeader';
 import { isPreviewEnv } from "@/util/environment";
 
+const isVercelProduction = process.env.VERCEL_ENV === 'production';
+
 export const metadata: Metadata = {
-  title: "SEO Tool",
-  description: "all in one SEO tool",
-  robots: "noindex, nofollow"
+  title: "Rankidang",
+  description: "analyze your website performance",
+  robots: isVercelProduction ? "index, follow" : "noindex, nofollow"
 };
 
 export default async function RootLayout({
