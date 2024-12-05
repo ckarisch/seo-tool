@@ -367,7 +367,6 @@ export async function* quickAnalysisGenerator(
 
                     const shouldSendInitialMessage = (
                         !domain.initialMessageSent &&
-                        !!domain.lastQuickAnalysis &&
                         !!domain.lastCrawl &&
                         !!domain.lastLighthouseAnalysis
                     )
@@ -379,7 +378,7 @@ export async function* quickAnalysisGenerator(
                             domain,
                             notifications,
                             !domain.initialMessageSent,
-                            !domain.lastQuickAnalysis || !domain.lastCrawl || !domain.lastLighthouseAnalysis
+                            !domain.lastCrawl || !domain.lastLighthouseAnalysis
                         );
 
                         if (notificationResult.sent) {
