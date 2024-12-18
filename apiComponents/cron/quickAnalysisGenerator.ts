@@ -12,6 +12,7 @@ import { calculateOverallScore } from "@/util/calculateOverallScore";
 import { aggregateErrorLogs, calculateScore, checkErrorChanges, NotificationItem, QuickAnalysisMetrics, getErrorChangeNotifications } from "@/crawler/scoreCalculator";
 import { storeQuickAnalysisHistory } from "@/crawler/scoreData";
 import { VerifyDomain } from "../domain/verifyDomain";
+import { analyzeLink } from "../crawler/linkTools";
 
 const resetCrawlTime = 3600000; // 1h
 const maxDomainCrawls = 20;
@@ -146,8 +147,10 @@ export async function* quickAnalysisGenerator(
         const diff = now.getTime() - lastQuickAnalysis.getTime();
         const diffMinutes = Math.floor(diff / 60000);
 
+        const { isLocalTestHttpLink } = analyzeLink(domain.domainName, domain.domainName);
+
         // if (domain.user.role !== UserRole.ADMIN) {
-        if (true) {
+        if (!isLocalTestHttpLink) {
             let isVerified = false;
 
             if (!domain.domainVerified) {

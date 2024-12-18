@@ -57,7 +57,6 @@ export async function* recursiveCrawl(
     const pushLinkInputs: Prisma.InternalLinkUpsertArgs[] = [];
     const externalLinksToInsert: { foundOnPath: string; href: string }[] = []; // Add this line
     const skippedCanonicals: any[] = [];
-    const protocol = 'https://';
 
     let response: recursiveCrawlResponse = {
         timeout: false,
@@ -108,9 +107,9 @@ export async function* recursiveCrawl(
             }
 
             if (typeof links[i] !== 'undefined' && links[i]) { // Check if the link is defined
-                const { subdomain, normalizedLink, isInternal, isInternalPage, warningDoubleSlash } = analyzeLink(links[i]!.path, extractedDomain);
+                const { subdomain, normalizedHttpsLink, isInternal, isInternalPage, warningDoubleSlash } = analyzeLink(links[i]!.path, extractedDomain);
 
-                if (!crawledLinks.includes(normalizedLink)) {
+                if (!crawledLinks.includes(normalizedHttpsLink)) {
                     if (warningDoubleSlash) {
                         yield* subLogger.log('❗double slash occured');
                         warningDoubleSlashOccured = true;
@@ -119,7 +118,7 @@ export async function* recursiveCrawl(
 
                     if (isInternal) {
                         if (subdomain != analyzedUrl.subdomain) {
-                            yield* subLogger.log(`warning: subdomain (${normalizedLink}) not matching with requested url`)
+                            yield* subLogger.log(`warning: subdomain (${normalizedHttpsLink}) not matching with requested url`)
                         }
 
                         timePassed = (new Date().getTime() - crawlStartTime);
@@ -150,7 +149,7 @@ export async function* recursiveCrawl(
                             }
 
                             requestStartTime = new Date().getTime();
-                            const requestUrl = protocol + normalizedLink;
+                            const requestUrl = normalizedHttpsLink;
 
                             let errors = {
                                 err_404: false,
@@ -170,7 +169,7 @@ export async function* recursiveCrawl(
 
                                 // Check for canonical URL before processing the page
                                 if (!links[i].ignoreCanonical) {
-                                    if (skippedCanonicals.includes(normalizedLink)) {
+                                    if (skippedCanonicals.includes(normalizedHttpsLink)) {
                                         // if this link is already marked as non canonical, skip it
                                         // no request to check for canonical tag will be started
                                         continue;
@@ -180,7 +179,7 @@ export async function* recursiveCrawl(
                                         // Add new link with ignoreCanonical = true
                                         const { normalizedLink: canonicalNormalizedLink } = analyzeLink(canonicalUrl, extractedDomain);
 
-                                        if (canonicalNormalizedLink !== normalizedLink) {
+                                        if (canonicalNormalizedLink !== normalizedHttpsLink) {
                                             // only skip, if canonical link is different
                                             links.push({
                                                 path: canonicalNormalizedLink,
@@ -190,9 +189,9 @@ export async function* recursiveCrawl(
 
                                             // do not push non canonicals to database
 
-                                            yield* subLogger.log('skip non canonical ' + normalizedLink)
+                                            yield* subLogger.log('skip non canonical ' + normalizedHttpsLink)
                                             yield* subLogger.log('use ' + canonicalNormalizedLink)
-                                            skippedCanonicals.push(normalizedLink);
+                                            skippedCanonicals.push(normalizedHttpsLink);
 
                                             // Skip further processing of this link
                                             continue;
@@ -201,13 +200,13 @@ export async function* recursiveCrawl(
                                 }
 
                                 // only push to crawled links, if link is not skipped
-                                crawledLinks.push(normalizedLink);
+                                crawledLinks.push(normalizedHttpsLink);
                                 const { language } = checkLanguage(data);
 
                                 if (pushLinksToDomain && domainId) {
                                     const internalLink = await pushLink(prisma,
                                         links[i].foundOnPath,
-                                        normalizedLink,
+                                        normalizedHttpsLink,
                                         false,
                                         domainId,
                                         linkType.page,
@@ -238,7 +237,7 @@ export async function* recursiveCrawl(
                                         prisma,
                                         domainId,
                                         domainCrawlId: domainCrawl?.id,
-                                        normalizedLink,
+                                        normalizedLink: normalizedHttpsLink,
                                         foundOnPath: links[i].foundOnPath,
                                         requestUrl,
                                         requestTime,
@@ -250,7 +249,7 @@ export async function* recursiveCrawl(
                                         if (errorResult.errorCode === HttpErrorCode.ERROR_404) {
                                             errors.err_404 = true;
                                             error404Occured = true;
-                                            error404Links.push(normalizedLink);
+                                            error404Links.push(normalizedHttpsLink);
                                             yield* subLogger.log('error: 404 ' + requestUrl);
                                         } else if (errorResult.errorCode === HttpErrorCode.ERROR_503) {
                                             errors.err_503 = true;
@@ -284,7 +283,7 @@ export async function* recursiveCrawl(
                             if (pushLinksToDomain && domainId) {
                                 requestTime = new Date().getTime() - requestStartTime;
 
-                                const pushLinkInput = createPushLinkInput(links[i].foundOnPath, normalizedLink, warningDoubleSlash, domainId, linkType.file, requestTime, null, null);
+                                const pushLinkInput = createPushLinkInput(links[i].foundOnPath, normalizedHttpsLink, warningDoubleSlash, domainId, linkType.file, requestTime, null, null);
                                 pushLinkInputs.push(pushLinkInput);
                             }
                             // await pushLink(prisma, links[i].foundOnPath, normalizedLink, warningDoubleSlash, domainId, linkType.page, requestTime, null);
@@ -296,7 +295,7 @@ export async function* recursiveCrawl(
                             // Instead of immediate push, collect in array
                             externalLinksToInsert.push({
                                 foundOnPath: links[i].foundOnPath,
-                                href: normalizedLink
+                                href: normalizedHttpsLink
                             });
                         }
                     }

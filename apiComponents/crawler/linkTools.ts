@@ -1,3 +1,5 @@
+import { isDevelopment, isTest } from "@/crawler/errorChecker";
+
 export function analyzeLink(link: string, currentDomain: string) {
     // Normalize current domain for consistency
     currentDomain = currentDomain.replace(/^https?:\/\//, '');
@@ -14,6 +16,12 @@ export function analyzeLink(link: string, currentDomain: string) {
     const includesDots = link.includes('.');
     const dotCount = link.split('.').length - 1;
     const includeProtocol = link.includes(':');
+
+    const isLocalTestHttpLink = (isDevelopment || isTest) && link.startsWith('localhost');
+    let protocol = 'https';
+    if (isLocalTestHttpLink) {
+        protocol = 'http';
+    }
 
     const isFile = isImage || isDocument || isZip;
 
@@ -46,7 +54,7 @@ export function analyzeLink(link: string, currentDomain: string) {
     if (!isAnchor || !link.startsWith('#')) { // Process for non-simple anchors or potential external links
         // Extract the domain from the link without the protocol and potential "www."
         linkDomain = normalizedLink.split('/')[0].split('#')[0]; // Removes path or anchor
-        linkDomainWithHttps = 'https://' + linkDomain;
+        linkDomainWithHttps = protocol + '://' + linkDomain;
 
         // Step 4: Check if the link is external by comparing the domain part
         isExternal = !isPageLink && !!currentDomain && !linkDomain.endsWith(currentDomain);
@@ -58,9 +66,9 @@ export function analyzeLink(link: string, currentDomain: string) {
 
     const warningDoubleSlash = normalizedLink.includes('//');
 
-    let normalizedHttpsLink: string | null = null;
+    let normalizedHttpsLink: string = normalizedLink;
     if (!isPageLink) {
-        normalizedHttpsLink = 'https://' + normalizedLink;
+        normalizedHttpsLink = protocol + '://' + normalizedLink;
     }
 
     // Logging results for demonstration
@@ -70,5 +78,5 @@ export function analyzeLink(link: string, currentDomain: string) {
     // console.log(`Link Domain: ${linkDomain}`);
     // console.log(`Is Anchor: ${isAnchor}`);
     // console.log(`Is External: ${isExternal}`);
-    return { isExternal, subdomain, linkDomain, linkDomainWithHttps, normalizedLink, normalizedHttpsLink, isAnchor, isMailto, isTel, isInternal, isInternalPage, isExternalPage, warningDoubleSlash, isFile }
+    return { isExternal, subdomain, linkDomain, linkDomainWithHttps, normalizedLink, normalizedHttpsLink, isAnchor, isMailto, isTel, isInternal, isInternalPage, isExternalPage, warningDoubleSlash, isFile, isLocalTestHttpLink }
 }

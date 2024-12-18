@@ -11,6 +11,15 @@ interface URLInputProps extends React.InputHTMLAttributes<HTMLInputElement> {
 export default function URLInput({ onChange, onValidation, className, ...props }: URLInputProps) {
   const [isValid, setIsValid] = useState<boolean>(false);
 
+  const isLocalhost = (url: string): boolean => {
+    try {
+      const urlObject = new URL(url);
+      return urlObject.hostname === 'localhost' || urlObject.hostname.startsWith('127.0.0.');
+    } catch {
+      return false;
+    }
+  };
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const input = e.target.value;
     
@@ -25,8 +34,13 @@ export default function URLInput({ onChange, onValidation, className, ...props }
       if (input === '') {
         newIsValid = false;
       } else {
-        const urlObject = new URL(processedUrl);
-        newIsValid = urlObject.hostname.includes('.') && isUrl(processedUrl);
+        // Check if it's a localhost URL
+        if (isLocalhost(processedUrl)) {
+          newIsValid = true;
+        } else {
+          const urlObject = new URL(processedUrl);
+          newIsValid = urlObject.hostname.includes('.') && isUrl(processedUrl);
+        }
       }
     } catch (err) {
       newIsValid = false;
@@ -44,9 +58,11 @@ export default function URLInput({ onChange, onValidation, className, ...props }
         {...props}
         className={`${styles.input} ${isValid ? styles.valid : ''} ${className || ''}`}
         onChange={handleInputChange}
+        aria-label="URL input"
+        aria-invalid={!isValid && props.value ? 'true' : 'false'}
       />
       {props.value && (
-        <span className={styles.iconWrapper}>
+        <span className={styles.iconWrapper} aria-hidden="true">
           {isValid ? (
             <CheckCircle2 className={styles.validIcon} />
           ) : (

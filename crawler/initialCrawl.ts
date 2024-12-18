@@ -33,6 +33,25 @@ interface ResourceMetrics {
     totalResources: number;
 }
 
+const formatFinalUrl = (urlObj: URL): string => {
+    let formattedUrl = urlObj.hostname;
+
+    // Add port if it exists and isn't the default port
+    if (urlObj.port) {
+        formattedUrl += `:${urlObj.port}`;
+    }
+
+    // Add pathname, but ensure it starts with '/'
+    formattedUrl += urlObj.pathname || '/';
+
+    // Add search params if they exist
+    if (urlObj.search) {
+        formattedUrl += urlObj.search;
+    }
+
+    return formattedUrl;
+};
+
 export const initialCrawl = async (
     domain: Partial<Domain>,
     targetURL: string,
@@ -42,9 +61,9 @@ export const initialCrawl = async (
     analyzedUrl: { normalizedLink: string }
 ): Promise<CrawlResponse> => {
     let timePassed = (new Date().getTime() - crawlStartTime);
-    let finalURL = targetURL;
     const urlObject = new URL(targetURL);
-    let finalURLObject = new URL(finalURL, urlObject.origin);
+    let finalURLObject = new URL(targetURL);
+    let finalURL = formatFinalUrl(finalURLObject);
     let responseHeaders: Record<string, string> = {};
     let startTime = Date.now();
 
@@ -65,18 +84,18 @@ export const initialCrawl = async (
 
         // Handle redirects
         if (headResponse.status >= 300 && headResponse.status < 400) {
-            finalURL = headResponse.headers.location;
-            finalURLObject = new URL(finalURL, urlObject.origin);
-
-            if (!finalURL.startsWith('http')) {
-                finalURLObject = new URL(finalURL, urlObject.origin);
-                finalURL = finalURLObject.toString();
+            const redirectUrl = headResponse.headers.location;
+            if (!redirectUrl.startsWith('http')) {
+                finalURLObject = new URL(redirectUrl, urlObject.origin);
+            } else {
+                finalURLObject = new URL(redirectUrl);
             }
+            finalURL = formatFinalUrl(finalURLObject);
         }
 
         // Make the actual GET request
         timePassed = (new Date().getTime() - crawlStartTime);
-        const response = await axios.get(finalURL, {
+        const response = await axios.get(`${urlObject.protocol}//${finalURL}`, {
             timeout: maxCrawlTime - timePassed,
             headers: {
                 'User-Agent': 'Mozilla/5.0 (compatible; SEOBot/1.0; +https://example.com/bot)',
@@ -85,16 +104,12 @@ export const initialCrawl = async (
             }
         });
 
+        // Rest of the function remains the same...
         const endTime = Date.now();
         const loadTime = endTime - startTime;
-
-        // Parse HTML and count resources
         const resourceMetrics = countResources(response.data);
-        
-        // Calculate initial performance score
         const initialScore = calculateInitialPerformanceScore(loadTime, resourceMetrics);
-        
-        // Calculate comprehensive performance metrics
+
         const performanceMetrics: PerformanceMetrics = {
             loadTime,
             totalResources: resourceMetrics.totalResources,
@@ -145,13 +160,13 @@ export const initialCrawl = async (
 
 function countResources(html: string): ResourceMetrics {
     const $ = load(html);
-    
+
     const scriptCount = $('script').length;
     const styleCount = $('link[rel="stylesheet"]').length + $('style').length;
     const imageCount = $('img').length;
     const iframeCount = $('iframe').length;
     const fontCount = $('link[rel="preload"][as="font"]').length;
-    
+
     return {
         scriptCount,
         styleCount,

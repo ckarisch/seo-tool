@@ -173,14 +173,13 @@ export async function* crawlDomain(
 
         const {
             data,
-            finalURL,
-            finalURLObject
+            finalURL
         } = await initialCrawl(domain, targetURL, maxCrawlTime, crawlStartTime, user, analyzedUrl);
 
         requestTime = new Date().getTime() - requestStartTime;
         yield* logger.log(`request time (${targetURL}): ${requestTime}`);
 
-        targetURL = finalURLObject.hostname;
+        targetURL = finalURL;
         analyzedUrl = analyzeLink(targetURL, targetURL);
         extractedDomain = analyzedUrl.linkDomain;
         yield* logger.log(`now using finalURL ${targetURL}`);

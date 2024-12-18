@@ -12,6 +12,7 @@ import {
 } from "./domainInterval";
 import { checkTimeout } from "@/app/api/seo/domains/[domainName]/crawl/crawlLinkHelper";
 import { calculateOverallScore } from "@/util/calculateOverallScore";
+import { analyzeLink } from "../crawler/linkTools";
 const prisma = new PrismaClient();
 
 const resetCrawlTime = 3600000; // 1h
@@ -71,6 +72,21 @@ export async function* lighthouseGenerator(
       yield* lighthouseLogger.log(`timeout`);
       return;
     }
+
+
+    const { isLocalTestHttpLink } = analyzeLink(domain.domainName, domain.domainName);
+    if (isLocalTestHttpLink) {
+      yield* lighthouseLogger.log(`skipping local domain`);
+      
+      await prisma.domain.update({
+        where: { id: domain.id },
+        data: {
+          performanceScore: 1,
+          lastLighthouseAnalysis: new Date()
+        }
+      });
+    }
+
     let domainInterval = fallbackInterval;
 
     /* subfunction */

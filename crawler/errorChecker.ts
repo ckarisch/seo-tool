@@ -233,7 +233,11 @@ export async function runErrorChecks(
             results: { multipleH1Result, emailExposedResult },
             summary: {
                 errorCount: errors.length,
-                warningCount: warnings.length
+                warningCount: warnings.length,
+                details: {
+                    errors,
+                    warnings
+                }
             }
         };
     }
@@ -254,6 +258,20 @@ export async function runErrorChecks(
         }
     });
 
+    // Get existing unresolved errors for this page
+    const existingErrors = await prisma.errorLog.findMany({
+        where: {
+            domainId: params.domainId,
+            internalLinkId: params.internalLinkId,
+        },
+        include: {
+            errorType: true
+        }
+    });
+    
+    // Filter for unresolved errors in JavaScript
+    const unresolvedErrors = existingErrors.filter(error => !error.resolvedAt);
+
     // Run checks based on error type configurations
     for (const errorType of errorTypes) {
         if (shouldExecuteCheck(errorType.implementation, errorType.userRole, userRole)) {
@@ -267,6 +285,20 @@ export async function runErrorChecks(
                         errorType.severity === 'HIGH' || errorType.severity === 'CRITICAL'
                             ? errors.push(errorType.code)
                             : warnings.push(errorType.code);
+                    } else {
+                        // If error not found, resolve any existing errors of this type
+                        const unresolvedError = unresolvedErrors.find(
+                            error => error.errorType.code === 'MULTIPLE_H1'
+                        );
+                        if (unresolvedError) {
+                            await prisma.errorLog.update({
+                                where: { id: unresolvedError.id },
+                                data: {
+                                    resolvedAt: new Date(),
+                                    resolutionNotified: false // Reset notification flag for resolution
+                                }
+                            });
+                        }
                     }
                     break;
                 case 'EMAIL_EXPOSED':
@@ -276,6 +308,20 @@ export async function runErrorChecks(
                         errorType.severity === 'HIGH' || errorType.severity === 'CRITICAL'
                             ? errors.push(errorType.code)
                             : warnings.push(errorType.code);
+                    } else {
+                        // If error not found, resolve any existing errors of this type
+                        const unresolvedError = unresolvedErrors.find(
+                            error => error.errorType.code === 'EMAIL_EXPOSED'
+                        );
+                        if (unresolvedError) {
+                            await prisma.errorLog.update({
+                                where: { id: unresolvedError.id },
+                                data: {
+                                    resolvedAt: new Date(),
+                                    resolutionNotified: false // Reset notification flag for resolution
+                                }
+                            });
+                        }
                     }
                     break;
             }

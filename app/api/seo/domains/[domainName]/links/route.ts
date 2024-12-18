@@ -51,10 +51,16 @@ export async function GET(
     }
   });
 
+  // Filter out resolved errors for each link
+  const linksWithUnresolvedErrors = links.map(link => ({
+    ...link,
+    errorLogs: link.errorLogs.filter(error => !error.resolvedAt)
+  }));
+
   const externalLinks = await prisma.externalLink.findMany({ where: { domainId: domain.id } })
 
   return Response.json({
-    links,
+    links: linksWithUnresolvedErrors,
     externalLinks,
     crawlingStatus: domain.crawlStatus,
     lastErrorTime: domain.lastErrorTime,
