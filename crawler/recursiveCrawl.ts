@@ -111,7 +111,7 @@ export async function* recursiveCrawl(
 
                 if (!crawledLinks.includes(normalizedLink)) {
                     if (warningDoubleSlash) {
-                        yield* subLogger.log('❗double slash occured');
+                        yield* subLogger.verbose('❗double slash occured');
                         warningDoubleSlashOccured = true;
                         response.warningDoubleSlashOccured = true;
                     }
