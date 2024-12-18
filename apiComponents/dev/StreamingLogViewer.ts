@@ -1,3 +1,6 @@
+import { prisma } from "@/lib/prisma";
+import { LogLevel } from "@prisma/client";
+
 export interface StreamingLogViewerProps {
   title?: string;
   styles?: {
@@ -243,6 +246,32 @@ export async function streamLogs(
       const script = `<script>appendLog("${text}", "${level}");</script>`
       controller.enqueue(encoder.encode(script))
       await new Promise(resolve => setTimeout(resolve, delay))
+
+      let prismaLevel;
+      switch (level) {
+        case 'info':
+          prismaLevel = LogLevel.INFO;
+          break
+        case 'warn':
+          prismaLevel = LogLevel.WARN;
+          break
+        case 'error':
+          prismaLevel = LogLevel.ERROR;
+          break
+        default:
+          prismaLevel = LogLevel.INFO;
+          break
+      }
+
+      if (prismaLevel == LogLevel.ERROR) {
+        await prisma.adminLog.create({
+          data: {
+            createdAt: new Date(),
+            message: text,
+            level: prismaLevel
+          },
+        });
+      }
     }
   } catch (error) {
     console.error('Error streaming logs:', error)

@@ -1,7 +1,7 @@
 import { env } from "process";
 import { createLogger } from "../dev/logger";
 import { LogEntry } from "../dev/StreamingLogViewer";
-import { CronJob, Prisma, Severity } from "@prisma/client";
+import { CronJob } from "@prisma/client";
 import { domainIntervalGenerator, domainIntervalResponse } from "./domainInterval";
 import { quickAnalysis, quickAnalysisResponse } from "@/app/api/seo/domains/[domainName]/crawl/quickAnalysis";
 import { checkTimeout } from "@/app/api/seo/domains/[domainName]/crawl/crawlLinkHelper";
@@ -9,7 +9,7 @@ import { CustomLogEntry } from "@/types/logs";
 import { consolidatedCrawlNotification, crawlNotificationType } from "@/mail/EnhancedEmailer";
 import { prisma } from '@/lib/prisma';
 import { calculateOverallScore } from "@/util/calculateOverallScore";
-import { aggregateErrorLogs, calculateErrorScore, calculateScore, checkErrorChanges, NotificationItem, QuickAnalysisMetrics, getErrorChangeNotifications } from "@/crawler/scoreCalculator";
+import { aggregateErrorLogs, calculateScore, checkErrorChanges, NotificationItem, QuickAnalysisMetrics, getErrorChangeNotifications } from "@/crawler/scoreCalculator";
 import { storeQuickAnalysisHistory } from "@/crawler/scoreData";
 import { VerifyDomain } from "../domain/verifyDomain";
 
