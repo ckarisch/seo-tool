@@ -146,7 +146,9 @@ async function logError(
     }
 
     await prisma.errorLog.create({ data: createData });
-    console.log(`[${errorType.implementation}] [${errorType.userRole}] Logged error: ${errorType.code}`);
+    if (isDevelopment || isTest) {
+        console.log(`[${errorType.implementation}] [${errorType.userRole}] Logged error: ${errorType.code}`);
+    }
 }
 
 /**
@@ -268,7 +270,7 @@ export async function runErrorChecks(
             errorType: true
         }
     });
-    
+
     // Filter for unresolved errors in JavaScript
     const unresolvedErrors = existingErrors.filter(error => !error.resolvedAt);
 

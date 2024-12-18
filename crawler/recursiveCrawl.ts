@@ -228,7 +228,7 @@ export async function* recursiveCrawl(
                                 totalWarningCount += errorCheckResult.summary.warningCount;
                             }
                             catch (error: AxiosError | TypeError | any) {
-                                yield* subLogger.log(`request ${requests} error (${requestUrl})`);
+                                yield* subLogger.verbose(`request ${requests} error (${requestUrl})`);
                                 timePassed = (new Date().getTime() - crawlStartTime);
 
                                 if (error instanceof AxiosError) {
