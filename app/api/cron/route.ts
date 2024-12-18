@@ -21,7 +21,7 @@ export async function GET(request: Request) {
 
   // maxExecutionTime ist 20 seconds lower than maxDuration to prevent hard timeouts
   const maxDurationInMilliseconds = maxDuration * 1000;
-  const maxExecutionTime = 230000; // in milliseconds
+  const maxExecutionTime = 220000; // in milliseconds
   const cronStartTime = new Date().getTime();
   let timePassed = new Date().getTime() - cronStartTime;
   let timeLeft = maxExecutionTime - timePassed;
