@@ -159,7 +159,7 @@ export async function* crawlerGenerator(
           data: { crawlStatus: "idle" },
         });
       }
-      yield* mainLogger.log(
+      yield* mainLogger.error(
         "➝  auto crawl: " + domain.domainName + " is already crawling"
       );
       continue;

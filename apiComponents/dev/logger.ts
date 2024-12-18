@@ -1,3 +1,4 @@
+import { isDevelopment, isTest } from "@/crawler/errorChecker";
 import { recursiveCrawlResponse } from "@/crawler/recursiveCrawl";
 
 // logger.ts
@@ -7,6 +8,7 @@ export interface LogEntry {
 }
 
 export type Logger = {
+  verbose: (text: string) => Generator<LogEntry>;
   log: (text: string) => Generator<LogEntry>;
   warn: (text: string) => Generator<LogEntry>;
   error: (text: string) => Generator<LogEntry>;
@@ -14,8 +16,15 @@ export type Logger = {
 
 export function createLogger(category?: string): Logger {
   const prefix = category ? `[${category}] ` : '';
-  
+
   return {
+    *verbose(text: string): Generator<LogEntry> {
+      const message = `${prefix}${text}`;
+      if (isDevelopment || isTest) {
+        console.log(message);
+        yield { text: message };
+      }
+    },
     *log(text: string): Generator<LogEntry> {
       const message = `${prefix}${text}`;
       console.log(message);

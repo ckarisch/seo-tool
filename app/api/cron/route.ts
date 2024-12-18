@@ -66,7 +66,7 @@ export async function GET(request: Request) {
       async function* cronJobGenerator(): AsyncGenerator<LogEntry> {
         yield* cronLogger.log(`start cron jobs`);
         if (!sortedCronJobs.length) {
-          yield* cronLogger.log(`no cron jobs available`);
+          yield* cronLogger.error(`no cron jobs available`);
         }
         for (const cron of sortedCronJobs) {
           timePassed = new Date().getTime() - cronStartTime;
@@ -80,14 +80,7 @@ export async function GET(request: Request) {
           if (cron.acitve) {
             yield* cronLogger.log(`${cron.name}: active`);
             if (cron.status === "running") {
-              yield* cronLogger.log(`${cron.name}: abort - still running`);
-
-              await prisma.adminLog.create({
-                  data: {
-                      createdAt: new Date(),
-                      message: `error: cron ${cron.type} still running`
-                  },
-              });
+              yield* cronLogger.error(`${cron.name}: abort - still running`);
             } else {
               const timePassedSinceLastExecutionInMinutes = Math.floor(
                 (Date.now() - cron.lastEnd.getTime()) / 1000 / 60
@@ -96,7 +89,7 @@ export async function GET(request: Request) {
                 `${cron.name}: time passed ${timePassedSinceLastExecutionInMinutes}m / ${cron.interval}m`
               );
               if (timePassedSinceLastExecutionInMinutes >= cron.interval) {
-                yield* cronLogger.log(
+                yield* cronLogger.verbose(
                   `${cron.name}: starting (interval ${cron.interval})`
                 );
                 await prisma.cronJob.update({

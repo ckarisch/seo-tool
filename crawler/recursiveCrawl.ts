@@ -189,8 +189,8 @@ export async function* recursiveCrawl(
 
                                             // do not push non canonicals to database
 
-                                            yield* subLogger.log('skip non canonical ' + normalizedHttpsLink)
-                                            yield* subLogger.log('use ' + canonicalNormalizedLink)
+                                            yield* subLogger.verbose('skip non canonical ' + normalizedHttpsLink)
+                                            yield* subLogger.verbose('use ' + canonicalNormalizedLink)
                                             skippedCanonicals.push(normalizedHttpsLink);
 
                                             // Skip further processing of this link
@@ -258,10 +258,10 @@ export async function* recursiveCrawl(
                                         }
                                     }
                                 } else {
-                                    throw error;
+                                    yield* subLogger.error(`request ${requests} critical error (${JSON.stringify(error)})`);
                                 }
                             }
-                            yield* subLogger.log(`request ${requests} ${new Date().getTime() - requestStartTime}ms (${requestUrl})`);
+                            yield* subLogger.verbose(`request ${requests} ${new Date().getTime() - requestStartTime}ms (${requestUrl})`);
 
                             // const strongestErrorCode = getStrongestErrorCode(errors);
 
@@ -304,11 +304,13 @@ export async function* recursiveCrawl(
         }
     }
 
+    yield* subLogger.log(`total request:  ${requests}`);
+
     if (pushLinksToDomain && domainId) {
         requestStartTime = new Date().getTime();
-        yield* subLogger.log(`start pushing links (${pushLinkInputs.length})`);
+        yield* subLogger.verbose(`start pushing links (${pushLinkInputs.length})`);
 
-        yield* subLogger.log(`filtering ${externalLinksToInsert.length} external links for unique entries`);
+        yield* subLogger.verbose(`filtering ${externalLinksToInsert.length} external links for unique entries`);
 
         // Filter for unique external links based on href
         const uniqueExternalLinks = externalLinksToInsert.reduce<{ foundOnPath: string; href: string }[]>((acc, current) => {
@@ -319,7 +321,7 @@ export async function* recursiveCrawl(
             return acc;
         }, []);
 
-        yield* subLogger.log(`start pushing external links (${uniqueExternalLinks.length} unique from ${externalLinksToInsert.length} total)`);
+        yield* subLogger.verbose(`start pushing external links (${uniqueExternalLinks.length} unique from ${externalLinksToInsert.length} total)`);
 
         // Run both operations concurrently
         const [internalResults, externalResults] = await Promise.all([
