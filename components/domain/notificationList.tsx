@@ -42,7 +42,7 @@ export default function NotificationList({ domainName }: NotificationListProps) 
     fetchUnreadCount();
 
     // Set up polling every 30 seconds
-    const interval = setInterval(fetchUnreadCount, 30000);
+    const interval = setInterval(fetchUnreadCount, 60000);
 
     return () => clearInterval(interval);
   }, [domainName]);
