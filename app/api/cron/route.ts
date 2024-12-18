@@ -81,6 +81,13 @@ export async function GET(request: Request) {
             yield* cronLogger.log(`${cron.name}: active`);
             if (cron.status === "running") {
               yield* cronLogger.log(`${cron.name}: abort - still running`);
+
+              await prisma.adminLog.create({
+                  data: {
+                      createdAt: new Date(),
+                      message: `error: cron ${cron.type} still running`
+                  },
+              });
             } else {
               const timePassedSinceLastExecutionInMinutes = Math.floor(
                 (Date.now() - cron.lastEnd.getTime()) / 1000 / 60

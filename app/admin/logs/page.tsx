@@ -21,11 +21,10 @@ const Logs = () => {
 
     return (
         <div className={styles.logsContainer}>
-            <h1>Admin Logs</h1>
+            <h1>Admin Logs <span className={styles.logIcon}>📝</span></h1>
             <div className={styles.logsList}>
                 {logs.adminLogs.map((log, index) => (
                     <div key={index} className={styles.logEntry}>
-                        <span className={styles.logIcon}>📝</span>
                         <p className={styles.logMessage}>{log.message}</p>
                         <p className={styles.logDate}>{format(log.createdAt, visibleDateFormat)}</p>
                     </div>

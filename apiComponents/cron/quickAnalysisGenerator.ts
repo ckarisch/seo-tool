@@ -391,6 +391,15 @@ export async function* quickAnalysisGenerator(
                                     data: { initialMessageSent: true }
                                 });
                             }
+
+                            await prisma.adminLog.create({
+                                data: {
+                                    createdAt: new Date(),
+                                    message: `${domain.domainName} message sent (${notifications.map(n => n.type).join(', ')})`,
+                                    domainId: domain.id,
+                                    userId: domain.userId,
+                                },
+                            });
                         }
                         else {
                             yield { text: `Nothing sent` };
@@ -409,15 +418,6 @@ export async function* quickAnalysisGenerator(
                 );
 
                 domainsCrawled++;
-
-                await prisma.adminLog.create({
-                    data: {
-                        createdAt: new Date(),
-                        message: `Quick analysis completed for ${domain.domainName} (score: ${(finalScore * 100).toFixed(1)}%, overall: ${(newScore * 100).toFixed(1)}%)`,
-                        domainId: domain.id,
-                        userId: domain.userId,
-                    },
-                });
 
                 yield { text: `Quick analysis completed for domain: ${domain.domainName} (score: ${(finalScore * 100).toFixed(1)}%, overall: ${(newScore * 100).toFixed(1)}%)` };
 
