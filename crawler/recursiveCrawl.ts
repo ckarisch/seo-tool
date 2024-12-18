@@ -250,11 +250,11 @@ export async function* recursiveCrawl(
                                             errors.err_404 = true;
                                             error404Occured = true;
                                             error404Links.push(normalizedHttpsLink);
-                                            yield* subLogger.log('error: 404 ' + requestUrl);
+                                            yield* subLogger.verbose('error: 404 ' + requestUrl);
                                         } else if (errorResult.errorCode === HttpErrorCode.ERROR_503) {
                                             errors.err_503 = true;
                                             error503Occured = true;
-                                            yield* subLogger.log('error: 503 ' + requestUrl);
+                                            yield* subLogger.verbose('error: 503 ' + requestUrl);
                                         }
                                     }
                                 } else {
