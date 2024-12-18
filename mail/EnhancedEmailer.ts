@@ -250,7 +250,6 @@ export const consolidatedCrawlNotification = async (
 
     // Process notifications
     for (const notification of notifications) {
-        console.log(`Processing notification of type: ${crawlNotificationType[notification.type]}`);
 
         const notificationData = createNotificationData(
             notification.type,
@@ -273,20 +272,16 @@ export const consolidatedCrawlNotification = async (
             if (domain.notificationType === NotificationType.NOTIFICATION ||
                 domain.notificationType === NotificationType.BOTH) {
                 try {
-                    console.log('Saving notification to database for domain:', domain.id);
-
                     // First, count existing notifications
                     const existingCount = await prisma.notification.count({
                         where: { domainId: domain.id }
                     });
 
-                    console.log(`Current notification count: ${existingCount}`);
                     const max = 5;
 
                     // If we're at or above the limit, remove oldest notifications to make space
                     if (existingCount >= max) {
                         const notificationsToRemove = existingCount - (max - 1); // Remove enough to have space for 1 new
-                        console.log(`Removing ${notificationsToRemove} old notifications`);
 
                         // Get the IDs of the oldest notifications
                         const oldestNotifications = await prisma.notification.findMany({
@@ -320,7 +315,6 @@ export const consolidatedCrawlNotification = async (
                         }
                     });
 
-                    console.log('Successfully saved notification:', savedNotification.id);
                     result.notificationsSaved++;
                 } catch (error) {
                     console.error('Error saving notification to database:', error);

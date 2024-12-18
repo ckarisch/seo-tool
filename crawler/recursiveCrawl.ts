@@ -107,9 +107,9 @@ export async function* recursiveCrawl(
             }
 
             if (typeof links[i] !== 'undefined' && links[i]) { // Check if the link is defined
-                const { subdomain, normalizedHttpsLink, isInternal, isInternalPage, warningDoubleSlash } = analyzeLink(links[i]!.path, extractedDomain);
+                const { subdomain, normalizedHttpsLink, normalizedLink, isInternal, isInternalPage, warningDoubleSlash } = analyzeLink(links[i]!.path, extractedDomain);
 
-                if (!crawledLinks.includes(normalizedHttpsLink)) {
+                if (!crawledLinks.includes(normalizedLink)) {
                     if (warningDoubleSlash) {
                         yield* subLogger.log('❗double slash occured');
                         warningDoubleSlashOccured = true;
@@ -118,7 +118,7 @@ export async function* recursiveCrawl(
 
                     if (isInternal) {
                         if (subdomain != analyzedUrl.subdomain) {
-                            yield* subLogger.log(`warning: subdomain (${normalizedHttpsLink}) not matching with requested url`)
+                            yield* subLogger.log(`warning: subdomain (${normalizedLink}) not matching with requested url`)
                         }
 
                         timePassed = (new Date().getTime() - crawlStartTime);
@@ -179,7 +179,7 @@ export async function* recursiveCrawl(
                                         // Add new link with ignoreCanonical = true
                                         const { normalizedLink: canonicalNormalizedLink } = analyzeLink(canonicalUrl, extractedDomain);
 
-                                        if (canonicalNormalizedLink !== normalizedHttpsLink) {
+                                        if (canonicalNormalizedLink !== normalizedLink) {
                                             // only skip, if canonical link is different
                                             links.push({
                                                 path: canonicalNormalizedLink,
@@ -189,9 +189,9 @@ export async function* recursiveCrawl(
 
                                             // do not push non canonicals to database
 
-                                            yield* subLogger.verbose('skip non canonical ' + normalizedHttpsLink)
+                                            yield* subLogger.verbose('skip non canonical ' + normalizedLink)
                                             yield* subLogger.verbose('use ' + canonicalNormalizedLink)
-                                            skippedCanonicals.push(normalizedHttpsLink);
+                                            skippedCanonicals.push(normalizedLink);
 
                                             // Skip further processing of this link
                                             continue;
@@ -200,13 +200,13 @@ export async function* recursiveCrawl(
                                 }
 
                                 // only push to crawled links, if link is not skipped
-                                crawledLinks.push(normalizedHttpsLink);
+                                crawledLinks.push(normalizedLink);
                                 const { language } = checkLanguage(data);
 
                                 if (pushLinksToDomain && domainId) {
                                     const internalLink = await pushLink(prisma,
                                         links[i].foundOnPath,
-                                        normalizedHttpsLink,
+                                        normalizedLink,
                                         false,
                                         domainId,
                                         linkType.page,
@@ -237,7 +237,7 @@ export async function* recursiveCrawl(
                                         prisma,
                                         domainId,
                                         domainCrawlId: domainCrawl?.id,
-                                        normalizedLink: normalizedHttpsLink,
+                                        normalizedLink: normalizedLink,
                                         foundOnPath: links[i].foundOnPath,
                                         requestUrl,
                                         requestTime,

@@ -66,7 +66,6 @@ async function aggregateErrorLogs(domainId: string, onlyNotNotified = false) {
     });
     // If we find errors, use approach 3 and filter in memory
     const errors = approach3.filter(error => error.resolvedAt === null);
-    console.log('Filtered results:', errors.length);
 
     // Create a map using composite key of errorType.code + page path
     const errorMap = new Map<string, typeof errors[0]>();
@@ -87,7 +86,6 @@ async function aggregateErrorLogs(domainId: string, onlyNotNotified = false) {
     });
 
     const result = Array.from(errorMap.values());
-    console.log('Final result count:', result.length);
 
     return result;
 }
