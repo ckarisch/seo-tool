@@ -8,6 +8,7 @@ import { DomainCrawl, Prisma, UserRole } from "@prisma/client";
 import { checkCanonical } from "./checks/checkCanonical";
 import { handleHttpError } from "./errorHandle/handleHttpError";
 import { checkLanguage } from "./checks/checkLanguage";
+import * as https from 'https';
 
 export interface recursiveCrawlResponse {
     timeout: boolean;
@@ -161,9 +162,26 @@ export async function* recursiveCrawl(
 
                             try {
                                 timePassed = (new Date().getTime() - crawlStartTime);
-
                                 requestStartTime = new Date().getTime();
-                                data = (await axios.get(requestUrl, { timeout: maxCrawlTime - timePassed })).data;
+
+                                const axiosInstance = axios.create();
+                                axiosInstance.interceptors.request.use(config => {
+                                    config.timeout = maxCrawlTime - timePassed;
+                                    return config;
+                                });
+
+                                const abortController = new AbortController();
+                                data = (await axiosInstance.get(requestUrl, {
+                                    signal: abortController.signal,
+                                    validateStatus: function (status) {
+                                        return status < 500; // Accept all status codes less than 500
+                                    },
+                                    httpsAgent: new https.Agent({
+                                        rejectUnauthorized: false,
+                                        timeout: maxCrawlTime - timePassed
+                                    })
+                                })).data;
+
                                 requestTime = new Date().getTime() - requestStartTime;
                                 let internalLinkId: string | undefined = undefined;
 
@@ -231,6 +249,38 @@ export async function* recursiveCrawl(
                                 yield* subLogger.verbose(`request ${requests} error (${requestUrl})`);
                                 timePassed = (new Date().getTime() - crawlStartTime);
 
+                                if (error.code === 'ECONNRESET') {
+                                    yield* subLogger.error(`Socket connection reset for ${requestUrl}`);
+                                    // Handle the ECONNRESET error specifically
+                                    if (pushLinksToDomain && domainId) {
+                                        await prisma.errorLog.create({
+                                            data: {
+                                                errorType: {
+                                                    connect: {
+                                                        code: 'ECONNRESET'
+                                                    }
+                                                },
+                                                domain: {
+                                                    connect: {
+                                                        id: domainId
+                                                    }
+                                                },
+                                                domainCrawl: domainCrawl ? {
+                                                    connect: {
+                                                        id: domainCrawl.id
+                                                    }
+                                                } : undefined,
+                                                metadata: {
+                                                    url: requestUrl,
+                                                    message: 'Socket connection reset'
+                                                }
+                                            }
+                                        });
+                                    }
+                                    // Skip this URL and continue with the next one
+                                    continue;
+                                }
+
                                 if (error instanceof AxiosError) {
                                     const errorResult = await handleHttpError({
                                         error,
@@ -258,7 +308,7 @@ export async function* recursiveCrawl(
                                         }
                                     }
                                 } else {
-                                    yield* subLogger.error(`request ${requests} critical error (${JSON.stringify(error)})`);
+                                    yield* subLogger.error(`request ${requests} critical error at ${requestUrl} ${JSON.stringify(error)}`);
                                 }
                             }
                             yield* subLogger.verbose(`request ${requests} ${new Date().getTime() - requestStartTime}ms (${requestUrl})`);
