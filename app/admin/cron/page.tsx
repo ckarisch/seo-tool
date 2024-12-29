@@ -136,7 +136,7 @@ export default function AdminCron() {
                                     <div>{formatDistanceToNow(job.lastStart, { addSuffix: true })}</div>
                                     <div>{formatDistanceToNow(job.lastEnd, { addSuffix: true })}</div>
                                     <div>
-                                        {job.status === 'crawling' && (
+                                        {job.status !== 'idle' && (
                                             <button
                                                 onClick={() => handleResetStatus(job.id)}
                                                 className={styles.resetButton}
