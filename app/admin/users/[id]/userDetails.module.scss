@@ -1,0 +1,197 @@
+// app/admin/users/[id]/userDetails.module.scss
+@import "@/app/variables";
+
+.userDetails {
+    padding: 40px 0;
+}
+
+.header {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    margin-bottom: 32px;
+}
+
+.backButton {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    border: none;
+    background: none;
+    color: $text-secondary;
+    cursor: pointer;
+    transition: all 0.2s ease;
+
+    &:hover {
+        color: $color;
+    }
+}
+
+.title {
+    font-size: 2rem;
+    font-weight: 600;
+    color: $color;
+    margin: 0;
+}
+
+.content {
+    display: grid;
+    gap: 32px;
+}
+
+.userCard {
+    background: white;
+    border-radius: 12px;
+    border: 1px solid $background-light;
+    padding: 24px;
+}
+
+.userInfo {
+    display: grid;
+    gap: 16px;
+}
+
+.infoRow {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: $text-secondary;
+
+    svg {
+        flex-shrink: 0;
+    }
+}
+
+.roleSelect {
+    padding: 6px 12px;
+    border: 1px solid $background-light;
+    border-radius: 6px;
+    background-color: white;
+    color: $color;
+    font-size: 0.875rem;
+
+    &:focus {
+        outline: none;
+        border-color: $color;
+        box-shadow: 0 0 0 2px rgba($color, 0.1);
+    }
+}
+
+.domainsSection {
+    .sectionTitle {
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: $color;
+        margin-bottom: 24px;
+    }
+}
+
+.domainsList {
+    display: grid;
+    gap: 16px;
+}
+
+.domainCard {
+    background: white;
+    border-radius: 12px;
+    border: 1px solid $background-light;
+    padding: 20px;
+    transition: all 0.2s ease;
+
+    &:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    }
+}
+
+.domainHeader {
+    margin-bottom: 16px;
+
+    .domainName {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: $color;
+        margin: 0 0 4px 0;
+    }
+
+    .domainUrl {
+        font-size: 0.875rem;
+        color: $text-secondary;
+    }
+}
+
+.domainStats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 16px;
+}
+
+.stat {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+
+    .statLabel {
+        font-size: 0.75rem;
+        color: $text-secondary;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .statValue {
+        font-weight: 500;
+        color: $color;
+
+        &.verified {
+            color: $veryGood;
+        }
+
+        &.unverified {
+            color: $warning;
+        }
+    }
+}
+
+.message {
+    margin-bottom: 24px;
+    padding: 12px 16px;
+    border-radius: 8px;
+    font-weight: 500;
+
+    &.success {
+        background-color: rgba($veryGood, 0.1);
+        color: $veryGood;
+        border: 1px solid rgba($veryGood, 0.2);
+    }
+
+    &.error {
+        background-color: rgba($error, 0.1);
+        color: $error;
+        border: 1px solid rgba($error, 0.2);
+    }
+}
+
+.loading, .notFound, .notAllowed, .noDomains {
+    text-align: center;
+    padding: 48px;
+    background: white;
+    border-radius: 12px;
+    border: 1px solid $background-light;
+}
+
+.loading {
+    color: $text-secondary;
+}
+
+.notFound {
+    color: $warning;
+}
+
+.notAllowed {
+    color: $error;
+}
+
+.noDomains {
+    color: $text-secondary;
+}

@@ -1,0 +1,117 @@
+// app/admin/users/users.module.scss
+@import "@/app/variables";
+
+.usersPage {
+    padding: 40px 0;
+}
+
+.title {
+    font-size: 2rem;
+    font-weight: 600;
+    margin-bottom: 32px;
+    color: $color;
+}
+
+.message {
+    margin-bottom: 24px;
+    padding: 12px 16px;
+    border-radius: 8px;
+    font-weight: 500;
+
+    &.success {
+        background-color: rgba($veryGood, 0.1);
+        color: $veryGood;
+        border: 1px solid rgba($veryGood, 0.2);
+    }
+
+    &.error {
+        background-color: rgba($error, 0.1);
+        color: $error;
+        border: 1px solid rgba($error, 0.2);
+    }
+}
+
+.table {
+    background: white;
+    border-radius: 12px;
+    border: 1px solid $background-light;
+    overflow: hidden;
+}
+
+.tableHeader {
+    display: grid;
+    grid-template-columns: 2fr 1.5fr 1fr 1fr 1.5fr 1fr;
+    gap: 16px;
+    padding: 16px;
+    background-color: $background-light;
+    font-weight: 600;
+    color: $text-secondary;
+}
+
+.tableRow {
+    display: grid;
+    grid-template-columns: 2fr 1.5fr 1fr 1fr 1.5fr 1fr;
+    gap: 16px;
+    padding: 16px;
+    align-items: center;
+    border-top: 1px solid $background-light;
+
+    &:hover {
+        background-color: rgba($background-light, 0.5);
+    }
+
+    > div {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+}
+
+.roleSelect {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid $background-light;
+    border-radius: 6px;
+    background-color: white;
+    color: $color;
+    font-size: 0.875rem;
+
+    &:focus {
+        outline: none;
+        border-color: $color;
+        box-shadow: 0 0 0 2px rgba($color, 0.1);
+    }
+}
+
+.viewButton {
+    background-color: $color;
+    color: white;
+    border: none;
+    padding: 6px 16px;
+    border-radius: 6px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+
+    &:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba($color, 0.2);
+    }
+}
+
+.loading, .noUsers {
+    text-align: center;
+    padding: 48px;
+    color: $text-secondary;
+    background: white;
+    border-radius: 12px;
+    border: 1px solid $background-light;
+}
+
+.notAllowed {
+    text-align: center;
+    padding: 48px;
+    color: $error;
+    font-size: 1.25rem;
+}

@@ -11,9 +11,11 @@ $main-light: #e0f2fe;
 $text-primary: #111827; // Base text color
 $color: #111827; // Darker for better contrast (keeping for backwards compatibility)
 $text-secondary: #4b5563; // Adjusted for 4.5:1 contrast ratio
+$text-secondary-dark: #4b5563;
 
 // Background Colors
 $background-light: #f3f4f6;
+$background-dark: #4b5563;
 $accent: #d1d5db;
 $border-color: $accent;
 $box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);

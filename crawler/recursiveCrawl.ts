@@ -108,9 +108,9 @@ export async function* recursiveCrawl(
             }
 
             if (typeof links[i] !== 'undefined' && links[i]) { // Check if the link is defined
-                const { subdomain, normalizedHttpsLink, normalizedLink, isInternal, isInternalPage, warningDoubleSlash } = analyzeLink(links[i]!.path, extractedDomain);
+                const { subdomain, normalizedLink, normalizedPageLink, normalizedHttpsPageLink, isInternal, isInternalPage, warningDoubleSlash } = analyzeLink(links[i]!.path, extractedDomain);
 
-                if (!crawledLinks.includes(normalizedLink)) {
+                if (!crawledLinks.includes(normalizedPageLink)) {
                     if (warningDoubleSlash) {
                         yield* subLogger.verbose('❗double slash occured');
                         warningDoubleSlashOccured = true;
@@ -119,7 +119,7 @@ export async function* recursiveCrawl(
 
                     if (isInternal) {
                         if (subdomain != analyzedUrl.subdomain) {
-                            yield* subLogger.log(`warning: subdomain (${normalizedLink}) not matching with requested url`)
+                            yield* subLogger.log(`warning: subdomain (${normalizedPageLink}) not matching with requested url`)
                         }
 
                         timePassed = (new Date().getTime() - crawlStartTime);
@@ -150,7 +150,7 @@ export async function* recursiveCrawl(
                             }
 
                             requestStartTime = new Date().getTime();
-                            const requestUrl = normalizedHttpsLink;
+                            const requestUrl = normalizedHttpsPageLink;
 
                             let errors = {
                                 err_404: false,
@@ -161,6 +161,7 @@ export async function* recursiveCrawl(
                             requestTime = 0; // set to 0 in case of error
 
                             try {
+                                yield* subLogger.verbose(`${normalizedPageLink} request`);
                                 timePassed = (new Date().getTime() - crawlStartTime);
                                 requestStartTime = new Date().getTime();
 
@@ -187,7 +188,7 @@ export async function* recursiveCrawl(
 
                                 // Check for canonical URL before processing the page
                                 if (!links[i].ignoreCanonical) {
-                                    if (skippedCanonicals.includes(normalizedHttpsLink)) {
+                                    if (skippedCanonicals.includes(normalizedHttpsPageLink)) {
                                         // if this link is already marked as non canonical, skip it
                                         // no request to check for canonical tag will be started
                                         continue;
@@ -218,13 +219,13 @@ export async function* recursiveCrawl(
                                 }
 
                                 // only push to crawled links, if link is not skipped
-                                crawledLinks.push(normalizedLink);
+                                crawledLinks.push(normalizedPageLink);
                                 const { language } = checkLanguage(data);
 
                                 if (pushLinksToDomain && domainId) {
                                     const internalLink = await pushLink(prisma,
                                         links[i].foundOnPath,
-                                        normalizedLink,
+                                        normalizedPageLink,
                                         false,
                                         domainId,
                                         linkType.page,
@@ -287,7 +288,7 @@ export async function* recursiveCrawl(
                                         prisma,
                                         domainId,
                                         domainCrawlId: domainCrawl?.id,
-                                        normalizedLink: normalizedLink,
+                                        normalizedLink: normalizedPageLink,
                                         foundOnPath: links[i].foundOnPath,
                                         requestUrl,
                                         requestTime,
@@ -299,7 +300,7 @@ export async function* recursiveCrawl(
                                         if (errorResult.errorCode === HttpErrorCode.ERROR_404) {
                                             errors.err_404 = true;
                                             error404Occured = true;
-                                            error404Links.push(normalizedHttpsLink);
+                                            error404Links.push(normalizedHttpsPageLink);
                                             yield* subLogger.verbose('error: 404 ' + requestUrl);
                                         } else if (errorResult.errorCode === HttpErrorCode.ERROR_503) {
                                             errors.err_503 = true;
@@ -322,8 +323,8 @@ export async function* recursiveCrawl(
                             for (let element of aElements) {
                                 const href = $(element).attr('href');
                                 if (href) {
-                                    const { normalizedLink } = analyzeLink(href, extractedDomain);
-                                    links.push({ path: normalizedLink, foundOnPath: requestUrl, ignoreCanonical: false });
+                                    const { normalizedPageLink } = analyzeLink(href, extractedDomain);
+                                    links.push({ path: normalizedPageLink, foundOnPath: requestUrl, ignoreCanonical: false });
                                 }
                             }
                         }
@@ -333,7 +334,7 @@ export async function* recursiveCrawl(
                             if (pushLinksToDomain && domainId) {
                                 requestTime = new Date().getTime() - requestStartTime;
 
-                                const pushLinkInput = createPushLinkInput(links[i].foundOnPath, normalizedHttpsLink, warningDoubleSlash, domainId, linkType.file, requestTime, null, null);
+                                const pushLinkInput = createPushLinkInput(links[i].foundOnPath, normalizedHttpsPageLink, warningDoubleSlash, domainId, linkType.file, requestTime, null, null);
                                 pushLinkInputs.push(pushLinkInput);
                             }
                             // await pushLink(prisma, links[i].foundOnPath, normalizedLink, warningDoubleSlash, domainId, linkType.page, requestTime, null);
@@ -342,10 +343,12 @@ export async function* recursiveCrawl(
                     else {
                         // yield* subLogger.log('push to external links: ' + normalizedLink);
                         if (pushLinksToDomain && domainId) {
+                            yield* subLogger.verbose(`push to external: ${normalizedLink} ${normalizedHttpsPageLink}`);
+
                             // Instead of immediate push, collect in array
                             externalLinksToInsert.push({
                                 foundOnPath: links[i].foundOnPath,
-                                href: normalizedHttpsLink
+                                href: normalizedHttpsPageLink
                             });
                         }
                     }

@@ -3,7 +3,18 @@
 import React, { useState, ReactNode } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Home, Users, FileText, Settings, LogOut, Menu as MenuIcon, ChevronLeft } from 'lucide-react';
+import {
+    LayoutDashboard,
+    AlertTriangle,
+    Users,
+    ScrollText,
+    Clock,
+    Wrench,
+    Settings,
+    LogOut,
+    Menu as MenuIcon,
+    ChevronLeft
+} from 'lucide-react';
 import styles from './adminDashboard.module.css';
 
 // Custom UI Components
@@ -33,7 +44,12 @@ type MenuItem = {
 const Menu: React.FC<{ items: MenuItem[]; selectedKey: string }> = ({ items, selectedKey }) => (
     <nav className={styles.menu}>
         {items.map((item) => (
-            <Link className={`${styles.menuItem} ${item.path === selectedKey ? styles.selected : ''}`} key={item.key} href={item.path} passHref>
+            <Link 
+                className={`${styles.menuItem} ${item.path === selectedKey ? styles.selected : ''}`} 
+                key={item.key} 
+                href={item.path} 
+                passHref
+            >
                 {item.icon}
                 <span className={styles.label}>{item.label}</span>
             </Link>
@@ -56,13 +72,15 @@ const Button: React.FC<{
     </button>
 );
 
-// Menu items configuration
+// Menu items configuration with more appropriate icons
 const menuItems: MenuItem[] = [
-    { key: '1', icon: <Home size={20} />, label: 'Home', path: '/admin' },
-    { key: '2', icon: <Home size={20} />, label: 'ErrorTypes', path: '/admin/error-types' },
+    { key: '1', icon: <LayoutDashboard size={20} />, label: 'Home', path: '/admin' },
+    { key: '2', icon: <AlertTriangle size={20} />, label: 'ErrorTypes', path: '/admin/error-types' },
     { key: '3', icon: <Users size={20} />, label: 'Users', path: '/admin/users' },
-    { key: '4', icon: <FileText size={20} />, label: 'Logs', path: '/admin/logs' },
-    { key: '5', icon: <Settings size={20} />, label: 'Settings', path: '/admin/settings' },
+    { key: '4', icon: <ScrollText size={20} />, label: 'Logs', path: '/admin/logs' },
+    { key: '5', icon: <Clock size={20} />, label: 'Cron', path: '/admin/cron' },
+    { key: '6', icon: <Wrench size={20} />, label: 'Actions', path: '/admin/actions' },
+    { key: '7', icon: <Settings size={20} />, label: 'Settings', path: '/admin/settings' },
 ];
 
 // Main AdminDashboard component
