@@ -81,7 +81,10 @@ export async function DELETE(
     return Response.json({ error: 'Not authenticated', domains: [] }, { status: 401 })
   }
   const user = await prisma.user.findFirst({ where: { email: session.user.email! } })
-  const domain = await prisma.domain.findFirst({ where: { domainName: params.domainName } })
+  if (!user || !user.id) {
+    return Response.json({ error: 'user not found' }, { status: 404 })
+  }
+  const domain = await prisma.domain.findFirst({ where: { domainName: params.domainName, userId: user.id } })
 
   if (!domain || domain.userId != user?.id) {
     return Response.json({ error: 'domain not found' }, { status: 404 })
