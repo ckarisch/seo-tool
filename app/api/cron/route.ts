@@ -77,6 +77,21 @@ export async function GET(request: Request) {
           }
           yield* cronLogger.log(`${cron.name}: time left: ${timeLeft}`);
 
+          if (cron.status === "running") {
+            const timePassedSinceLastEndInHours = Math.floor(
+              (Date.now() - cron.lastEnd.getTime()) / 1000 / 60 / 60
+            );
+
+            if (timePassedSinceLastEndInHours >= 24) {
+              yield* cronLogger.error(`${cron.name}: found stale running job (${timePassedSinceLastEndInHours}h), resetting to idle`);
+              await prisma.cronJob.update({
+                where: { id: cron.id },
+                data: { status: "idle" },
+              });
+              // Continue with normal execution after reset
+            }
+          }
+
           if (cron.acitve) {
             yield* cronLogger.log(`${cron.name}: active`);
             if (cron.status === "running") {
