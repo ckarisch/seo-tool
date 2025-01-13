@@ -10,6 +10,7 @@
   display: flex;
   gap: 12px;
   margin-bottom: 16px;
+  flex-wrap: wrap; // Add this to handle multiple buttons better
 }
 
 .filterButton {
@@ -22,6 +23,7 @@
   border: 1px solid $background-light;
   background: white;
   color: $text-secondary;
+  white-space: nowrap; // Prevent button text from wrapping
 
   &:hover {
     background: $background-light;
@@ -31,6 +33,45 @@
     background: $color;
     color: white;
     border-color: $color;
+  }
+
+  // Improve accessibility
+  &:focus {
+    outline: 2px solid $color;
+    outline-offset: 2px;
+  }
+
+  // Add keyboard navigation support
+  &:focus-visible {
+    outline: 2px solid $color;
+    outline-offset: 2px;
+  }
+}
+
+.path {
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  .templatePath {
+    font-weight: 700;
+  }
+
+  .templateCount {
+    background: $background-light;
+    color: $text-secondary;
+    font-size: 0.8rem;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-weight: 500;
+  }
+
+  @media print {
+    flex-wrap: wrap;
   }
 }
 
@@ -78,6 +119,12 @@
   &:hover {
     background-color: $background-light;
   }
+
+  @media print {
+    grid-template-columns: 1fr;
+    font-size: 10px;
+    padding: 10px 8px;
+  }
 }
 
 .linkHeadingMain {
@@ -91,6 +138,13 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+  }
+}
+
+.date,
+.loadTime {
+  @media print {
+    display: none;
   }
 }
 
@@ -131,6 +185,10 @@
     background: $background-light;
     color: $text-secondary;
   }
+
+  @media print {
+    font-size: 12px;
+  }
 }
 
 .linkDetails {
@@ -142,8 +200,8 @@
 
   &.visible {
     padding: 16px;
-    max-height: 800px; // Increase if needed
-    overflow-y: auto; // Enable vertical scrolling if content is too long
+    max-height: 800px;
+    overflow-y: auto;
   }
 
   > div {
@@ -224,7 +282,7 @@
 
 .metadata {
   flex-direction: column !important;
-  width: 100%; // Ensure it takes full width of parent
+  width: 100%;
 
   pre {
     background: $background-light;
@@ -232,10 +290,54 @@
     border-radius: 4px;
     font-size: 0.85rem;
     margin: 4px 0;
-    overflow: auto; // Enable scrolling
-    max-height: 200px; // Limit vertical height
-    max-width: 100%; // Prevent horizontal overflow
-    word-wrap: break-word; // Break long words
-    white-space: pre-wrap; // Preserve whitespace but wrap text
+    overflow: auto;
+    max-height: 200px;
+    max-width: 100%;
+    word-wrap: break-word;
+    white-space: pre-wrap;
+  }
+}
+
+@media print {
+  .links {
+    // Verhindert, dass Links am Seitenende abgeschnitten werden
+    page-break-inside: auto;
+  }
+
+  .linkInner {
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+
+  // Verbesserung der Lesbarkeit im Druck
+  .linkHeading {
+    background-color: transparent !important;
+    border-bottom: 1px solid #ddd;
+  }
+
+  // Sicherstellen, dass der Text schwarz ist für bessere Lesbarkeit
+  .path {
+    color: #000 !important;
+  }
+
+  // Filter-Container ausblenden, da nicht relevant für den Druck
+  .filterContainer {
+    display: none !important;
+  }
+
+  // Sicherstellen, dass Fehler und Warnungen auch im Druck erkennbar sind
+  .severityBadge {
+    border: 1px solid #000;
+    // Druckoptimierte Farben für die Badges
+    &.critical,
+    &.high {
+      background-color: #ffeeee !important;
+      color: #000 !important;
+    }
+    &.medium,
+    &.low {
+      background-color: #ffffee !important;
+      color: #000 !important;
+    }
   }
 }

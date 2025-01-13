@@ -6,12 +6,12 @@
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
   position: relative;
-  
+
   @media (min-width: 768px) {
     flex: 1;
     overflow-x: visible;
   }
-  
+
   // Hide scrollbar but keep functionality
   &::-webkit-scrollbar {
     display: none;
@@ -21,7 +21,7 @@
 
   // Add fade effect on mobile when scrollable
   &::after {
-    content: '';
+    content: "";
     position: absolute;
     right: 0;
     top: 0;
@@ -31,6 +31,10 @@
     pointer-events: none;
 
     @media (min-width: 768px) {
+      display: none;
+    }
+
+    @media print {
       display: none;
     }
   }
@@ -43,7 +47,7 @@
   margin: 0;
   padding: 0 4px;
   min-width: min-content;
-  
+
   @media (min-width: 768px) {
     gap: 8px;
     justify-content: flex-end;
@@ -70,7 +74,7 @@
   text-decoration: none;
   white-space: nowrap;
   position: relative;
-  
+
   @media (min-width: 768px) {
     padding: 8px 16px;
     font-size: 0.95rem;
@@ -102,7 +106,7 @@
 
   // Animation for active state
   &::after {
-    content: '';
+    content: "";
     position: absolute;
     bottom: -2px;
     left: 50%;

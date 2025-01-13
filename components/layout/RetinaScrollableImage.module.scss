@@ -1,0 +1,41 @@
+@import "@/app/variables";
+
+.imageContainer {
+    box-shadow: 0 0 2px rgba(0,0,0,.5);
+    position: relative;
+    overflow: hidden;
+    cursor: ns-resize;
+
+    @media print {
+        box-shadow: none;
+        border: 1px solid $color;
+        overflow: visible !important;
+        cursor: default;
+        position: relative !important;
+        height: 150px !important; // Feste Höhe für den Druck
+        width: 150px !important;  // Feste Breite für den Druck
+        page-break-inside: avoid;
+        opacity: 1 !important;
+        visibility: visible !important;
+    }
+}
+
+.image {
+    width: 100%;
+    height: 100%;
+    transition: object-position 0.1s ease-out;
+    display: block;
+
+    @media print {
+        display: block !important;
+        position: relative !important;
+        width: 100% !important;
+        height: 100% !important;
+        min-height: 150px !important;
+        object-fit: cover !important;
+        object-position: center top !important;
+        opacity: 1 !important;
+        visibility: visible !important;
+        transform: none !important;
+    }
+}

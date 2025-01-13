@@ -29,6 +29,7 @@ const DomainActions: React.FC<DomainActionsProps> = ({
     }
     return (
         <MinimizableContainer
+            className={styles.container}
             title={
                 <div className={styles.titleContainer}>
                     <span>Domain Actions</span>

@@ -13,4 +13,12 @@
   @media all and (min-width: 426px) {
     width: calc(100vw - 40px);
   }
+
+  @media print {
+    width: 100% !important;
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: visible !important;
+  }
 }

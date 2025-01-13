@@ -157,3 +157,79 @@ button {
     box-shadow: 2px 2px 0 rgba(0, 0, 0, .9);
   }
 }
+
+@media print {
+  html,
+  body {
+    height: auto !important;
+    min-height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
+    background: none !important;
+  }
+
+  body {
+    display: block !important; /* Override flex */
+    position: relative !important;
+  }
+
+  /* Override flex box for main content */
+  main {
+    flex: none !important;
+    height: auto !important;
+    min-height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
+  }
+
+  /* Footer im Druck optimieren */
+  #globalfooter {
+    position: relative !important;
+    margin-top: 2em !important;
+    padding: 1em 0 !important;
+    background: none !important;
+    border-top: 1px solid #000;
+  }
+
+  /* Verbessertes Seitenumbruchverhalten */
+  h1, h2, h3 {
+    page-break-after: avoid;
+    break-after: avoid;
+  }
+
+  /* Entferne alle Transitions und Animationen */
+  * {
+    transition: none !important;
+    animation: none !important;
+  }
+
+  /* Druckspezifische Link-Darstellung */
+  a {
+    text-decoration: none !important;
+  }
+
+  /* Verbesserte Farbanpassung für den Druck */
+  body {
+    color: #000 !important;
+    background: #fff !important;
+  }
+
+  /* Entferne alle fixed/sticky Positionierungen */
+  * {
+    position: static !important;
+  }
+}
+
+@media print {
+  img, svg {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+  }
+}
+
+/* Seiteneinstellungen für den Druck */
+@page {
+  margin: 2cm;
+  size: auto;
+}

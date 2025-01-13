@@ -51,6 +51,7 @@ export default function LinkList({ params, linksFetchTag, domainFetchTag }: {
     const [hide404, setHide404] = useState(false);
     const [hide503, setHide503] = useState(false);
     const [hiddenLanguages, setHiddenLanguages] = useState<string[]>([]);
+    const [hideTemplates, setHideTemplates] = useState(false);
 
     const has404Errors = linksJson.links?.some(link =>
         link.errorLogs.some(log => log.errorType.code === 'ERROR_404')
@@ -142,7 +143,48 @@ export default function LinkList({ params, linksFetchTag, domainFetchTag }: {
         }
     };
 
-    const filteredLinks = linksJson.links.filter(link => {
+
+    const getTemplateGroups = (links: UILink[]): { [key: string]: UILink[] } => {
+        return links.reduce((groups: { [key: string]: UILink[] }, link) => {
+            // Extract template path (everything before the last segment)
+            const pathParts = link.path.split('/');
+            const templatePath = pathParts.slice(0, -1).join('/');
+
+            if (templatePath) {
+                if (!groups[templatePath]) {
+                    groups[templatePath] = [];
+                }
+                groups[templatePath].push(link);
+            }
+
+            return groups;
+        }, {});
+    };
+
+    const filterTemplatePages = (links: UILink[]): UILink[] => {
+        if (!hideTemplates) return links;
+
+        const templateGroups = getTemplateGroups(links);
+        const seenTemplates = new Set<string>();
+
+        return links.filter(link => {
+            const pathParts = link.path.split('/');
+            const templatePath = pathParts.slice(0, -1).join('/');
+
+            if (!templatePath || templateGroups[templatePath]?.length <= 1) {
+                return true;
+            }
+
+            if (!seenTemplates.has(templatePath)) {
+                seenTemplates.add(templatePath);
+                return true;
+            }
+
+            return false;
+        });
+    };
+
+    const filteredLinks = filterTemplatePages(linksJson.links.filter(link => {
         if (hide404 && link.errorLogs.some(log => log.errorType.code === 'ERROR_404')) {
             return false;
         }
@@ -153,12 +195,46 @@ export default function LinkList({ params, linksFetchTag, domainFetchTag }: {
             return false;
         }
         return true;
-    });
+    }));
+
+    const PathWithTemplate = ({ path, templateGroups }: { path: string, templateGroups: { [key: string]: UILink[] } }) => {
+        const pathParts = path.split('/');
+        const lastPart = pathParts.pop() || '';
+        const templatePath = pathParts.join('/');
+
+        // Nur anzeigen wenn es tatsächlich ein Template mit mehreren Seiten ist
+        const isTemplate = templatePath && templateGroups[templatePath]?.length > 1;
+
+        if (!isTemplate) {
+            return <span>{path}</span>;
+        }
+
+        return (
+            <>
+                <span className={styles.templatePath}>{templatePath}/</span>
+                {lastPart}
+                <span className={styles.templateCount}>
+                    {templateGroups[templatePath].length} pages
+                </span>
+            </>
+        );
+    };
+
+    const templateGroups = getTemplateGroups(linksJson.links);
 
     return (
         <div className={styles.sectionContainer}>
             <MinimizableContainer title={`Links (${filteredLinks.length})`}>
                 <div className={styles.filterContainer}>
+                    <button
+                        className={[
+                            styles.filterButton,
+                            hideTemplates ? styles.active : ''
+                        ].join(' ')}
+                        onClick={() => setHideTemplates(!hideTemplates)}
+                    >
+                        Hide Similar Pages
+                    </button>
                     {has404Errors && (
                         <button
                             className={[
@@ -230,12 +306,17 @@ export default function LinkList({ params, linksFetchTag, domainFetchTag }: {
                                                 {highestSeverity}
                                             </span>
                                         )}
-                                        <span className={styles.path}>{link.path}</span>
+                                        <span className={styles.path}>
+                                            <PathWithTemplate
+                                                path={link.path}
+                                                templateGroups={templateGroups}
+                                            />
+                                        </span>
                                     </div>
-                                    <div>
+                                    <div className={styles.date}>
                                         {format(new Date(link.lastCheck), visibleDateFormat)}
                                     </div>
-                                    <div>
+                                    <div className={styles.loadTime}>
                                         {link.lastLoadTime > 0 ? link.lastLoadTime + 'ms' : 'no data'}
                                     </div>
                                 </div>

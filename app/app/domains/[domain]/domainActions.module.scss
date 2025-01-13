@@ -1,5 +1,11 @@
 @import "@/app/variables";
 
+.container {
+  @media print {
+    display: none;
+  }
+}
+
 .titleContainer {
   display: flex;
   align-items: center;
@@ -19,9 +25,9 @@
 }
 
 .actionItem {
-  padding: 16px;  // Reduced padding on mobile
+  padding: 16px; // Reduced padding on mobile
   border-bottom: 1px solid $background-light;
-  
+
   @media (min-width: 768px) {
     padding: 24px;
   }
@@ -37,11 +43,11 @@
 }
 
 .actionTitle {
-  font-size: 1rem;  // Slightly smaller on mobile
+  font-size: 1rem; // Slightly smaller on mobile
   font-weight: 500;
   color: $color;
-  margin-bottom: 6px;  // Reduced margin on mobile
-  
+  margin-bottom: 6px; // Reduced margin on mobile
+
   @media (min-width: 768px) {
     font-size: 1.1rem;
     margin-bottom: 8px;
@@ -49,11 +55,11 @@
 }
 
 .actionDescription {
-  font-size: 0.9rem;  // Slightly smaller on mobile
+  font-size: 0.9rem; // Slightly smaller on mobile
   color: $text-secondary;
-  margin-bottom: 12px;  // Reduced margin on mobile
+  margin-bottom: 12px; // Reduced margin on mobile
   line-height: 1.5;
-  
+
   @media (min-width: 768px) {
     font-size: 0.95rem;
     margin-bottom: 16px;
@@ -63,7 +69,7 @@
 .actionButton {
   display: inline-flex;
   align-items: center;
-  justify-content: center;  // Center content on mobile
+  justify-content: center; // Center content on mobile
   gap: 8px;
   padding: 8px 16px;
   background-color: $color;
@@ -71,10 +77,10 @@
   border-radius: $border-radius;
   font-weight: 500;
   transition: all 0.2s ease;
-  width: 100%;  // Full width on mobile
-  
+  width: 100%; // Full width on mobile
+
   @media (min-width: 768px) {
-    width: auto;  // Auto width on desktop
+    width: auto; // Auto width on desktop
   }
 
   svg {
@@ -101,9 +107,9 @@
 // Add container for multiple buttons
 .actionButtons {
   display: flex;
-  flex-direction: column;  // Stack on mobile
+  flex-direction: column; // Stack on mobile
   gap: 12px;
-  
+
   @media (min-width: 768px) {
     flex-direction: row;
     gap: 16px;
