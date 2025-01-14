@@ -18,6 +18,7 @@ import Image from "next/image";
 import RetinaScrollableImage from "@/components/layout/RetinaScrollableImage";
 import { canAccessFeature } from "@/lib/session";
 import { UserRole } from "@prisma/client";
+import { PDFDownloadButton } from "@/components/layout/input/PdfDownloadButton";
 
 export default function DomainStatus({ params, domainFetchTag, linksFetchTag }: { params: { domain: string }, domainFetchTag: string, linksFetchTag: string }) {
     const { data: session, status } = useSession({
@@ -159,37 +160,37 @@ export default function DomainStatus({ params, domainFetchTag, linksFetchTag }: 
     return (
         <div>
             <Card className={styles.domainCard}>
-            <div className={[styles.domainIcon].join(' ')}>
-                {icons()}
-            </div>
+                <div className={[styles.domainIcon].join(' ')}>
+                    {icons()}
+                </div>
 
-            <div className={styles.imageSection}>
-                {domain.image ? (
-                    <div className={[
-                        styles.imageWrapper,
-                        imageLoaded ? styles.loaded : styles.loading
-                    ].join(' ')}>
-                        <RetinaScrollableImage 
-                            src={domain.image} 
-                            width={150} 
-                            height={100}
-                        />
-                        <Image 
-                            src={domain.image}
-                            alt="Preload Image"
-                            width={1}
-                            height={1}
-                            className={styles.preloadImage}
-                            onLoad={() => setImageLoaded(true)}
-                        />
-                    </div>
-                ) : (
-                    <div className={styles.imagePlaceholder}>
-                        preview
-                    </div>
-                )}
-            </div>
-    
+                <div className={styles.imageSection}>
+                    {domain.image ? (
+                        <div className={[
+                            styles.imageWrapper,
+                            imageLoaded ? styles.loaded : styles.loading
+                        ].join(' ')}>
+                            <RetinaScrollableImage
+                                src={domain.image}
+                                width={150}
+                                height={100}
+                            />
+                            <Image
+                                src={domain.image}
+                                alt="Preload Image"
+                                width={1}
+                                height={1}
+                                className={styles.preloadImage}
+                                onLoad={() => setImageLoaded(true)}
+                            />
+                        </div>
+                    ) : (
+                        <div className={styles.imagePlaceholder}>
+                            preview
+                        </div>
+                    )}
+                </div>
+
                 <div className={styles.domainStatus}>
                     <h2 className={styles.title}>Domain Status</h2>
                     <div className={styles.infoContainer}>
@@ -230,7 +231,7 @@ export default function DomainStatus({ params, domainFetchTag, linksFetchTag }: 
                             </span>
                         </div>
                     </div>
-    
+
                     {domain.error && (
                         <div className={[styles.alert, styles.error].join(' ')}>
                             <div className={styles.alertIcon}>
@@ -239,7 +240,7 @@ export default function DomainStatus({ params, domainFetchTag, linksFetchTag }: 
                             <div>{domain.error}</div>
                         </div>
                     )}
-                    
+
                     {domain.warning && !domain.error && (
                         <div className={[styles.alert, styles.warning].join(' ')}>
                             <div className={styles.alertIcon}>
@@ -249,8 +250,11 @@ export default function DomainStatus({ params, domainFetchTag, linksFetchTag }: 
                         </div>
                     )}
                 </div>
+                <div className={styles.pdfDownload}>
+                    <PDFDownloadButton />
+                </div>
             </Card>
-    
+
             {canAccessDomainActions && (
                 <DomainActions
                     crawlStatus={crawlStatus}

@@ -224,12 +224,13 @@ export default function LinkList({ params, linksFetchTag, domainFetchTag }: {
 
     return (
         <div className={styles.sectionContainer}>
-            <MinimizableContainer title={`Links (${filteredLinks.length})`}>
+            <MinimizableContainer title={`${hideTemplates ? 'Website Templates' : 'Website Links'} (${filteredLinks.length})`}>
                 <div className={styles.filterContainer}>
                     <button
                         className={[
                             styles.filterButton,
-                            hideTemplates ? styles.active : ''
+                            hideTemplates ? styles.active : '',
+                            styles.noPrint
                         ].join(' ')}
                         onClick={() => setHideTemplates(!hideTemplates)}
                     >
@@ -239,22 +240,24 @@ export default function LinkList({ params, linksFetchTag, domainFetchTag }: {
                         <button
                             className={[
                                 styles.filterButton,
-                                hide404 ? styles.active : ''
+                                hide404 ? styles.active : '',
+                                hide404 ? styles.noPrint : ''
                             ].join(' ')}
                             onClick={() => setHide404(!hide404)}
                         >
-                            Hide 404 Errors ({errorCounts.error404})
+                            <span className={styles.noPrint}>Hide </span>404 Errors ({errorCounts.error404} pages)
                         </button>
                     )}
                     {has503Errors && (
                         <button
                             className={[
                                 styles.filterButton,
-                                hide503 ? styles.active : ''
+                                hide503 ? styles.active : '',
+                                hide503 ? styles.noPrint : ''
                             ].join(' ')}
                             onClick={() => setHide503(!hide503)}
                         >
-                            Hide 503 Errors ({errorCounts.error503})
+                            <span className={styles.noPrint}>Hide </span>503 Errors ({errorCounts.error503} pages)
                         </button>
                     )}
                     {getUniqueLanguages(linksJson.links).map(lang => {
@@ -264,7 +267,8 @@ export default function LinkList({ params, linksFetchTag, domainFetchTag }: {
                                 key={lang}
                                 className={[
                                     styles.filterButton,
-                                    hiddenLanguages.includes(lang) ? styles.active : ''
+                                    hiddenLanguages.includes(lang) ? styles.active : '',
+                                    hiddenLanguages.includes(lang) ? styles.noPrint : ''
                                 ].join(' ')}
                                 onClick={() => {
                                     setHiddenLanguages(prev =>
@@ -274,7 +278,7 @@ export default function LinkList({ params, linksFetchTag, domainFetchTag }: {
                                     )
                                 }}
                             >
-                                Hide {lang} ({count})
+                                <span className={styles.noPrint}>Hide </span>Lang {lang} ({count} pages)
                             </button>
                         );
                     })}
@@ -290,7 +294,8 @@ export default function LinkList({ params, linksFetchTag, domainFetchTag }: {
                                 className={[
                                     styles.linkInner,
                                     link.warningDoubleSlash ? styles.warning : '',
-                                    (link.errorCode || link.errorLogs.length) ? styles.error : ''
+                                    (link.errorCode || link.errorLogs.length) ? styles.error : '',
+                                    link.descriptionVisible ? styles.descriptionVisible : ''
                                 ].join(' ')}
                             >
                                 <div
@@ -320,7 +325,7 @@ export default function LinkList({ params, linksFetchTag, domainFetchTag }: {
                                         {link.lastLoadTime > 0 ? link.lastLoadTime + 'ms' : 'no data'}
                                     </div>
                                 </div>
-                                <div
+                                {link.descriptionVisible && <div
                                     className={[
                                         styles.linkDetails,
                                         link.descriptionVisible ? styles.visible : styles.hidden
@@ -376,7 +381,7 @@ export default function LinkList({ params, linksFetchTag, domainFetchTag }: {
                                             ))}
                                         </div>
                                     )}
-                                </div>
+                                </div>}
                             </div>
                         );
                     })}
@@ -384,7 +389,8 @@ export default function LinkList({ params, linksFetchTag, domainFetchTag }: {
             </MinimizableContainer>
 
             <MinimizableContainer title={`External Links (${linksJson.externalLinks?.length})`}
-                initiallyMinimized={true}>
+                initiallyMinimized={true}
+                className={styles.externalLinks}>
                 <div className={styles.links}>
                     {linksJson.externalLinks && linksJson.externalLinks.map((link: any, index: number) => (
                         <div

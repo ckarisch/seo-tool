@@ -12,6 +12,10 @@
     padding: 20px;
     margin-top: auto;
 
+    @media print {
+        display: none;
+    }
+
     @media (prefers-color-scheme: dark) {
         background-color: $background-light-dark;
     }

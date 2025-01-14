@@ -23,4 +23,8 @@
     margin: 20px;
     max-width: calc(100vw - 20px);
   }
+
+  @media print {
+    margin: 10px 20px;
+  }
 }

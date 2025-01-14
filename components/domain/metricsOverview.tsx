@@ -89,7 +89,7 @@ export default function MetricsOverview({ domain, loading = false }: MetricsOver
           ))}
         </div>
 
-        <div className={styles.graphContainer}>
+        <div className={[styles.graphContainer, historicalData.length === 0 ? styles.nodata : ''].join(' ')}>
           <h3 className={styles.graphTitle}>Domain Metrics History (Last 30 Days)</h3>
           {isLoading ? (
             <div className={styles.errorMessage}>Loading...</div>

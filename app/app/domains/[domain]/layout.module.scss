@@ -20,6 +20,10 @@
     align-items: center;
     padding: 16px 0;
   }
+
+  @media print {
+    padding: 20px;
+  }
 }
 
 .domain {
@@ -72,4 +76,8 @@
   align-items: center;
   gap: 16px;
   margin-left: auto;
+
+  @media print {
+    display: none;
+  }
 }
