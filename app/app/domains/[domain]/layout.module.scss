@@ -6,6 +6,11 @@
   background: white;
   z-index: 10;
   border-bottom: 1px solid $background-light;
+
+  
+  @media print {
+    position: static;
+  }
 }
 
 .domainheaderContent {

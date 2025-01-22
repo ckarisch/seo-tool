@@ -214,9 +214,14 @@ button {
     background: #fff !important;
   }
 
-  /* Entferne alle fixed/sticky Positionierungen */
-  * {
-    position: static !important;
+  .recharts-wrapper,
+  .recharts-legend-wrapper,
+  .recharts-default-legend {
+    width: 100% !important;
+  }
+
+  .recharts-responsive-container {
+    height: 100% !important;
   }
 }
 

@@ -171,6 +171,10 @@ export default function LinkList({ params, linksFetchTag, domainFetchTag }: {
             const pathParts = link.path.split('/');
             const templatePath = pathParts.slice(0, -1).join('/');
 
+            if (pathParts.length <= 2) {
+                return true;
+            }
+
             if (!templatePath || templateGroups[templatePath]?.length <= 1) {
                 return true;
             }
