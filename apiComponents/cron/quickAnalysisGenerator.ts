@@ -1,7 +1,7 @@
 import { env } from "process";
 import { createLogger } from "../dev/logger";
 import { LogEntry } from "../dev/StreamingLogViewer";
-import { CronJob } from "@prisma/client";
+import { CronJob, UserRole } from "@prisma/client";
 import { domainIntervalGenerator, domainIntervalResponse } from "./domainInterval";
 import { quickAnalysis, quickAnalysisResponse } from "@/app/api/seo/domains/[domainName]/crawl/quickAnalysis";
 import { checkTimeout } from "@/app/api/seo/domains/[domainName]/crawl/crawlLinkHelper";
@@ -150,7 +150,7 @@ export async function* quickAnalysisGenerator(
         const { isLocalTestHttpLink } = analyzeLink(domain.domainName, domain.domainName);
 
         // if (domain.user.role !== UserRole.ADMIN) {
-        if (!isLocalTestHttpLink) {
+        if (!isLocalTestHttpLink && domain.user.role !== UserRole.ADMIN) {
             let isVerified = false;
 
             if (!domain.domainVerified) {
