@@ -3,6 +3,7 @@ import DomainNavigation from "./DomainNavigation";
 import styles from "./layout.module.scss";
 import Section from "@/components/layout/section";
 import NotificationList from "@/components/domain/notificationList";
+import Description from "./description";
 
 export const metadata: Metadata = {
   title: "SEO App",
@@ -33,6 +34,9 @@ export default function RootLayout({ children, params }: LayoutProps) {
       </div>
 
       <main className={styles.main}>
+        <Section>
+          <Description />
+        </Section>
         <Section>
           {children}
         </Section>

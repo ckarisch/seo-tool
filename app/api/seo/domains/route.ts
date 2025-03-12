@@ -49,6 +49,8 @@ export async function GET(req: NextRequest, res: NextResponse) {
     }
   });
 
+  console.log('domain length', domains.length);
+
   for (const d of domains) {
     // set domain verification key if it does not exist
     if (!d.domainVerificationKey) {

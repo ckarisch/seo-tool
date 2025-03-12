@@ -173,7 +173,7 @@ export async function* crawlerGenerator(
           : `➝  auto crawl: ${domain.domainName} last crawl was ${diffMinutes} / ${domainInterval} minutes ago`
       );
 
-      const depth = 1;
+      const depth = 2;
       const followLinks = true;
 
       timePassed = new Date().getTime() - crawlerStartTime;
