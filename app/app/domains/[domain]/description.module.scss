@@ -1,0 +1,86 @@
+// description.module.scss
+@import "@/app/variables";
+
+.container {
+    padding: 20px;
+    justify-content: space-between;
+    gap: 40px;
+    display: flex;
+}
+
+.mainContent {
+    flex: 1;
+}
+
+.title {
+    font-size: 1.7rem;
+    font-weight: 500;
+    margin-bottom: 1rem;
+    color: $text-primary;
+}
+
+.text {
+    font-size: .9rem;
+    line-height: 1.5;
+    color: $text-primary;
+    max-width: 800px;
+}
+
+.legend {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    min-width: 250px;
+}
+
+.legendTitle {
+    font-size: 1.25rem;
+    font-weight: 500;
+    margin-bottom: 1rem;
+    color: $text-primary;
+}
+
+.legendList {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.legendItem {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
+    color: $text-primary;
+    font-size: 1rem;
+
+    &:last-child {
+        margin-bottom: 0;
+    }
+}
+
+.legendDot {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.success {
+    background-color: $veryGood;
+}
+
+.warning {
+    background-color: $warning;
+}
+
+.error {
+    background-color: $error;
+}
+
+@media print {
+    .container {
+        display: flex;
+    }
+}
